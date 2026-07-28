@@ -9,7 +9,7 @@ import requests
 
 logger = logging.getLogger("a-share-report")
 
-DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
+DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
 MAX_RETRIES = 3
 TIMEOUT = 60
 
@@ -28,7 +28,7 @@ def get_api_key() -> str:
 def generate_report(
     system_prompt: str,
     user_prompt: str,
-    model: str = "deepseek-chat",
+    model: str = "deepseek-v4-pro",
     temperature: float = 0.3,
     max_tokens: int = 4096,
 ) -> str:
