@@ -1,8 +1,9 @@
-"""数据源 —— 直接 HTTP 请求东方财富/新浪 API，不依赖 akshare 封装"""
+"""数据源 —— 直接 HTTP 请求东方财富/新浪 API，含重试和降级"""
 
 import json
 import logging
 import re
+import time
 from typing import Any
 
 import requests
@@ -16,6 +17,24 @@ HEADERS = {
 }
 
 
+def _safe_get(url: str, timeout: int = 15, max_retries: int = 3, extra_headers: dict | None = None) -> requests.Response | None:
+    """带重试的 HTTP GET，返回 Response 或 None"""
+    h = dict(HEADERS)
+    if extra_headers:
+        h.update(extra_headers)
+    for attempt in range(max_retries):
+        try:
+            resp = requests.get(url, headers=h, timeout=timeout)
+            if resp.status_code == 200 and resp.text and resp.text.strip():
+                return resp
+            logger.warning(f"API 返回异常 (attempt {attempt+1}): status={resp.status_code}, body_len={len(resp.text)}")
+        except Exception as e:
+            logger.warning(f"API 请求失败 (attempt {attempt+1}): {e}")
+        if attempt < max_retries - 1:
+            time.sleep(2 * (attempt + 1))
+    return None
+
+
 def fetch_index_quotes() -> dict[str, Any]:
     """获取主要指数实时行情（东方财富）"""
     try:
@@ -25,7 +44,9 @@ def fetch_index_quotes() -> dict[str, Any]:
             "fltt=2&secids=1.000001,0.399001,0.399006,1.000688,1.000300,1.000905"
             "&fields=f2,f3,f4,f5,f6,f12,f14"
         )
-        resp = requests.get(url, headers=HEADERS, timeout=15)
+        resp = _safe_get(url)
+        if resp is None:
+            return _fallback_sina_index()
         data = resp.json()
         if not data.get("data") or not data["data"].get("diff"):
             logger.warning("东方财富指数 API 返回空数据")
@@ -59,7 +80,9 @@ def _fallback_sina_index() -> dict[str, Any]:
     try:
         codes = "sh000001,sz399001,sz399006,sh000688,sh000300,sh000905"
         url = f"http://hq.sinajs.cn/list={codes}"
-        resp = requests.get(url, headers={"Referer": "https://finance.sina.com.cn"}, timeout=15)
+        resp = _safe_get(url, extra_headers={"Referer": "https://finance.sina.com.cn"})
+        if resp is None:
+            return {}
         resp.encoding = "gbk"
         result = {}
         name_map = {
@@ -96,7 +119,9 @@ def fetch_sector_performance() -> list[dict[str, Any]]:
             "pn=1&pz=30&po=1&np=1&fs=m:90+t:3&fid=f3"
             "&fields=f2,f3,f4,f12,f14,f128"
         )
-        resp = requests.get(url, headers=HEADERS, timeout=15)
+        resp = _safe_get(url)
+        if resp is None:
+            return []
         data = resp.json()
         sectors = []
         if data.get("data") and data["data"].get("diff"):
@@ -123,16 +148,17 @@ def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
             "pn=1&pz=20&po=1&np=1&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23&fid=f3"
             "&fields=f2,f3,f12,f14"
         )
-        resp = requests.get(url_up, headers=HEADERS, timeout=15)
-        data = resp.json()
-        if data.get("data") and data["data"].get("diff"):
-            for item in data["data"]["diff"]:
-                result["gainers"].append({
-                    "code": str(item.get("f12", "")),
-                    "name": str(item.get("f14", "")),
-                    "price": float(item.get("f2", 0) or 0),
-                    "change_pct": float(item.get("f3", 0) or 0),
-                })
+        resp = _safe_get(url_up)
+        if resp is not None:
+            data = resp.json()
+            if data.get("data") and data["data"].get("diff"):
+                for item in data["data"]["diff"]:
+                    result["gainers"].append({
+                        "code": str(item.get("f12", "")),
+                        "name": str(item.get("f14", "")),
+                        "price": float(item.get("f2", 0) or 0),
+                        "change_pct": float(item.get("f3", 0) or 0),
+                    })
 
         # 跌幅榜
         url_down = (
@@ -140,16 +166,17 @@ def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
             "pn=1&pz=20&po=0&np=1&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23&fid=f3"
             "&fields=f2,f3,f12,f14"
         )
-        resp = requests.get(url_down, headers=HEADERS, timeout=15)
-        data = resp.json()
-        if data.get("data") and data["data"].get("diff"):
-            for item in data["data"]["diff"]:
-                result["losers"].append({
-                    "code": str(item.get("f12", "")),
-                    "name": str(item.get("f14", "")),
-                    "price": float(item.get("f2", 0) or 0),
-                    "change_pct": float(item.get("f3", 0) or 0),
-                })
+        resp = _safe_get(url_down)
+        if resp is not None:
+            data = resp.json()
+            if data.get("data") and data["data"].get("diff"):
+                for item in data["data"]["diff"]:
+                    result["losers"].append({
+                        "code": str(item.get("f12", "")),
+                        "name": str(item.get("f14", "")),
+                        "price": float(item.get("f2", 0) or 0),
+                        "change_pct": float(item.get("f3", 0) or 0),
+                    })
 
         logger.info(f"东财: 涨跌幅榜各 {len(result['gainers'])}/{len(result['losers'])} 条")
         return result
@@ -167,12 +194,8 @@ def fetch_market_overview() -> dict[str, Any]:
             "pn=1&pz=5000&np=1&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23"
             "&fid=f3&fields=f3,f6"
         )
-        resp = requests.get(url_stat, headers=HEADERS, timeout=20)
-        if not resp.text or not resp.text.strip():
-            logger.warning("市场概况 API 返回空内容")
-            return _empty_overview()
-        if resp.status_code != 200:
-            logger.warning(f"市场概况 API HTTP {resp.status_code}")
+        resp = _safe_get(url_stat, timeout=20)
+        if resp is None:
             return _empty_overview()
         data = resp.json()
         if not data.get("data") or not data["data"].get("diff"):
