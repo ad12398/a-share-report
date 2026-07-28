@@ -51,6 +51,11 @@ def collect_all_data(slot: str) -> dict[str, Any]:
     if slot == "0925":
         global_data = _fetch_overnight_global()
 
+    # 清理校验标记——不要传给 DeepSeek，仅供内部日志使用
+    validation_info = index_data.pop("_validation", {})
+    if validation_info.get("warnings"):
+        logger.warning(f"数据校验警告: {validation_info['warnings']}")
+
     result = {
         "slot": slot,
         "index": index_data,
@@ -60,7 +65,6 @@ def collect_all_data(slot: str) -> dict[str, Any]:
         "north_flow": north_data,
         "dragon_tiger": dragon_data,
         "global": global_data,
-        "_validation": index_data.pop("_validation", {}),
     }
 
     logger.info(f"数据采集完成 (slot={slot})")
