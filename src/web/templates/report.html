@@ -41,10 +41,16 @@
     {% endfor %}
   </div>
 
-  <!-- 图表 -->
-  <div class="chart-container">
+  <!-- 行业板块图表 -->
+  <div class="chart-container" id="sector-container">
     <div class="chart-title">📈 行业板块涨跌幅 TOP 20</div>
     <div class="chart-box" id="sector-chart"></div>
+  </div>
+
+  <!-- 涨幅榜图表 -->
+  <div class="chart-container" id="gainers-container">
+    <div class="chart-title">🔥 今日涨幅榜 TOP 10</div>
+    <div class="chart-box" id="gainers-chart"></div>
   </div>
 
   <!-- 分析报告 -->
@@ -94,26 +100,35 @@
 
 <script>
 (function() {
-  var chartDom = document.getElementById('sector-chart');
-  var chart = echarts.init(chartDom, 'dark');
   var chartData = {{ chart_data | safe }};
-  var sectors = chartData.sectors || [];
-  var names = sectors.map(function(s) { return s.name; });
-  var values = sectors.map(function(s) { return s.change_pct; });
-  var option = {
-    title: { text: '行业板块涨跌幅 TOP 20', subtext: '单位：%  绿色=上涨  红色=下跌', left: 'center', textStyle: { color: '#e6edf3', fontSize: 15 }, subtextStyle: { color: '#8b949e', fontSize: 12 } },
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + '<br/>涨跌幅：<b>' + p[0].value.toFixed(2) + '%</b>'; } },
-    grid: { left: '15%', right: '10%', top: 60, bottom: 10 },
-    xAxis: { type: 'value', name: '涨跌幅 (%)', axisLabel: { formatter: '{value}%' }, splitLine: { lineStyle: { color: '#30363d' } } },
-    yAxis: { type: 'category', data: names.reverse(), axisLabel: { color: '#8b949e', fontSize: 11, width: 80, overflow: 'truncate' }, inverse: true },
-    series: [{
-      type: 'bar',
-      data: values.reverse().map(function(v) { return { value: v, itemStyle: { color: v >= 0 ? '#3fb950' : '#f85149' } }; }),
-      label: { show: true, position: 'right', color: '#e6edf3', fontSize: 11, formatter: function(p) { return p.value.toFixed(1) + '%'; } }
-    }]
-  };
-  chart.setOption(option);
-  window.addEventListener('resize', function() { chart.resize(); });
+  var colorGreen = '#3fb950';
+  var colorRed = '#f85149';
+
+  function renderBar(chartId, items, hideIfEmpty) {
+    var el = document.getElementById(chartId);
+    if (!items || items.length === 0) {
+      if (hideIfEmpty) { var p = el.parentElement; if (p) p.style.display = 'none'; }
+      return;
+    }
+    var chart = echarts.init(el, 'dark');
+    var names = items.map(function(s) { return s.name; });
+    var values = items.map(function(s) { return s.change_pct; });
+    chart.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + '<br/>涨跌幅：<b>' + p[0].value.toFixed(2) + '%</b>'; } },
+      grid: { left: '15%', right: '10%', top: 10, bottom: 10 },
+      xAxis: { type: 'value', name: '%', axisLabel: { formatter: '{value}%' }, splitLine: { lineStyle: { color: '#30363d' } } },
+      yAxis: { type: 'category', data: names.reverse(), axisLabel: { color: '#8b949e', fontSize: 11, width: 80, overflow: 'truncate' }, inverse: true },
+      series: [{
+        type: 'bar',
+        data: values.reverse().map(function(v) { return { value: v, itemStyle: { color: v >= 0 ? colorGreen : colorRed } }; }),
+        label: { show: true, position: 'right', color: '#e6edf3', fontSize: 11, formatter: function(p) { return p.value.toFixed(1) + '%'; } }
+      }]
+    });
+    window.addEventListener('resize', function() { chart.resize(); });
+  }
+
+  renderBar('sector-chart', chartData.sectors, true);
+  renderBar('gainers-chart', chartData.gainers, true);
 })();
 </script>
 
