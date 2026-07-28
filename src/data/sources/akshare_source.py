@@ -112,7 +112,8 @@ def _sina_index_fallback() -> dict[str, Any]:
                         "price": price,
                         "change_pct": change_pct,
                         "change_amt": round(price - prev_close, 2),
-                        "volume": 0, "amount": 0,
+                        "volume": float(vals[8] or 0) if len(vals) > 8 else 0,
+                        "amount": float(vals[9] or 0) if len(vals) > 9 else 0,
                     }
         logger.info(f"新浪: 获取指数行情 {len(result)} 条")
         return result
