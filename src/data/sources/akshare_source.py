@@ -109,32 +109,63 @@ def _sina_index_fallback() -> dict[str, Any]:
         return {}
 
 
-# ═══ 板块涨跌榜（东方财富 - 仅此一个仍使用东财，不行就兜底空） ═══
+# ═══ 板块涨跌榜（东财 → 新浪备用） ═══
 
 def fetch_sector_performance() -> list[dict[str, Any]]:
+    # 先试东方财富
     try:
         url = (
             "https://push2.eastmoney.com/api/qt/clist/get?"
             "pn=1&pz=30&po=1&np=1&fs=m:90+t:3&fid=f3"
             "&fields=f2,f3,f14,f128"
         )
-        resp = _safe_get(url)
+        resp = _safe_get(url, max_retries=1)  # 只试 1 次，快速降级
         if resp:
             data = resp.json()
-            sectors = []
             if data.get("data") and data["data"].get("diff"):
-                for item in data["data"]["diff"]:
-                    sectors.append({
-                        "name": str(item.get("f14", "")),
-                        "change_pct": float(item.get("f3", 0) or 0),
-                        "leader": str(item.get("f128", "")),
-                    })
-            if sectors:
-                logger.info(f"东财: 获取行业板块 {len(sectors)} 条")
-                return sectors
+                sectors = [{"name": str(item.get("f14", "")), "change_pct": float(item.get("f3", 0) or 0), "leader": str(item.get("f128", ""))} for item in data["data"]["diff"]]
+                if sectors:
+                    logger.info(f"东财: 获取行业板块 {len(sectors)} 条")
+                    return sectors
+    except Exception:
+        pass
+
+    # 降级到新浪
+    return _sina_sectors_fallback()
+
+
+def _sina_sectors_fallback() -> list[dict[str, Any]]:
+    """新浪行业板块数据"""
+    try:
+        url = "http://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php"
+        resp = _safe_get(url, extra_headers={"Referer": "https://vip.stock.finance.sina.com.cn"})
+        if not resp:
+            return []
+        text = resp.text
+        json_start = text.find("{")
+        if json_start == -1:
+            return []
+        data = json.loads(text[json_start:])
+        sectors = []
+        for value in data.values():
+            fields = value.split(",")
+            if len(fields) >= 6:
+                try:
+                    pct = float(fields[5] or 0)
+                except ValueError:
+                    pct = 0.0
+                sectors.append({
+                    "name": fields[1],
+                    "change_pct": pct,
+                    "leader": "",
+                })
+        sectors.sort(key=lambda x: abs(x["change_pct"]), reverse=True)
+        result = sectors[:30]
+        logger.info(f"新浪: 获取行业板块 {len(result)} 条")
+        return result
     except Exception as e:
-        logger.warning(f"东财板块失败: {e}")
-    return []
+        logger.warning(f"新浪板块失败: {e}")
+        return []
 
 
 # ═══ 涨跌幅榜（新浪 API） ═══
