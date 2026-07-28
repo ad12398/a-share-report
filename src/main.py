@@ -86,6 +86,7 @@ def run(slot: str):
     logger.info("Step 4/5: 渲染 HTML 报告...")
     sector_list = data.get("sectors", [])
     gainers_list = data.get("movers", {}).get("gainers", [])
+    losers_list = data.get("movers", {}).get("losers", [])
 
     chart_data = {}
     if sector_list and isinstance(sector_list, list) and len(sector_list) > 0:
@@ -100,6 +101,12 @@ def run(slot: str):
             for g in gainers_list[:10]
         ]
         logger.info(f"DEBUG: chart_data gainers={len(chart_data['gainers'])}")
+    if losers_list and isinstance(losers_list, list) and len(losers_list) > 0:
+        chart_data["losers"] = [
+            {"name": l.get("name", ""), "change_pct": l.get("change_pct", 0)}
+            for l in losers_list[:10]
+        ]
+        logger.info(f"DEBUG: chart_data losers={len(chart_data['losers'])}")
     if not chart_data:
         chart_data = None
         logger.warning("DEBUG: chart_data is None (no chart data)")
