@@ -84,12 +84,19 @@ def run(slot: str):
 
     # 6. 渲染 HTML
     logger.info("Step 4/5: 渲染 HTML 报告...")
-    chart_data = {
-        "sectors": [
-            {"name": s.get("name", ""), "change_pct": s.get("change_pct", 0)}
-            for s in data.get("sectors", [])[:20]
-        ]
-    } if data.get("sectors") else None
+    sector_list = data.get("sectors", [])
+    logger.info(f"DEBUG: sector_list type={type(sector_list)}, len={len(sector_list) if isinstance(sector_list, list) else 'N/A'}")
+    if sector_list and isinstance(sector_list, list) and len(sector_list) > 0:
+        chart_data = {
+            "sectors": [
+                {"name": s.get("name", ""), "change_pct": s.get("change_pct", 0)}
+                for s in sector_list[:20]
+            ]
+        }
+        logger.info(f"DEBUG: chart_data has {len(chart_data['sectors'])} sectors")
+    else:
+        chart_data = None
+        logger.warning("DEBUG: chart_data is None (no sector data)")
 
     report_html = render_report(slot, safe_report, data, chart_data)
     report_path = save_report_html(report_html, slot)
