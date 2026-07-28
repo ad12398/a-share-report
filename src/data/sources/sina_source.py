@@ -1,29 +1,44 @@
-"""新浪财经数据源 —— 备用数据"""
+"""新浪财经数据源 —— 备用数据（带重试）"""
 
 import logging
 import re
+import time
 from typing import Any
 
 import requests
 
 logger = logging.getLogger("a-share-report")
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+}
 
-def _sina_code(market_code: str) -> str:
-    """转换代码格式: '000001' → 'sh000001' or 'sz000001'"""
-    code = market_code.strip()
-    if code.startswith("6") or code.startswith("000"):
-        return f"sh{code}"
-    return f"sz{code}"
+
+def _safe_get(url: str, timeout: int = 15, max_retries: int = 3, extra_headers: dict | None = None) -> requests.Response | None:
+    h = dict(HEADERS)
+    if extra_headers:
+        h.update(extra_headers)
+    for attempt in range(max_retries):
+        try:
+            resp = requests.get(url, headers=h, timeout=timeout)
+            if resp.status_code == 200 and resp.text and resp.text.strip():
+                return resp
+        except Exception as e:
+            logger.warning(f"sina 请求失败 (attempt {attempt+1}): {e}")
+        if attempt < max_retries - 1:
+            time.sleep(2 * (attempt + 1))
+    return None
 
 
 def fetch_index_quotes() -> dict[str, Any]:
-    """从新浪获取指数行情（备用）"""
+    """从新浪获取指数行情（备用，用于交叉校验）"""
     try:
         codes = ["sh000001", "sz399001", "sz399006", "sh000688", "sh000300", "sh000905"]
         url = f"http://hq.sinajs.cn/list={','.join(codes)}"
-        headers = {"Referer": "https://finance.sina.com.cn"}
-        resp = requests.get(url, headers=headers, timeout=15)
+        resp = _safe_get(url, extra_headers={"Referer": "https://finance.sina.com.cn"})
+        if not resp:
+            return {}
         resp.encoding = "gbk"
         text = resp.text
         result = {}
