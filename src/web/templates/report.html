@@ -47,6 +47,12 @@
     <div class="chart-box" id="gainers-chart" style="height:380px;"></div>
   </div>
 
+  <!-- 跌幅榜图表 -->
+  <div class="chart-container" id="losers-container">
+    <div class="chart-title">📉 今日跌幅榜 TOP 10</div>
+    <div class="chart-box" id="losers-chart"></div>
+  </div>
+
   <!-- 行业板块图表（备选，东财/新浪都可能抽风） -->
   <div class="chart-container" id="sector-container">
     <div class="chart-title">📈 行业板块涨跌幅 TOP 20</div>
@@ -129,6 +135,7 @@
 
   renderBar('sector-chart', chartData.sectors, true);
   renderBar('gainers-chart', chartData.gainers, true);
+  renderBar('losers-chart', chartData.losers, true);
 })();
 </script>
 
