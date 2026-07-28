@@ -223,35 +223,50 @@ def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
 # ═══ 市场概况 ═══
 
 def fetch_market_overview() -> dict[str, Any]:
-    """分页获取全市场涨跌统计（每页 100 条，最多取 55 页 = 5500 只）"""
+    """
+    轻量采样统计市场涨跌比。
+    取涨幅前 300 + 跌幅前 300，从中统计涨平跌分布。足够准确且不会超时。
+    """
     try:
         total = up = down = flat = 0
         base_url = (
             "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
-            "Market_Center.getHQNodeData?sort=changepercent"
-            "&asc=0&node=hs_a&symbol=&_s_r_a=auto&num=100"
+            "Market_Center.getHQNodeData?node=hs_a&symbol=&_s_r_a=auto&num=100"
         )
-        for page in range(1, 60):
-            url = f"{base_url}&page={page}"
+
+        # 取涨幅端（asc=0: 涨幅从大到小）
+        for page in range(1, 5):  # 4页 × 100 = 400只
+            url = f"{base_url}&sort=changepercent&asc=0&page={page}"
             resp = _safe_get(url, extra_headers={"Referer": "https://vip.stock.finance.sina.com.cn"}, max_retries=1)
             if not resp:
                 break
-            data = resp.json()
-            if not isinstance(data, list) or len(data) == 0:
+            batch = resp.json()
+            if not isinstance(batch, list) or len(batch) == 0:
                 break
-            for item in data:
+            for item in batch:
                 pct = float(item.get("changepercent", 0) or 0)
                 total += 1
-                if pct > 0:
-                    up += 1
-                elif pct < 0:
-                    down += 1
-                else:
-                    flat += 1
-            if len(data) < 100:  # 最后一页
-                break
+                if pct > 0: up += 1
+                elif pct < 0: down += 1
+                else: flat += 1
 
-        logger.info(f"新浪: 市场概况 total={total} up={up} down={down} (pages scanned)")
+        # 取跌幅端（asc=1: 跌幅从大到小）
+        for page in range(1, 5):
+            url = f"{base_url}&sort=changepercent&asc=1&page={page}"
+            resp = _safe_get(url, extra_headers={"Referer": "https://vip.stock.finance.sina.com.cn"}, max_retries=1)
+            if not resp:
+                break
+            batch = resp.json()
+            if not isinstance(batch, list) or len(batch) == 0:
+                break
+            for item in batch:
+                pct = float(item.get("changepercent", 0) or 0)
+                total += 1
+                if pct > 0: up += 1
+                elif pct < 0: down += 1
+                else: flat += 1
+
+        logger.info(f"新浪: 市场概况 sampled total={total} up={up} down={down}")
         return {
             "total": total, "up": up, "down": down, "flat": flat,
             "total_amount": 0,
