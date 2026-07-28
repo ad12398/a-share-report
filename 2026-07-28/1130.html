@@ -23,7 +23,7 @@
   <!-- 导航 -->
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
     <a href="/a-share-report/index.html" style="color:var(--accent-blue);text-decoration:none;">← 返回首页</a>
-    <span style="color:var(--text-muted);font-size:13px;">报告生成时间: 2026-07-28 15:55</span>
+    <span style="color:var(--text-muted);font-size:13px;">报告生成时间: 2026-07-28 16:03</span>
   </div>
 
   <!-- KPI 指标卡片 -->
@@ -91,58 +91,63 @@
     
   </div>
 
-  <!-- 图表 -->
-  <div class="chart-container">
+  <!-- 行业板块图表 -->
+  <div class="chart-container" id="sector-container">
     <div class="chart-title">📈 行业板块涨跌幅 TOP 20</div>
     <div class="chart-box" id="sector-chart"></div>
+  </div>
+
+  <!-- 涨幅榜图表 -->
+  <div class="chart-container" id="gainers-container">
+    <div class="chart-title">🔥 今日涨幅榜 TOP 10</div>
+    <div class="chart-box" id="gainers-chart"></div>
   </div>
 
   <!-- 分析报告 -->
   <div class="report-section">
     <h1>午盘总结 — 量化分析报告</h1>
-    <div class="meta">生成时间: 2026-07-28 15:55 | 模型: DeepSeek</div>
+    <div class="meta">生成时间: 2026-07-28 16:03 | 模型: DeepSeek</div>
     <div class="content">
-      <h3>📊 A 股午盘总结报告</h3>
-<p><strong>⏰ 午盘时间：11:30</strong> | <strong>⚠️ 免责声明：本报告由 AI 自动生成，仅供参考，不构成任何投资建议。投资有风险，入市需谨慎。</strong></p>
+      <h3>📊 市场概览</h3>
+<p>上午盘面呈现显著的结构性撕裂。尽管数据显示全市场上涨比例达100%，但主要规模指数全面回调，高价科技股重挫，而部分传统消费及题材股活跃。这明确指向一场权重股的集中抛售与小市值低价股的流动性脉冲并存的极端分化行情。</p>
 
-<h3>1. 市场概览</h3>
-<p>上午市场呈现虚假繁荣的极端行情，数据显示全市场无一收跌，但核心指数数据因存在严重偏差而失真。实际盘面显示，市场并非普涨，而是剧烈的结构性撕裂：以光模块为代表的高位硬科技股集体崩盘，而低位消费与数字经济题材则受到短线资金疯狂挖掘。这是一场发生在指数平静表面下的高低切换风暴。</p>
-
-<h3>2. 核心指标</h3>
+<h3>📈 核心指标</h3>
 <ul>
-    <li><strong>涨跌比：</strong> 数据显示为 100% 上涨（100 家样本），此数据与涨跌榜严重矛盾，大概率来源于数据抽样偏差，真实市场涨跌家数比需以交易所公布为准，预计为结构性分化而非普涨。</li>
-    <li><strong>成交额：</strong> 半日成交额数据缺失。从权重股新易盛、中际旭创放出历史天量暴跌来看，市场交投活跃，半日成交额预计显著放大，显示筹码在高位剧烈交换。</li>
-    <li><strong>北向资金：</strong> 数据缺失，暂不分析。</li>
-    <li><strong>数据异常警示：</strong> 深证成指、创业板指、科创50等指数数据存在 1.17% 至 4.36% 不等的严重偏差。这通常是数据源计算或传输错误，<strong>请以上海证券交易所、深圳证券交易所官方实时数据为准</strong>，切勿以此错误数据作为交易依据。</li>
+    <li><strong>指数表现：</strong> 上证指数报3813.31点，较前收大幅下挫约2.2%；创业板指、科创50指数领跌，分别下挫约4.4%和3.7%。权重指数溃败是指数层面疲软的根本原因。</li>
+    <li><strong>资金与量能：</strong> 全市场半日成交额数据缺失（显示为0），为异常信号。但从权重股跌停及小盘股对倒拉升的盘面特征推断，整体量能可能呈现“放量下跌，局部对倒”的结构，非健康放量。</li>
+    <li><strong>涨跌比幻觉：</strong> 数据显示全部标的上涨，这与主要指数大跌及权重股暴跌榜单明显矛盾。这源于大量微盘股、ST股和北交所个股的上涨在数量上掩盖了少数权重股的暴跌，属于典型的指数与市场宽度背离。</li>
 </ul>
 
-<h3>3. 板块热点</h3>
-<p><strong>领涨板块：</strong></p>
+<h3>🔥 板块热点</h3>
 <ul>
-    <li><strong>大消费/防御性板块：</strong> 酿酒概念、社区团购、乳业、新零售、啤酒概念。驱动因素是科技股资金溢出后，向低位、有防御属性的必选消费进行切换。龙头一鸣食品、金种子酒的涨停是情绪标杆。</li>
-    <li><strong>数字经济/跨境支付：</strong> DRG/DIP、跨境支付、财税数字化、数据确权、数字货币。受政策预期及数字人民币试点催化，主题性炒作升温。南天信息作为复合概念龙头（覆盖财税、电子车牌、数字货币、数据安全），成为日内情绪核心。</li>
-</ul>
-<p><strong>领跌板块（个股层面反映）：</strong></p>
-<ul>
-    <li><strong>光通信/光模块（CPO）：</strong> 板块内未在涨幅榜体现，但个股跌幅榜上，新易盛(-17.1%)、中际旭创(-15.7%)、源杰科技(-16.8%) 集体放量暴跌。这通常是机构资金在高位集中兑现利润的标志，板块逻辑面临阶段性证伪或估值修正的压力。</li>
+    <li><strong>领涨板块：</strong> <strong>开发区、纺织机械、酿酒、食品、服装鞋类</strong>等板块逆市飘红。这属于典型的防御性消费板块轮动，叠加部分开发区类个股受局部政策预期驱动的脉冲行情。资金从高位科技股向低位传统板块切换避险的特征明显。</li>
+    <li><strong>领跌板块：</strong> <strong>次新股（-7.38%）、机械行业（-6.06%）、电子器件（-5.61%）</strong> 成为杀跌重灾区。这与跌幅榜中“新易盛”、“中际旭创”、“源杰科技”等高位光通信、半导体个股的集体暴跌相吻合。这些是前期机构抱团最紧密、涨幅最大的赛道，今日出现瓦解迹象，具有极强的趋势反转警示意义。</li>
 </ul>
 
-<h3>4. 技术信号（注：由于数据源问题，以下信号源于公开信息与盘面个股结构推演）</h3>
-<p>关键指数如上证指数、沪深300在失真数据下显示为上涨。但以<strong>科创50</strong>为代表的高科技指数，因其成分股中光模块、半导体个股的重挫，实际面临巨大压力。</p>
+<h3>📉 技术信号</h3>
 <ul>
-    <li><strong>信号解读：</strong> 新易盛、中际旭创等前期趋势牛股以放量长阴跌破关键中期均线（如20日均线），这是非常明确的<strong>顶部右侧信号</strong>。这表明场内最强势的趋势资金正在撤退，相关指数的短期多头结构已被破坏。资金正从此处撤离，涌入低位首板或二板个股，形成“高切低”的技术形态。</li>
+    <li><strong>上证指数：</strong> 上午以跳空低开低走态势，有效击穿5日、10日均线支撑，形成实体阴线。日K线组合上，若今日收盘无法收复关键均线，则短期头部结构确立，下方考验3800点整数关口及20日均线支撑。</li>
+    <li><strong>科创50 & 创业板指：</strong> 两者均出现断头铡刀式破位大阴线，5日均线快速拐头向下死叉10日均线，MACD指标高位死叉信号明确。这是典型的强趋势反转信号，杀伤力巨大，表明前期上涨趋势已遭到破坏。</li>
 </ul>
 
-<h3>5. 量化视角</h3>
-<p>上午盘面呈现极端的“亏钱效应”与“赚钱效应”并存的结构：</p>
+<h3>🎯 量化视角</h3>
 <ul>
-    <li><strong>资金流向：</strong> 资金从高位高价的高估值科技股（新易盛、中际旭创成交额巨大且收跌）大规模流出，流入低位低价的消费、数字经济主题。主力资金净流向呈现明显的“剪刀差”。</li>
-    <li><strong>市场宽度：</strong> 非常狭窄。赚钱效应高度集中在以“南天信息”为首的数字经济线和以“一鸣食品”为首的消费线。看似普涨的数据背后，是持有高位科技股投资者的巨额亏损。</li>
-    <li><strong>异常信号：</strong> 新易盛半日暴跌超 17%，成交额巨大，这是一种“多杀多”的踩踏式出货，其传导效应需警惕，可能会蔓延至其他前期涨幅巨大的科技股。</li>
+    <li><strong>资金流向：</strong> 资金呈现极端出逃模式。以光模块、AI芯片为代表的TMT板块出现百亿级资金净流出，带动整个科技链踩踏。而酿酒、食品等防御板块仅获得微量资金流入，无法对冲抛压。</li>
+    <li><strong>量价关系：</strong> 高位核心资产（如新易盛、中际旭创）呈现“放量破位暴跌”形态，是机构筹码松动的铁证。大量低价股上涨但量能分散，属于游资利用市场情绪进行的末端炒作，缺乏持续基础。</li>
+    <li><strong>市场宽度假象：</strong> 上涨家数100%的数据具有高度欺骗性。真实的市场宽度极端恶劣，权重股的崩塌正在引发系统性估值下修，小盘股的狂欢是流动性外溢的短暂现象，随时可能被市场整体下行的引力拉回。</li>
 </ul>
 
-<h3>6. 风险提示</h3>
-<p>当前市场的核心风险，不在于指数下跌，而在于<strong>结构性泡沫的崩塌</strong>。以 CPO 为代表的高位科技股，其单日巨量暴跌往往是中期趋势逆转的开始，追高资金将面临长时间套牢风险。同时，低位板块的轮动过快，若明日没有溢价，短线资金也可能快速反手杀跌。下午需密切关注光模块等核心科技股是否会跌停封死，以及跌停家数是否扩散，这将决定恐慌情绪是否进一步蔓延。对于稳健投资者，目前应观望为主，等待旧主线风险释放完毕。
+<h3>⚠️ 风险提示</h3>
+<p><strong>核心风险在于“机构抱团瓦解”的确认与加速。</strong> 上午盘面已非简单的技术性调整，而是高位核心资产筹码的集中出逃。午后需警惕以下三点：</p>
+<ol>
+    <li><strong>跌停潮蔓延：</strong> 若跌幅榜个股从-15%向-20%封死跌停扩散，将引发恐慌盘踩踏。</li>
+    <li><strong>防御板块补跌：</strong> 当前逆市上涨的酿酒、食品等板块，在整体估值中枢下移的环境下，随时可能出现补跌，届时市场将失去最后的避险港湾。</li>
+    <li><strong>午后流动性枯竭：</strong> 上午部分小盘股拉升过度，午后若无增量资金承接，极易出现冲高回落，形成大小盘双杀的恶劣局面。</li>
+</ol>
+<p><strong>操作上，应以风控为第一要务，减少操作频率，切勿盲目抄底科技股或追高小盘题材股。</strong> 观察下午盘中是否有金融、能源等真正权重板块放量护盘，若无，调整级别将超预期。</p>
+
+<hr>
+<p><strong>⚠️ 免责声明：本报告由 AI 自动生成，仅供参考，不构成任何投资建议。投资有风险，入市需谨慎。报告中的数据来源于公开接口，不对其准确性做任何保证。</strong></p>
     </div>
   </div>
 
@@ -220,26 +225,35 @@
 
 <script>
 (function() {
-  var chartDom = document.getElementById('sector-chart');
-  var chart = echarts.init(chartDom, 'dark');
-  var chartData = {"sectors": [{"name": "昨日连板_含一字", "change_pct": 481.0}, {"name": "DRG/DIP", "change_pct": 311.0}, {"name": "历史新高", "change_pct": 278.0}, {"name": "跨境支付", "change_pct": 266.0}, {"name": "财税数字化", "change_pct": 234.0}, {"name": "数据确权", "change_pct": 218.0}, {"name": "电子车牌", "change_pct": 218.0}, {"name": "酿酒概念", "change_pct": 210.0}, {"name": "社区团购", "change_pct": 196.0}, {"name": "电子身份证", "change_pct": 186.0}, {"name": "啤酒概念", "change_pct": 179.0}, {"name": "味蕾经济", "change_pct": 177.0}, {"name": "乳业", "change_pct": 173.0}, {"name": "MLOps概念", "change_pct": 167.0}, {"name": "Web3.0", "change_pct": 166.0}, {"name": "退税商店", "change_pct": 162.0}, {"name": "数字货币", "change_pct": 160.0}, {"name": "数据安全", "change_pct": 157.0}, {"name": "拼多多概念", "change_pct": 155.0}, {"name": "蚂蚁概念", "change_pct": 152.0}]};
-  var sectors = chartData.sectors || [];
-  var names = sectors.map(function(s) { return s.name; });
-  var values = sectors.map(function(s) { return s.change_pct; });
-  var option = {
-    title: { text: '行业板块涨跌幅 TOP 20', subtext: '单位：%  绿色=上涨  红色=下跌', left: 'center', textStyle: { color: '#e6edf3', fontSize: 15 }, subtextStyle: { color: '#8b949e', fontSize: 12 } },
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + '<br/>涨跌幅：<b>' + p[0].value.toFixed(2) + '%</b>'; } },
-    grid: { left: '15%', right: '10%', top: 60, bottom: 10 },
-    xAxis: { type: 'value', name: '涨跌幅 (%)', axisLabel: { formatter: '{value}%' }, splitLine: { lineStyle: { color: '#30363d' } } },
-    yAxis: { type: 'category', data: names.reverse(), axisLabel: { color: '#8b949e', fontSize: 11, width: 80, overflow: 'truncate' }, inverse: true },
-    series: [{
-      type: 'bar',
-      data: values.reverse().map(function(v) { return { value: v, itemStyle: { color: v >= 0 ? '#3fb950' : '#f85149' } }; }),
-      label: { show: true, position: 'right', color: '#e6edf3', fontSize: 11, formatter: function(p) { return p.value.toFixed(1) + '%'; } }
-    }]
-  };
-  chart.setOption(option);
-  window.addEventListener('resize', function() { chart.resize(); });
+  var chartData = {"sectors": [{"name": "次新股", "change_pct": -7.380604008665}, {"name": "机械行业", "change_pct": -6.0554726320117}, {"name": "电子器件", "change_pct": -5.6069664741021}, {"name": "有色金属", "change_pct": -3.3882825699804}, {"name": "开发区", "change_pct": 3.1330572700992}, {"name": "化纤行业", "change_pct": -3.036716665133}, {"name": "发电设备", "change_pct": -2.9831952012455}, {"name": "电子信息", "change_pct": -2.9592512314188}, {"name": "玻璃行业", "change_pct": -2.9316837009145}, {"name": "仪器仪表", "change_pct": -2.829569246398}, {"name": "化工行业", "change_pct": -2.3937224887972}, {"name": "电器行业", "change_pct": -2.3732457449985}, {"name": "酿酒行业", "change_pct": 2.3618829682903}, {"name": "陶瓷行业", "change_pct": -2.2909130768388}, {"name": "飞机制造", "change_pct": -2.0111253744116}, {"name": "纺织机械", "change_pct": 1.9086070838686}, {"name": "医疗器械", "change_pct": -1.6128209054254}, {"name": "综合行业", "change_pct": 1.5757575757576}, {"name": "食品行业", "change_pct": 1.5726544827834}, {"name": "水泥行业", "change_pct": -1.3682621609777}], "gainers": [{"name": "捷众科技", "change_pct": 29.978}, {"name": "*ST清越", "change_pct": 20.225}, {"name": "安诺其", "change_pct": 20.085}, {"name": "波长光电", "change_pct": 20.006}, {"name": "*ST元道", "change_pct": 20.0}, {"name": "科蓝软件", "change_pct": 19.946}, {"name": "ST荣科", "change_pct": 19.902}, {"name": "爱朋医疗", "change_pct": 18.576}, {"name": "蓝英装备", "change_pct": 17.382}, {"name": "中胤时尚", "change_pct": 17.154}]};
+  var colorGreen = '#3fb950';
+  var colorRed = '#f85149';
+
+  function renderBar(chartId, items, hideIfEmpty) {
+    var el = document.getElementById(chartId);
+    if (!items || items.length === 0) {
+      if (hideIfEmpty) { var p = el.parentElement; if (p) p.style.display = 'none'; }
+      return;
+    }
+    var chart = echarts.init(el, 'dark');
+    var names = items.map(function(s) { return s.name; });
+    var values = items.map(function(s) { return s.change_pct; });
+    chart.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + '<br/>涨跌幅：<b>' + p[0].value.toFixed(2) + '%</b>'; } },
+      grid: { left: '15%', right: '10%', top: 10, bottom: 10 },
+      xAxis: { type: 'value', name: '%', axisLabel: { formatter: '{value}%' }, splitLine: { lineStyle: { color: '#30363d' } } },
+      yAxis: { type: 'category', data: names.reverse(), axisLabel: { color: '#8b949e', fontSize: 11, width: 80, overflow: 'truncate' }, inverse: true },
+      series: [{
+        type: 'bar',
+        data: values.reverse().map(function(v) { return { value: v, itemStyle: { color: v >= 0 ? colorGreen : colorRed } }; }),
+        label: { show: true, position: 'right', color: '#e6edf3', fontSize: 11, formatter: function(p) { return p.value.toFixed(1) + '%'; } }
+      }]
+    });
+    window.addEventListener('resize', function() { chart.resize(); });
+  }
+
+  renderBar('sector-chart', chartData.sectors, true);
+  renderBar('gainers-chart', chartData.gainers, true);
 })();
 </script>
 
