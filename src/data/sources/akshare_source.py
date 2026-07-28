@@ -223,32 +223,35 @@ def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
 # ═══ 市场概况 ═══
 
 def fetch_market_overview() -> dict[str, Any]:
+    """分页获取全市场涨跌统计（每页 100 条，最多取 55 页 = 5500 只）"""
     try:
-        # 获取全量数据来统计
-        url = (
+        total = up = down = flat = 0
+        base_url = (
             "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
-            "Market_Center.getHQNodeData?page=1&num=5000&sort=changepercent"
-            "&asc=0&node=hs_a&symbol=&_s_r_a=auto"
+            "Market_Center.getHQNodeData?sort=changepercent"
+            "&asc=0&node=hs_a&symbol=&_s_r_a=auto&num=100"
         )
-        resp = _safe_get(url, extra_headers={"Referer": "https://vip.stock.finance.sina.com.cn"}, timeout=30)
-        if not resp:
-            return _empty_overview()
-        data = resp.json()
-        if not isinstance(data, list):
-            return _empty_overview()
+        for page in range(1, 60):
+            url = f"{base_url}&page={page}"
+            resp = _safe_get(url, extra_headers={"Referer": "https://vip.stock.finance.sina.com.cn"}, max_retries=1)
+            if not resp:
+                break
+            data = resp.json()
+            if not isinstance(data, list) or len(data) == 0:
+                break
+            for item in data:
+                pct = float(item.get("changepercent", 0) or 0)
+                total += 1
+                if pct > 0:
+                    up += 1
+                elif pct < 0:
+                    down += 1
+                else:
+                    flat += 1
+            if len(data) < 100:  # 最后一页
+                break
 
-        total = len(data)
-        up = down = flat = 0
-        for item in data:
-            pct = float(item.get("changepercent", 0) or 0)
-            if pct > 0:
-                up += 1
-            elif pct < 0:
-                down += 1
-            else:
-                flat += 1
-
-        logger.info(f"新浪: 市场概况 total={total} up={up} down={down}")
+        logger.info(f"新浪: 市场概况 total={total} up={up} down={down} (pages scanned)")
         return {
             "total": total, "up": up, "down": down, "flat": flat,
             "total_amount": 0,
