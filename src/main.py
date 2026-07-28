@@ -85,18 +85,24 @@ def run(slot: str):
     # 6. 渲染 HTML
     logger.info("Step 4/5: 渲染 HTML 报告...")
     sector_list = data.get("sectors", [])
-    logger.info(f"DEBUG: sector_list type={type(sector_list)}, len={len(sector_list) if isinstance(sector_list, list) else 'N/A'}")
+    gainers_list = data.get("movers", {}).get("gainers", [])
+
+    chart_data = {}
     if sector_list and isinstance(sector_list, list) and len(sector_list) > 0:
-        chart_data = {
-            "sectors": [
-                {"name": s.get("name", ""), "change_pct": s.get("change_pct", 0)}
-                for s in sector_list[:20]
-            ]
-        }
-        logger.info(f"DEBUG: chart_data has {len(chart_data['sectors'])} sectors")
-    else:
+        chart_data["sectors"] = [
+            {"name": s.get("name", ""), "change_pct": s.get("change_pct", 0)}
+            for s in sector_list[:20]
+        ]
+        logger.info(f"DEBUG: chart_data sectors={len(chart_data['sectors'])}")
+    if gainers_list and isinstance(gainers_list, list) and len(gainers_list) > 0:
+        chart_data["gainers"] = [
+            {"name": g.get("name", ""), "change_pct": g.get("change_pct", 0)}
+            for g in gainers_list[:10]
+        ]
+        logger.info(f"DEBUG: chart_data gainers={len(chart_data['gainers'])}")
+    if not chart_data:
         chart_data = None
-        logger.warning("DEBUG: chart_data is None (no sector data)")
+        logger.warning("DEBUG: chart_data is None (no chart data)")
 
     report_html = render_report(slot, safe_report, data, chart_data)
     report_path = save_report_html(report_html, slot)
