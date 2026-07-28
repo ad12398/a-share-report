@@ -1,4 +1,4 @@
-"""涓滄柟璐㈠瘜鏁版嵁婧?鈥斺€?鍖楀悜璧勯噾 & 榫欒檸姒滐紙绾?HTTP API锛?""
+"""东方财富数据源 —— 北向资金 & 龙虎榜（纯 HTTP API）"""
 
 import logging
 from typing import Any
@@ -15,7 +15,7 @@ HEADERS = {
 
 
 def fetch_north_flow() -> dict[str, Any]:
-    """鑾峰彇鍖楀悜璧勯噾褰撴棩鍑€娴佸悜锛堜笢鏂硅储瀵岋級"""
+    """获取北向资金当日净流向（东方财富）"""
     try:
         url = (
             "https://push2.eastmoney.com/api/qt/kamt.kline/get?"
@@ -32,12 +32,12 @@ def fetch_north_flow() -> dict[str, Any]:
                 }
         return {}
     except Exception as e:
-        logger.error(f"鍖楀悜璧勯噾鑾峰彇澶辫触: {e}")
+        logger.error(f"北向资金获取失败: {e}")
         return {}
 
 
 def fetch_dragon_tiger() -> list[dict[str, Any]]:
-    """鑾峰彇浠婃棩榫欒檸姒滐紙涓滄柟璐㈠瘜锛?""
+    """获取今日龙虎榜（东方财富）"""
     try:
         url = (
             "https://push2.eastmoney.com/api/qt/clist/get?"
@@ -55,8 +55,8 @@ def fetch_dragon_tiger() -> list[dict[str, Any]]:
                     "change_pct": float(item.get("f3", 0) or 0),
                     "reason": str(item.get("f152", "")),
                 })
-        logger.info(f"榫欒檸姒滆幏鍙?{len(result)} 鏉?)
+        logger.info(f"龙虎榜获取 {len(result)} 条")
         return result
     except Exception as e:
-        logger.error(f"榫欒檸姒滆幏鍙栧け璐? {e}")
+        logger.error(f"龙虎榜获取失败: {e}")
         return []
