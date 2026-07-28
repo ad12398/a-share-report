@@ -94,31 +94,27 @@
 
 </div>
 
-{% if chart_data %}
+{% if chart_data and chart_data != '{}' %}
 <script>
 (function() {
   var chartDom = document.getElementById('sector-chart');
   var chart = echarts.init(chartDom, 'dark');
   var chartData = {{ chart_data | safe }};
-  // 默认展示空图表占位
+  var sectors = chartData.sectors || [];
+  var names = sectors.map(function(s) { return s.name; });
+  var values = sectors.map(function(s) { return s.change_pct; });
   var option = {
-    title: { text: '板块表现', left: 'center', textStyle: { color: '#8b949e', fontSize: 13 } },
-    tooltip: {},
-    xAxis: { type: 'category', data: [] },
-    yAxis: { type: 'value' },
-    series: [{ type: 'bar', data: [] }]
-  };
-  if (chartData && chartData.sectors && chartData.sectors.length > 0) {
-    var names = chartData.sectors.map(function(s) { return s.name; });
-    var values = chartData.sectors.map(function(s) { return s.change_pct; });
-    option.xAxis.data = names;
-    option.series = [{
+    title: { text: '行业板块涨跌幅 TOP 20', subtext: '单位：%  绿色=上涨  红色=下跌', left: 'center', textStyle: { color: '#e6edf3', fontSize: 15 }, subtextStyle: { color: '#8b949e', fontSize: 12 } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + '<br/>涨跌幅：<b>' + p[0].value.toFixed(2) + '%</b>'; } },
+    grid: { left: '15%', right: '10%', top: 60, bottom: 10 },
+    xAxis: { type: 'value', name: '涨跌幅 (%)', axisLabel: { formatter: '{value}%' }, splitLine: { lineStyle: { color: '#30363d' } } },
+    yAxis: { type: 'category', data: names.reverse(), axisLabel: { color: '#8b949e', fontSize: 11, width: 80, overflow: 'truncate' }, inverse: true },
+    series: [{
       type: 'bar',
-      data: values.map(function(v) { return { value: v, itemStyle: { color: v >= 0 ? '#3fb950' : '#f85149' } }; }),
-      label: { show: true, position: 'top', formatter: function(p) { return p.value.toFixed(1) + '%'; } }
-    }];
-    option.dataZoom = [{ type: 'slider', start: 0, end: 50 }];
-  }
+      data: values.reverse().map(function(v) { return { value: v, itemStyle: { color: v >= 0 ? '#3fb950' : '#f85149' } }; }),
+      label: { show: true, position: 'right', color: '#e6edf3', fontSize: 11, formatter: function(p) { return p.value.toFixed(1) + '%'; } }
+    }]
+  };
   chart.setOption(option);
   window.addEventListener('resize', function() { chart.resize(); });
 })();
