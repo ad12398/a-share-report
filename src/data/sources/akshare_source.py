@@ -62,11 +62,15 @@ def fetch_index_quotes() -> dict[str, Any]:
                     sid = m.group(1)
                     fields = m.group(2).split("~")
                     if sid in code_map and len(fields) >= 6:
+                        price = float(fields[3] or 0)
+                        prev_close = float(fields[4] or 0)
+                        change_pct = round((price - prev_close) / prev_close * 100, 2) if prev_close else 0
+                        change_amt = round(price - prev_close, 2)
                         result[code_map[sid]] = {
                             "name": name_map[code_map[sid]],
-                            "price": float(fields[3] or 0),
-                            "change_pct": float(fields[5] or 0),
-                            "change_amt": float(fields[4] or 0),
+                            "price": price,
+                            "change_pct": change_pct,
+                            "change_amt": change_amt,
                             "volume": float(fields[6] or 0) if len(fields) > 6 else 0,
                             "amount": float(fields[7] or 0) if len(fields) > 7 else 0,
                         }
@@ -99,11 +103,15 @@ def _sina_index_fallback() -> dict[str, Any]:
                 sid, vals = m.group(1), m.group(2).split(",")
                 if sid in name_map and len(vals) >= 4:
                     code, cname = name_map[sid]
+                    # Sina 格式: [0]名字 [1]今开 [2]昨收 [3]当前价
+                    price = float(vals[3] or 0) if len(vals) > 3 else 0
+                    prev_close = float(vals[2] or 0) if len(vals) > 2 else 0
+                    change_pct = round((price - prev_close) / prev_close * 100, 2) if prev_close else 0
                     result[code] = {
                         "name": cname,
-                        "price": float(vals[1] or 0),
-                        "change_pct": float(vals[3] or 0),
-                        "change_amt": float(vals[2] or 0),
+                        "price": price,
+                        "change_pct": change_pct,
+                        "change_amt": round(price - prev_close, 2),
                         "volume": 0, "amount": 0,
                     }
         logger.info(f"新浪: 获取指数行情 {len(result)} 条")
@@ -224,35 +232,18 @@ def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
 
 def fetch_market_overview() -> dict[str, Any]:
     """
-    轻量采样统计市场涨跌比。
-    取涨幅前 300 + 跌幅前 300，从中统计涨平跌分布。足够准确且不会超时。
+    按股票代码顺序采样统计市场涨跌比。
+    用 sort=symbol 排序可获得代表性样本，而非全是涨/跌的极端值。
     """
     try:
         total = up = down = flat = 0
         base_url = (
             "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
-            "Market_Center.getHQNodeData?node=hs_a&symbol=&_s_r_a=auto&num=100"
+            "Market_Center.getHQNodeData?node=hs_a&symbol=&_s_r_a=auto&num=100&sort=symbol"
         )
 
-        # 取涨幅端（asc=0: 涨幅从大到小）
-        for page in range(1, 5):  # 4页 × 100 = 400只
-            url = f"{base_url}&sort=changepercent&asc=0&page={page}"
-            resp = _safe_get(url, extra_headers={"Referer": "https://vip.stock.finance.sina.com.cn"}, max_retries=1)
-            if not resp:
-                break
-            batch = resp.json()
-            if not isinstance(batch, list) or len(batch) == 0:
-                break
-            for item in batch:
-                pct = float(item.get("changepercent", 0) or 0)
-                total += 1
-                if pct > 0: up += 1
-                elif pct < 0: down += 1
-                else: flat += 1
-
-        # 取跌幅端（asc=1: 跌幅从大到小）
-        for page in range(1, 5):
-            url = f"{base_url}&sort=changepercent&asc=1&page={page}"
+        for page in range(1, 11):  # 10页 × 100 = 1000只采样
+            url = f"{base_url}&page={page}"
             resp = _safe_get(url, extra_headers={"Referer": "https://vip.stock.finance.sina.com.cn"}, max_retries=1)
             if not resp:
                 break
