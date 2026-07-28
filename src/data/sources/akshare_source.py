@@ -93,7 +93,7 @@ def fetch_sector_performance() -> list[dict[str, Any]]:
     try:
         url = (
             "https://push2.eastmoney.com/api/qt/clist/get?"
-            "pn=1&pz=30&po=1&np=1&fs=m:90+t:2&fid=f3"
+            "pn=1&pz=30&po=1&np=1&fs=m:90+t:3&fid=f3"
             "&fields=f2,f3,f4,f12,f14,f128"
         )
         resp = requests.get(url, headers=HEADERS, timeout=15)
