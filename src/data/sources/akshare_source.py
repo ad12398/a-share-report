@@ -1,166 +1,200 @@
-"""akshare 数据源 —— 主力数据采集（列名自适应版）"""
+"""鏁版嵁婧?鈥斺€?鐩存帴 HTTP 璇锋眰涓滄柟璐㈠瘜/鏂版氮 API锛屼笉渚濊禆 akshare 灏佽"""
 
+import json
 import logging
+import re
 from typing import Any
 
-import pandas as pd
+import requests
 
 logger = logging.getLogger("a-share-report")
 
-
-def _safe_col(row: pd.Series, *names: str) -> float:
-    """安全获取列值：按优先级尝试多个列名，返回 float"""
-    for name in names:
-        val = row.get(name)
-        if val is not None and pd.notna(val):
-            return float(val)
-    return 0.0
-
-
-def _safe_str(row: pd.Series, *names: str) -> str:
-    """安全获取字符串列值"""
-    for name in names:
-        val = row.get(name)
-        if val is not None and pd.notna(val):
-            return str(val)
-    return ""
-
-
-def _debug_columns(df: pd.DataFrame, func_name: str):
-    """打印列名用于调试"""
-    logger.warning(f"[{func_name}] 实际列名: {list(df.columns)}")
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Referer": "https://quote.eastmoney.com/",
+}
 
 
 def fetch_index_quotes() -> dict[str, Any]:
-    """获取主要指数实时行情"""
+    """鑾峰彇涓昏鎸囨暟瀹炴椂琛屾儏锛堜笢鏂硅储瀵岋級"""
     try:
-        import akshare as ak
-        df = ak.stock_zh_index_spot_em()
-        targets = {
-            "000001": "上证指数", "399001": "深证成指", "399006": "创业板指",
-            "000688": "科创50", "000300": "沪深300", "000905": "中证500",
-        }
-        # 修正深证成指代码
-        if "399001" in targets:
-            pass
+        # 涓滄柟璐㈠瘜鎸囨暟琛屾儏 API
+        url = (
+            "https://push2.eastmoney.com/api/qt/ulist.np/get?"
+            "fltt=2&secids=1.000001,0.399001,0.399006,1.000688,1.000300,1.000905"
+            "&fields=f2,f3,f4,f5,f6,f12,f14"
+        )
+        resp = requests.get(url, headers=HEADERS, timeout=15)
+        data = resp.json()
+        if not data.get("data") or not data["data"].get("diff"):
+            logger.warning("涓滄柟璐㈠瘜鎸囨暟 API 杩斿洖绌烘暟鎹?)
+            return _fallback_sina_index()
+
         result = {}
-        for _, row in df.iterrows():
-            code = _safe_str(row, "代码", "code", "symbol")
-            if code in targets:
+        name_map = {
+            "000001": "涓婅瘉鎸囨暟", "399001": "娣辫瘉鎴愭寚", "399006": "鍒涗笟鏉挎寚",
+            "000688": "绉戝垱50", "000300": "娌繁300", "000905": "涓瘉500",
+        }
+        for item in data["data"]["diff"]:
+            code = str(item.get("f12", ""))
+            if code in name_map:
                 result[code] = {
-                    "name": targets[code],
-                    "price": _safe_col(row, "最新价", "最新", "close", "price"),
-                    "change_pct": _safe_col(row, "涨跌幅", "涨跌幅(%)", "pct_chg", "pct_change"),
-                    "change_amt": _safe_col(row, "涨跌额", "涨跌额(元)", "change", "chg"),
-                    "volume": _safe_col(row, "成交量", "成交量(手)", "volume", "vol"),
-                    "amount": _safe_col(row, "成交额", "成交额(元)", "amount", "amt"),
+                    "name": name_map[code],
+                    "price": float(item.get("f2", 0) or 0),
+                    "change_pct": float(item.get("f3", 0) or 0),
+                    "change_amt": float(item.get("f4", 0) or 0),
+                    "volume": float(item.get("f5", 0) or 0),
+                    "amount": float(item.get("f6", 0) or 0),
                 }
-        if not result:
-            _debug_columns(df, "stock_zh_index_spot_em")
-        logger.info(f"akshare: 获取指数行情 {len(result)} 条")
+        logger.info(f"涓滆储: 鑾峰彇鎸囨暟琛屾儏 {len(result)} 鏉?)
         return result
     except Exception as e:
-        logger.error(f"akshare 指数行情获取失败: {e}")
+        logger.error(f"涓滆储鎸囨暟琛屾儏鑾峰彇澶辫触: {e}")
+        return _fallback_sina_index()
+
+
+def _fallback_sina_index() -> dict[str, Any]:
+    """澶囩敤锛氭柊娴寚鏁拌鎯?""
+    try:
+        codes = "sh000001,sz399001,sz399006,sh000688,sh000300,sh000905"
+        url = f"http://hq.sinajs.cn/list={codes}"
+        resp = requests.get(url, headers={"Referer": "https://finance.sina.com.cn"}, timeout=15)
+        resp.encoding = "gbk"
+        result = {}
+        name_map = {
+            "sh000001": ("000001", "涓婅瘉鎸囨暟"), "sz399001": ("399001", "娣辫瘉鎴愭寚"),
+            "sz399006": ("399006", "鍒涗笟鏉挎寚"), "sh000688": ("000688", "绉戝垱50"),
+            "sh000300": ("000300", "娌繁300"), "sh000905": ("000905", "涓瘉500"),
+        }
+        for line in resp.text.strip().split("\n"):
+            m = re.search(r'hq_str_(\w+)="(.+)"', line)
+            if m:
+                sid, vals = m.group(1), m.group(2).split(",")
+                if sid in name_map and len(vals) >= 4:
+                    code, cname = name_map[sid]
+                    result[code] = {
+                        "name": cname,
+                        "price": float(vals[1] or 0),
+                        "change_pct": float(vals[3] or 0),
+                        "change_amt": float(vals[2] or 0),
+                        "volume": float(vals[8] or 0) if len(vals) > 8 else 0,
+                        "amount": float(vals[9] or 0) if len(vals) > 9 else 0,
+                    }
+        logger.info(f"鏂版氮澶囩敤: 鑾峰彇鎸囨暟琛屾儏 {len(result)} 鏉?)
+        return result
+    except Exception as e:
+        logger.error(f"鏂版氮澶囩敤涔熷け璐ヤ簡: {e}")
         return {}
 
 
 def fetch_sector_performance() -> list[dict[str, Any]]:
-    """获取行业板块涨跌榜"""
+    """鑾峰彇琛屼笟鏉垮潡娑ㄨ穼姒滐紙涓滄柟璐㈠瘜锛?""
     try:
-        import akshare as ak
-        df = ak.stock_board_industry_name_em()
+        url = (
+            "https://push2.eastmoney.com/api/qt/clist/get?"
+            "pn=1&pz=30&po=1&np=1&fs=m:90+t:2&fid=f3"
+            "&fields=f2,f3,f4,f12,f14,f128"
+        )
+        resp = requests.get(url, headers=HEADERS, timeout=15)
+        data = resp.json()
         sectors = []
-        for _, row in df.head(30).iterrows():
-            sectors.append({
-                "name": _safe_str(row, "板块名称", "板块", "name", "board_name", "industry"),
-                "change_pct": _safe_col(row, "涨跌幅", "涨跌幅(%)", "最新价", "pct_chg", "change_pct"),
-                "leader": _safe_str(row, "领涨股票", "领涨股", "leading", "leader"),
-            })
-        if not sectors:
-            _debug_columns(df, "stock_board_industry_name_em")
-        logger.info(f"akshare: 获取行业板块 {len(sectors)} 条")
+        if data.get("data") and data["data"].get("diff"):
+            for item in data["data"]["diff"]:
+                sectors.append({
+                    "name": str(item.get("f14", "")),
+                    "change_pct": float(item.get("f3", 0) or 0),
+                    "leader": str(item.get("f128", "")),
+                })
+        logger.info(f"涓滆储: 鑾峰彇琛屼笟鏉垮潡 {len(sectors)} 鏉?)
         return sectors
     except Exception as e:
-        logger.error(f"akshare 板块数据获取失败: {e}")
+        logger.error(f"鏉垮潡鏁版嵁鑾峰彇澶辫触: {e}")
         return []
 
 
 def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
-    """获取涨幅榜和跌幅榜前 20"""
+    """鑾峰彇娑ㄥ箙姒滃拰璺屽箙姒滃墠 20锛堜笢鏂硅储瀵岋級"""
+    result = {"gainers": [], "losers": []}
     try:
-        import akshare as ak
-        df = ak.stock_zh_a_spot_em()
+        # 娑ㄥ箙姒?        url_up = (
+            "https://push2.eastmoney.com/api/qt/clist/get?"
+            "pn=1&pz=20&po=1&np=1&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23&fid=f3"
+            "&fields=f2,f3,f12,f14"
+        )
+        resp = requests.get(url_up, headers=HEADERS, timeout=15)
+        data = resp.json()
+        if data.get("data") and data["data"].get("diff"):
+            for item in data["data"]["diff"]:
+                result["gainers"].append({
+                    "code": str(item.get("f12", "")),
+                    "name": str(item.get("f14", "")),
+                    "price": float(item.get("f2", 0) or 0),
+                    "change_pct": float(item.get("f3", 0) or 0),
+                })
 
-        # 灵活找涨跌幅列
-        pct_col = None
-        for candidate in ["涨跌幅", "涨跌幅(%)", "pct_chg", "pct_change", "change_pct"]:
-            if candidate in df.columns:
-                pct_col = candidate
-                break
-        if pct_col is None:
-            _debug_columns(df, "stock_zh_a_spot_em")
-            raise KeyError("找不到涨跌幅列")
+        # 璺屽箙姒?        url_down = (
+            "https://push2.eastmoney.com/api/qt/clist/get?"
+            "pn=1&pz=20&po=0&np=1&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23&fid=f3"
+            "&fields=f2,f3,f12,f14"
+        )
+        resp = requests.get(url_down, headers=HEADERS, timeout=15)
+        data = resp.json()
+        if data.get("data") and data["data"].get("diff"):
+            for item in data["data"]["diff"]:
+                result["losers"].append({
+                    "code": str(item.get("f12", "")),
+                    "name": str(item.get("f14", "")),
+                    "price": float(item.get("f2", 0) or 0),
+                    "change_pct": float(item.get("f3", 0) or 0),
+                })
 
-        df_sorted = df.sort_values(pct_col, ascending=False)
-        gainers = []
-        losers = []
-        for _, row in df_sorted.head(20).iterrows():
-            gainers.append({
-                "code": _safe_str(row, "代码", "code", "symbol"),
-                "name": _safe_str(row, "名称", "name", "stock_name"),
-                "price": _safe_col(row, "最新价", "最新", "close", "price"),
-                "change_pct": float(row.get(pct_col, 0) or 0),
-            })
-        for _, row in df_sorted.tail(20).iterrows():
-            losers.append({
-                "code": _safe_str(row, "代码", "code", "symbol"),
-                "name": _safe_str(row, "名称", "name", "stock_name"),
-                "price": _safe_col(row, "最新价", "最新", "close", "price"),
-                "change_pct": float(row.get(pct_col, 0) or 0),
-            })
-        losers.reverse()
-        logger.info(f"akshare: 涨跌幅榜各 {len(gainers)}/{len(losers)} 条")
-        return {"gainers": gainers, "losers": losers}
+        logger.info(f"涓滆储: 娑ㄨ穼骞呮鍚?{len(result['gainers'])}/{len(result['losers'])} 鏉?)
+        return result
     except Exception as e:
-        logger.error(f"akshare 涨跌榜获取失败: {e}")
-        return {"gainers": [], "losers": []}
+        logger.error(f"娑ㄨ穼姒滆幏鍙栧け璐? {e}")
+        return result
 
 
 def fetch_market_overview() -> dict[str, Any]:
-    """获取全市场概况（上涨/下跌/平盘家数）"""
+    """鑾峰彇鍏ㄥ競鍦烘鍐碉紙涓滄柟璐㈠瘜锛?""
     try:
-        import akshare as ak
-        df = ak.stock_zh_a_spot_em()
-
-        # 灵活找涨跌幅列和成交额列
-        pct_col = None
-        for candidate in ["涨跌幅", "涨跌幅(%)", "pct_chg", "pct_change", "change_pct"]:
-            if candidate in df.columns:
-                pct_col = candidate
-                break
-        if pct_col is None:
-            _debug_columns(df, "stock_zh_a_spot_em")
-            raise KeyError("找不到涨跌幅列")
-
-        amt_col = None
-        for candidate in ["成交额", "成交额(元)", "amount", "amt", "turnover"]:
-            if candidate in df.columns:
-                amt_col = candidate
-                break
-
-        up_count = int((df[pct_col] > 0).sum())
-        down_count = int((df[pct_col] < 0).sum())
-        flat_count = int((df[pct_col] == 0).sum())
-        total_amount = float(df[amt_col].sum()) if amt_col else 0
+        url = (
+            "https://push2.eastmoney.com/api/qt/clist/get?"
+            "pn=1&pz=1&np=1&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23"
+            "&fid=f3&fields=f2,f3,f4,f5,f6,f12,f14"
+        )
+        # 鑾峰彇鍏ㄩ噺鏁版嵁鐨勬定璺岀粺璁?        url_stat = (
+            "https://push2.eastmoney.com/api/qt/clist/get?"
+            "pn=1&pz=5000&np=1&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23"
+            "&fid=f3&fields=f3,f6"
+        )
+        resp = requests.get(url_stat, headers=HEADERS, timeout=20)
+        data = resp.json()
+        total = 0
+        up = down = flat = 0
+        total_amount = 0
+        if data.get("data") and data["data"].get("diff"):
+            items = data["data"]["diff"]
+            total = len(items)
+            for item in items:
+                pct = float(item.get("f3", 0) or 0)
+                if pct > 0:
+                    up += 1
+                elif pct < 0:
+                    down += 1
+                else:
+                    flat += 1
+                total_amount += float(item.get("f6", 0) or 0)
 
         return {
-            "total": len(df),
-            "up": up_count,
-            "down": down_count,
-            "flat": flat_count,
+            "total": total,
+            "up": up,
+            "down": down,
+            "flat": flat,
             "total_amount": total_amount,
-            "up_ratio": round(up_count / len(df) * 100, 1) if len(df) > 0 else 0,
+            "up_ratio": round(up / total * 100, 1) if total > 0 else 0,
         }
     except Exception as e:
-        logger.error(f"akshare 市场概况获取失败: {e}")
-        return {}
+        logger.error(f"甯傚満姒傚喌鑾峰彇澶辫触: {e}")
+        return {"total": 0, "up": 0, "down": 0, "flat": 0, "total_amount": 0, "up_ratio": 0}
