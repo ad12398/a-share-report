@@ -26,6 +26,9 @@ def _safe_get(url: str, timeout: int = 20, max_retries: int = 3, extra_headers: 
             if resp.status_code == 200 and resp.text and resp.text.strip():
                 return resp
             logger.warning(f"API 返回异常 (attempt {attempt+1}): status={resp.status_code}")
+            # 502/503 多等一会
+            if resp.status_code in (502, 503):
+                time.sleep(5)
         except Exception as e:
             logger.warning(f"API 请求失败 (attempt {attempt+1}): {e}")
         if attempt < max_retries - 1:
