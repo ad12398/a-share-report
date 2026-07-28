@@ -1,6 +1,7 @@
 """鏁版嵁閲囬泦涓婚€昏緫 鈥斺€?澶氭簮鑱氬悎 + 浜ゅ弶鏍￠獙锛堢函 HTTP锛屾棤 akshare 渚濊禆锛?""
 
 import logging
+import re
 from typing import Any
 
 import requests
@@ -73,7 +74,7 @@ def _fetch_overnight_global() -> dict[str, Any]:
         url = "http://hq.sinajs.cn/list=gb_ixic"
         resp = requests.get(url, headers={"Referer": "https://finance.sina.com.cn"}, timeout=15)
         resp.encoding = "gbk"
-        m = __import__("re").search(r'="(.+)"', resp.text)
+        m = re.search(r'="(.+)"', resp.text)
         if m:
             vals = m.group(1).split(",")
             if len(vals) >= 2:
@@ -90,7 +91,7 @@ def _fetch_overnight_global() -> dict[str, Any]:
         url = "http://hq.sinajs.cn/list=nf_A50"
         resp = requests.get(url, headers={"Referer": "https://finance.sina.com.cn"}, timeout=15)
         resp.encoding = "gbk"
-        m = __import__("re").search(r'="(.+)"', resp.text)
+        m = re.search(r'="(.+)"', resp.text)
         if m:
             vals = m.group(1).split(",")
             if len(vals) >= 2:
