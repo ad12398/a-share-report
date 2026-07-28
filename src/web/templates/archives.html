@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>报告归档 — A股量化报告</title>
+<link rel="stylesheet" href="/a-share-report/assets/css/dashboard.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="brand">📊 A-Share Quant<span>量化分析报告</span></div>
+  <div class="nav-links">
+    <a href="/a-share-report/index.html">首页</a>
+    <a href="/a-share-report/archives.html" class="active">归档</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+    <h1 style="font-size:22px;">📁 报告归档</h1>
+    <span style="color:var(--text-muted);font-size:14px;">共 {{ total_reports }} 份报告</span>
+  </div>
+
+  {% if by_month %}
+  {% for month, reports in by_month.items() | sort(reverse=true) %}
+  <div class="archive-month">
+    <h3>{{ month }}</h3>
+    {% for r in reports %}
+    <a href="/a-share-report/{{ r.url }}" class="report-link">
+      <span class="slot-tag">{{ r.time }}</span>
+      <span class="date-tag">{{ r.date }}</span>
+      <span class="title-tag">{{ r.title }}</span>
+      {% if r.keywords %}
+      <span style="color:var(--text-muted);font-size:11px;">
+        {% for kw in r.keywords[:3] %}{{ kw }} {% endfor %}
+      </span>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="no-results">
+    <p style="font-size:48px;margin-bottom:16px;">📭</p>
+    <p>暂无归档报告。</p>
+  </div>
+  {% endif %}
+
+</div>
+
+</body>
+</html>

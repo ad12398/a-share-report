@@ -1,0 +1,213 @@
+/* === A股量化报告 — 暗色仪表盘主题 === */
+
+:root {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-card: #1c2333;
+  --border: #30363d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --accent-green: #3fb950;
+  --accent-red: #f85149;
+  --accent-blue: #58a6ff;
+  --accent-orange: #d29922;
+  --accent-purple: #bc8cff;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* === 导航栏 === */
+.navbar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.navbar .brand { font-size: 18px; font-weight: 700; color: var(--accent-blue); }
+.navbar .brand span { color: var(--text-secondary); font-weight: 400; font-size: 14px; margin-left: 8px; }
+.navbar .nav-links { display: flex; gap: 20px; }
+.navbar .nav-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+.navbar .nav-links a:hover, .navbar .nav-links a.active { color: var(--text-primary); }
+
+/* === 搜索栏 === */
+.search-bar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  display: flex;
+  gap: 12px;
+}
+.search-bar input {
+  flex: 1;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 8px 16px;
+  font-size: 14px;
+  outline: none;
+  max-width: 400px;
+}
+.search-bar input:focus { border-color: var(--accent-blue); }
+.search-bar input::placeholder { color: var(--text-muted); }
+.search-bar .results-info { color: var(--text-muted); font-size: 12px; align-self: center; }
+
+/* === 容器 === */
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+/* === KPI 卡片行 === */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.kpi-card .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+.kpi-card .value { font-size: 24px; font-weight: 700; }
+.kpi-card .change { font-size: 13px; margin-top: 2px; }
+.kpi-card .up { color: var(--accent-green); }
+.kpi-card .down { color: var(--accent-red); }
+
+/* === 报告内容区 === */
+.report-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 32px;
+  margin-bottom: 24px;
+}
+.report-section h1 { font-size: 24px; margin-bottom: 8px; }
+.report-section .meta { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.report-section .content { font-size: 15px; line-height: 1.8; }
+.report-section .content h3 {
+  color: var(--accent-blue);
+  margin: 24px 0 12px;
+  font-size: 17px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.report-section .content strong { color: var(--accent-orange); }
+.report-section .content ul { padding-left: 20px; margin: 8px 0; }
+.report-section .content li { margin-bottom: 6px; }
+
+/* === 图表区 === */
+.chart-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.chart-container .chart-title {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+.chart-box { width: 100%; height: 400px; }
+
+/* === 数据表格 === */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.data-table th {
+  text-align: left;
+  padding: 8px 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.data-table tr:hover td { background: rgba(88, 166, 255, 0.04); }
+
+/* === 免责声明 === */
+.disclaimer {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 24px;
+  margin: 24px 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* === 归档列表 === */
+.archive-month { margin-bottom: 24px; }
+.archive-month h3 {
+  color: var(--accent-blue);
+  font-size: 16px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.report-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: background 0.15s;
+}
+.report-link:hover { background: var(--bg-card); }
+.report-link .slot-tag {
+  background: var(--accent-blue);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  min-width: 64px;
+  text-align: center;
+}
+.report-link .date-tag { color: var(--text-muted); font-size: 12px; min-width: 100px; }
+.report-link .title-tag { flex: 1; }
+
+/* === 搜索结果 === */
+.search-results { display: none; }
+.search-results.active { display: block; }
+.no-results {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-muted);
+}
+
+/* === 响应式 === */
+@media (max-width: 768px) {
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .report-section { padding: 16px; }
+  .chart-box { height: 280px; }
+}
