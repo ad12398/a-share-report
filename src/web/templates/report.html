@@ -41,16 +41,16 @@
     {% endfor %}
   </div>
 
-  <!-- 行业板块图表 -->
+  <!-- 涨幅榜图表（主力，数据稳定） -->
+  <div class="chart-container">
+    <div class="chart-title">🔥 今日涨幅榜 TOP 10</div>
+    <div class="chart-box" id="gainers-chart" style="height:380px;"></div>
+  </div>
+
+  <!-- 行业板块图表（备选，东财/新浪都可能抽风） -->
   <div class="chart-container" id="sector-container">
     <div class="chart-title">📈 行业板块涨跌幅 TOP 20</div>
     <div class="chart-box" id="sector-chart"></div>
-  </div>
-
-  <!-- 涨幅榜图表 -->
-  <div class="chart-container" id="gainers-container">
-    <div class="chart-title">🔥 今日涨幅榜 TOP 10</div>
-    <div class="chart-box" id="gainers-chart"></div>
   </div>
 
   <!-- 分析报告 -->
