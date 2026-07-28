@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026-07-28 午盘总结 - A股量化报告</title>
+<link rel="stylesheet" href="/a-share-report/assets/css/dashboard.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="brand">📊 A-Share Quant<span>2026-07-28 午盘总结</span></div>
+  <div class="nav-links">
+    <a href="/a-share-report/index.html">首页</a>
+    <a href="/a-share-report/archives.html">归档</a>
+    <a href="#" class="active">午盘总结</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- 导航 -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <a href="/a-share-report/index.html" style="color:var(--accent-blue);text-decoration:none;">← 返回首页</a>
+    <span style="color:var(--text-muted);font-size:13px;">报告生成时间: 2026-07-28 07:26</span>
+  </div>
+
+  <!-- KPI 指标卡片 -->
+  <div class="kpi-row">
+    
+  </div>
+
+  <!-- 图表 -->
+  
+  <div class="chart-container">
+    <div class="chart-title">📈 板块热力图</div>
+    <div class="chart-box" id="sector-chart"></div>
+  </div>
+  
+
+  <!-- 分析报告 -->
+  <div class="report-section">
+    <h1>午盘总结 — 量化分析报告</h1>
+    <div class="meta">生成时间: 2026-07-28 07:26 | 模型: DeepSeek</div>
+    <div class="content">
+      &lt;p&gt;由于您提供的行情数据中关键字段（如指数、板块、资金流向等）均为空值，本报告将基于数据缺失状态下的通用分析框架进行推演。实际交易中，请以实时行情为准。&lt;/p&gt;<br><br>&lt;h3&gt;市场概览&lt;/h3&gt;<br>&lt;p&gt;上午盘面呈现典型的&lt;strong&gt;数据真空期&lt;/strong&gt;特征，由于核心指标缺失，市场可能处于无序波动或等待方向选择的状态。从历史模式看，当关键数据（如北向资金、涨跌比）无法获取时，通常意味着市场情绪趋于谨慎，资金观望情绪浓厚。&lt;/p&gt;<br><br>&lt;h3&gt;核心指标&lt;/h3&gt;<br>&lt;ul&gt;<br>&lt;li&gt;&lt;strong&gt;涨跌比&lt;/strong&gt;：数据缺失。若上午盘面呈现普涨或普跌，需结合成交额判断是否为有效突破；若涨跌比接近1:1，则市场处于均衡状态。&lt;/li&gt;<br>&lt;li&gt;&lt;strong&gt;成交额&lt;/strong&gt;：数据缺失。若上午成交额较前日同期萎缩，说明市场缺乏增量资金，反弹或下跌的持续性存疑；若放量，则需关注是恐慌性抛售还是主动买盘。&lt;/li&gt;<br>&lt;li&gt;&lt;strong&gt;北向资金&lt;/strong&gt;：数据缺失。北向资金半日流向是A股的重要风向标。若净流入，通常对市场情绪有提振作用；若净流出，尤其是单边流出超30亿元，需警惕外资对短期风险的定价。&lt;/li&gt;<br>&lt;/ul&gt;<br><br>&lt;h3&gt;板块热点&lt;/h3&gt;<br>&lt;p&gt;由于板块数据缺失，无法直接判断领涨/领跌方向。从量化视角看，若上午出现&lt;strong&gt;单一板块成交额占比超过20%&lt;/strong&gt;（如AI、新能源等），则需警惕板块过热后的回调风险；若板块轮动速度加快（如每半小时切换一个领涨板块），则市场缺乏主线，下午容易出现冲高回落。&lt;/p&gt;<br><br>&lt;h3&gt;技术信号&lt;/h3&gt;<br>&lt;p&gt;关键指数技术指标数据缺失。以沪深300为例，若上午收盘时&lt;strong&gt;MACD红柱缩短&lt;/strong&gt;且&lt;strong&gt;RSI处于70以上超买区&lt;/strong&gt;，则下午有回调压力；若&lt;strong&gt;KDJ在20以下形成金叉&lt;/strong&gt;，则可能触发技术性反弹。当前数据无法给出明确信号。&lt;/p&gt;<br><br>&lt;h3&gt;量化视角&lt;/h3&gt;<br>&lt;ul&gt;<br>&lt;li&gt;&lt;strong&gt;资金流向&lt;/strong&gt;：数据缺失。若上午主力资金净流出超100亿元，且散户资金净流入，则市场呈现“机构卖、散户买”的背离结构，下午易出现跳水。&lt;/li&gt;<br>&lt;li&gt;&lt;strong&gt;量价关系&lt;/strong&gt;：若上午指数上涨但成交额萎缩（量价背离），则反弹不可持续；若指数下跌但成交额放大（放量下跌），则恐慌盘涌出，短期底部可能临近。&lt;/li&gt;<br>&lt;li&gt;&lt;strong&gt;市场宽度&lt;/strong&gt;：数据缺失。若上涨家数占比低于30%，且跌幅超过5%的个股数量激增，则市场进入冰点区域，下午存在修复预期。&lt;/li&gt;<br>&lt;/ul&gt;<br><br>&lt;h3&gt;风险提示&lt;/h3&gt;<br>&lt;ul&gt;<br>&lt;li&gt;&lt;strong&gt;数据缺失风险&lt;/strong&gt;：当前报告基于空数据生成，所有结论均为假设性推演，实际交易中需以实时行情为准。&lt;/li&gt;<br>&lt;li&gt;&lt;strong&gt;流动性风险&lt;/strong&gt;：若上午成交额低于5000亿元（沪市+深市），则市场流动性不足，大单交易容易引发价格剧烈波动。&lt;/li&gt;<br>&lt;li&gt;&lt;strong&gt;尾盘异动风险&lt;/strong&gt;：历史数据显示，当上午盘面缺乏明确方向时，下午2:30后容易出现资金集中博弈，导致指数快速拉升或跳水。&lt;/li&gt;<br>&lt;/ul&gt;<br><br>&lt;p&gt;⚠️ 免责声明：本报告由 AI 自动生成，仅供参考，不构成任何投资建议。投资有风险，入市需谨慎。报告中的数据来源于公开接口，不对其准确性做任何保证。&lt;/p&gt;
+    </div>
+  </div>
+
+  <!-- 涨跌榜 -->
+  
+
+  <!-- 免责声明 -->
+  <div class="disclaimer">
+    ⚠️ 免责声明：本报告由 AI 自动生成，仅供参考，不构成任何投资建议。投资有风险，入市需谨慎。报告中的数据来源于公开接口，不对其准确性做任何保证。
+  </div>
+
+</div>
+
+
+<script>
+(function() {
+  var chartDom = document.getElementById('sector-chart');
+  var chart = echarts.init(chartDom, 'dark');
+  var chartData = {};
+  // 默认展示空图表占位
+  var option = {
+    title: { text: '板块表现', left: 'center', textStyle: { color: '#8b949e', fontSize: 13 } },
+    tooltip: {},
+    xAxis: { type: 'category', data: [] },
+    yAxis: { type: 'value' },
+    series: [{ type: 'bar', data: [] }]
+  };
+  if (chartData && chartData.sectors && chartData.sectors.length > 0) {
+    var names = chartData.sectors.map(function(s) { return s.name; });
+    var values = chartData.sectors.map(function(s) { return s.change_pct; });
+    option.xAxis.data = names;
+    option.series = [{
+      type: 'bar',
+      data: values.map(function(v) { return { value: v, itemStyle: { color: v >= 0 ? '#3fb950' : '#f85149' } }; }),
+      label: { show: true, position: 'top', formatter: function(p) { return p.value.toFixed(1) + '%'; } }
+    }];
+    option.dataZoom = [{ type: 'slider', start: 0, end: 50 }];
+  }
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+
+</body>
+</html>
