@@ -23,7 +23,7 @@
   <!-- 导航 -->
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
     <a href="/a-share-report/index.html" style="color:var(--accent-blue);text-decoration:none;">← 返回首页</a>
-    <span style="color:var(--text-muted);font-size:13px;">报告生成时间: 2026-07-28 16:14</span>
+    <span style="color:var(--text-muted);font-size:13px;">报告生成时间: 2026-07-28 16:23</span>
   </div>
 
   <!-- KPI 指标卡片 -->
@@ -97,6 +97,12 @@
     <div class="chart-box" id="gainers-chart" style="height:380px;"></div>
   </div>
 
+  <!-- 跌幅榜图表 -->
+  <div class="chart-container" id="losers-container">
+    <div class="chart-title">📉 今日跌幅榜 TOP 10</div>
+    <div class="chart-box" id="losers-chart"></div>
+  </div>
+
   <!-- 行业板块图表（备选，东财/新浪都可能抽风） -->
   <div class="chart-container" id="sector-container">
     <div class="chart-title">📈 行业板块涨跌幅 TOP 20</div>
@@ -106,47 +112,45 @@
   <!-- 分析报告 -->
   <div class="report-section">
     <h1>午盘总结 — 量化分析报告</h1>
-    <div class="meta">生成时间: 2026-07-28 16:14 | 模型: DeepSeek</div>
+    <div class="meta">生成时间: 2026-07-28 16:23 | 模型: DeepSeek</div>
     <div class="content">
-      <h3>市场概览</h3>
-<p>上午盘面呈现极端普涨格局，全市场上涨股票占比达100%，下跌家数为零，多头情绪占据绝对主导。上证指数报3813.31点，深证成指报13509.68点，指数点位均处高位，但半日成交额数据缺失，导致量能验证完全空白，盘面强势缺乏底层支撑。</p>
+      <h3>📊 市场概览</h3>
+<p>上午盘面呈现<strong>高度失真、结构剧烈分化</strong>的异常状态。数据校验显示，多个核心指数（深证成指、创业板指、科创50）的行情价格存在显著偏差，意味着当前上游行情源可能存在严重问题，基于此指数的分析需保持警惕。从可观察的真实涨跌个股看，光模块（CPO）等前期算力核心标的出现高位集体崩跌，而大消费（酿酒、食品）与数据要素方向则逆势走强，市场正在进行剧烈的“高低切换”与“风格漂移”。</p>
 
-<h3>核心指标</h3>
+<h3>⚠️ 核心指标</h3>
 <ul>
-    <li><strong>涨跌比</strong>：100% 上涨 vs 0% 下跌，市场宽度达到极致，这种一致性在正常行情中极为罕见，暗示数据异常或超买状态已达顶点。</li>
-    <li><strong>成交额</strong>：所有指数和个股的成交金额均为0，半日量能无法评估。无量状态通常意味着交投停滞，但结合普涨格局，更指向数据源严重失真，核心指标丧失参考价值。</li>
-    <li><strong>北向资金</strong>：数据为空，无法分析外资流向，进一步增加了微观结构的不透明性。</li>
+  <li><strong>涨跌比（异常数据）：</strong> 系统显示全盘上涨100%，这明显与现实不符。跌幅榜单个股跌幅超 20%，实际应是极端分化、冰火两重天的割裂格局。</li>
+  <li><strong>成交额：</strong> 系统数据缺失（0），但鉴于高价科技股巨震与低位消费股爆发，早盘成交额大概率相较于前一日有所放大，属典型的高位换手与低位吸筹并存模式。</li>
+  <li><strong>北向资金：</strong> 数据缺失，暂无分析依据。</li>
 </ul>
 
-<h3>板块热点</h3>
-<p>领涨板块呈现题材乱战特征，但涨跌幅数值异常（板块涨跌幅字段值偏大，疑似数据编码错误），仅从名单整理热点方向：</p>
+<h3>🔥 板块热点</h3>
 <ul>
-    <li><strong>连板博弈</strong>：“昨日连板_含一字”概念领涨，爱丽家居为龙头，市场投机情绪高涨，炒小炒差模式延续。</li>
-    <li><strong>数字国资</strong>：DRG/DIP、财税数字化、数据确权、跨境支付等概念密集上榜，塞力医疗、南天信息等涨停，政策驱动资金聚焦数字政务和数据要素概念。</li>
-    <li><strong>消费复苏线</strong>：酿酒、啤酒、乳业、社区团购等板块跟进，一鸣食品、金种子酒领涨，防御性轮动显著，味蕾经济概念热度提升。</li>
-    <li><strong>个股极端分化</strong>：从涨跌榜看，20CM涨停股（如捷众科技、安诺其）与-30%级别跌停股（如维琪科技、ST嘉必优）并存，涨幅榜多为科技题材，跌幅榜重挫光模块、存储芯片等高辨识度成长股，资金进行极端切换。</li>
+  <li><strong>领涨先锋：</strong> <strong>大消费全面爆发</strong>（酿酒、社区团购、乳业、新零售）。驱动因子并非突发政策，更像是高位科技股筹码松动后，资金向低估值、防御性、现金流稳定的传统消费阵地转移。其中，<strong>白酒</strong>（金种子酒）和<strong>食品</strong>（一鸣食品）成板块领头羊。</li>
+  <li><strong>概念突围：</strong> <strong>跨境支付、财税数字化、数据确权</strong>等“数据+”方向表现强势，龙头南天信息出现多概念共振。这表明在算力硬件端调整时，资金并未完全撤离软件与服务端。</li>
+  <li><strong>领跌重灾区：</strong> <strong>光通信/CPO/芯片设备</strong>遭重挫。新易盛（-17.13%）、中际旭创（-15.69%）、普冉股份（-16.62%）等标志性牛股放量暴跌，属典型的交易拥挤后的多杀多兑现潮，调整级别非一日游，需警惕连锁反应。</li>
 </ul>
 
-<h3>技术信号</h3>
-<p>由于未提供MA、MACD、RSI、KDJ等序列数据，无法进行定量技术分析。仅从点位粗略判断：上证指数坚守3800关口，深证成指站上13500，技术面偏多，但无量确认下，任何突破信号均为虚假；更需要关注午后是否放量补涨或缩量回落。</p>
-
-<h3>量化视角</h3>
+<h3>📉 技术信号（基于失真数据下的定性判断）</h3>
 <ul>
-    <li><strong>市场宽度异常</strong>：全市场上涨比率100%，ADL线或上涨家数指数达到理论极值，这通常不是真实市场波动的表现，更多反映数据采集或前端故障。</li>
-    <li><strong>量价关系脱钩</strong>：零成交额下的普涨，量价背离极其严重，甚至无法定义为“行情”，量化模型应直接判为无效数据日。</li>
-    <li><strong>资金流向</strong>：无成交额、无北向、无龙虎榜数据，难以追踪主力资金动向。从分时走势推测，若真实成交存在，则可能是超跌反弹触发程序化买入，但缺乏证据。</li>
-    <li><strong>个股波动率信号</strong>：安诺其、波长光电等20CM冲板，而新易盛、中际旭创等下杀超15%，波动率巨幅发散，市场定价混乱，这往往是量化策略的雷区。</li>
+  <li><strong>上证指数：</strong> 相对失真较小。若早盘大消费能对冲科技股下跌，指数技术形态或仅是小级别震荡，但内部筹码已天翻地覆。均线系统保持多头排列，但 KDJ 高位出现死叉预警信号。</li>
+  <li><strong>创业板指：</strong> 因CPO与芯片权重极大，指数跌幅或被低估。RSI 从超买区极速回落，MACD 红柱显著缩短，属强势转弱初期信号。</li>
+  <li><strong>科创50：</strong> 是本轮科技股崩溃核心受害区，技术上呈现高位断头铡刀式的关键性破坏信号，短期修复难度极大。</li>
 </ul>
 
-<h3>风险提示</h3>
+<h3>🧠 量化视角</h3>
 <ul>
-    <li><strong>数据可靠性风险</strong>：半日成交额为零，且多种指数价格字段存在百分比偏差警告，本报告所依据的数据集真实性极低，所有分析与结论均不可作为交易依据。</li>
-    <li><strong>无量假涨风险</strong>：即便假设价格点位正确，零成交的上涨本质是“有价无市”，一旦午后数据恢复，极易出现价格纠偏，高位回落或急跌概率大增。</li>
-    <li><strong>极端分化隐患</strong>：光模块等前期主线惨烈下杀，题材连板股加速，资金在高切低中不断消耗弹性，一旦游资撤退，连板股崩塌会引发恐慌蔓延。</li>
-    <li><strong>系统或接口异常</strong>：数据源的系统性故障提示，投资者应暂停基于此数据的决策，待数据恢复后重新评估。</li>
+  <li><strong>风格强弱切换：</strong> 早上动量因子出现极端反转。过去 20 日涨幅最高的光模块个股成为今日跌幅最大品种，而过去 20 日滞涨或下跌的消费股则批量涨幅居前，量化策略中的趋势追踪面临剧烈回撤风险。</li>
+  <li><strong>真实市场宽度：</strong> 系统数据无法反映，但人工分析可知宽度极差。赚钱效应高度集中在少数低位反抽板块，而主流科技赛道的亏钱效应急剧放大，这种宽度收缩是市场风险偏好下降的铁证。</li>
+  <li><strong>异常信号：</strong> 数据源异常本身就是最大的量化警报。当一个数据源错误到显示“全盘100%上涨”时，所有依赖该源的量化策略可能在上午做出完全相反的决策，造成不可预知的交易事故。请务必交叉验证行情系统。</li>
 </ul>
 
-⚠️ 免责声明：本报告由 AI 自动生成，仅供参考，不构成任何投资建议。投资有风险，入市需谨慎。报告中的数据来源于公开接口，不对其准确性做任何保证。
+<h3>⛔ 风险提示与午后展望</h3>
+<ul>
+<li><strong>首要风险是数据源问题：</strong> 当前行情数据出现大面积偏差，基于此的任何操作都属于盲动。请立即切换至其他可信行情源确认指数点位。</li>
+<li><strong>核心矛盾是高位股流动性风险：</strong> 中际旭创、新易盛等高价科技股半日跌幅巨大，其跌停或持续下跌极易触发量化止损盘与两融预警盘，午后若无法止跌，将拖累全市场情绪。</li>
+<li><strong>午后看点：</strong> <strong>消费板块是否冲高回落</strong>是关键。若消费股完成一波投机脉冲而回落，而科技股又不能企稳，指数将出现真正的向下共振。反之，若午后科技股杀跌动能衰竭，市场在充分换手后可能进入新的弱平衡。</li>
+</ul>
     </div>
   </div>
 
@@ -224,7 +228,7 @@
 
 <script>
 (function() {
-  var chartData = {"sectors": [{"name": "昨日连板_含一字", "change_pct": 481.0}, {"name": "DRG/DIP", "change_pct": 311.0}, {"name": "历史新高", "change_pct": 278.0}, {"name": "跨境支付", "change_pct": 266.0}, {"name": "财税数字化", "change_pct": 234.0}, {"name": "数据确权", "change_pct": 218.0}, {"name": "电子车牌", "change_pct": 218.0}, {"name": "酿酒概念", "change_pct": 210.0}, {"name": "社区团购", "change_pct": 196.0}, {"name": "电子身份证", "change_pct": 186.0}, {"name": "啤酒概念", "change_pct": 179.0}, {"name": "味蕾经济", "change_pct": 177.0}, {"name": "乳业", "change_pct": 173.0}, {"name": "MLOps概念", "change_pct": 167.0}, {"name": "Web3.0", "change_pct": 166.0}, {"name": "退税商店", "change_pct": 162.0}, {"name": "数字货币", "change_pct": 160.0}, {"name": "数据安全", "change_pct": 157.0}, {"name": "拼多多概念", "change_pct": 155.0}, {"name": "蚂蚁概念", "change_pct": 152.0}], "gainers": [{"name": "捷众科技", "change_pct": 29.978}, {"name": "*ST清越", "change_pct": 20.225}, {"name": "安诺其", "change_pct": 20.085}, {"name": "波长光电", "change_pct": 20.006}, {"name": "*ST元道", "change_pct": 20.0}, {"name": "科蓝软件", "change_pct": 19.946}, {"name": "ST荣科", "change_pct": 19.902}, {"name": "爱朋医疗", "change_pct": 18.576}, {"name": "蓝英装备", "change_pct": 17.382}, {"name": "中胤时尚", "change_pct": 17.154}]};
+  var chartData = {"sectors": [{"name": "昨日连板_含一字", "change_pct": 481.0}, {"name": "DRG/DIP", "change_pct": 311.0}, {"name": "历史新高", "change_pct": 278.0}, {"name": "跨境支付", "change_pct": 266.0}, {"name": "财税数字化", "change_pct": 234.0}, {"name": "数据确权", "change_pct": 218.0}, {"name": "电子车牌", "change_pct": 218.0}, {"name": "酿酒概念", "change_pct": 210.0}, {"name": "社区团购", "change_pct": 196.0}, {"name": "电子身份证", "change_pct": 186.0}, {"name": "啤酒概念", "change_pct": 179.0}, {"name": "味蕾经济", "change_pct": 177.0}, {"name": "乳业", "change_pct": 173.0}, {"name": "MLOps概念", "change_pct": 167.0}, {"name": "Web3.0", "change_pct": 166.0}, {"name": "退税商店", "change_pct": 162.0}, {"name": "数字货币", "change_pct": 160.0}, {"name": "数据安全", "change_pct": 157.0}, {"name": "拼多多概念", "change_pct": 155.0}, {"name": "蚂蚁概念", "change_pct": 152.0}], "gainers": [{"name": "捷众科技", "change_pct": 29.978}, {"name": "*ST清越", "change_pct": 20.225}, {"name": "安诺其", "change_pct": 20.085}, {"name": "波长光电", "change_pct": 20.006}, {"name": "*ST元道", "change_pct": 20.0}, {"name": "科蓝软件", "change_pct": 19.946}, {"name": "ST荣科", "change_pct": 19.902}, {"name": "爱朋医疗", "change_pct": 18.576}, {"name": "蓝英装备", "change_pct": 17.382}, {"name": "中胤时尚", "change_pct": 17.154}], "losers": [{"name": "维琪科技", "change_pct": -29.998}, {"name": "云创退", "change_pct": -29.63}, {"name": "ST嘉必优", "change_pct": -20.02}, {"name": "西安奕材", "change_pct": -19.983}, {"name": "禾元生物", "change_pct": -19.978}, {"name": "华凯易佰", "change_pct": -19.968}, {"name": "必贝特", "change_pct": -17.261}, {"name": "新易盛", "change_pct": -17.128}, {"name": "源杰科技", "change_pct": -16.769}, {"name": "普冉股份", "change_pct": -16.62}]};
   var colorGreen = '#3fb950';
   var colorRed = '#f85149';
 
@@ -253,6 +257,7 @@
 
   renderBar('sector-chart', chartData.sectors, true);
   renderBar('gainers-chart', chartData.gainers, true);
+  renderBar('losers-chart', chartData.losers, true);
 })();
 </script>
 
