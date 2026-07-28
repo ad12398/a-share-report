@@ -1,4 +1,4 @@
-"""数据源 —— 腾讯财经 API（主） + 新浪（备用），GitHub Actions 友好"""
+"""数据源 —— 腾讯（指数）+ 新浪（股票）+ 东财（板块），GitHub Actions 优化"""
 
 import json
 import logging
@@ -16,8 +16,7 @@ HEADERS = {
 }
 
 
-def _safe_get(url: str, timeout: int = 15, max_retries: int = 3, extra_headers: dict | None = None) -> requests.Response | None:
-    """带重试的 HTTP GET"""
+def _safe_get(url: str, timeout: int = 20, max_retries: int = 3, extra_headers: dict | None = None) -> requests.Response | None:
     h = dict(HEADERS)
     if extra_headers:
         h.update(extra_headers)
@@ -26,39 +25,17 @@ def _safe_get(url: str, timeout: int = 15, max_retries: int = 3, extra_headers: 
             resp = requests.get(url, headers=h, timeout=timeout)
             if resp.status_code == 200 and resp.text and resp.text.strip():
                 return resp
-            logger.warning(f"API 返回异常 (attempt {attempt+1}): status={resp.status_code}, len={len(resp.text)}")
+            logger.warning(f"API 返回异常 (attempt {attempt+1}): status={resp.status_code}")
         except Exception as e:
             logger.warning(f"API 请求失败 (attempt {attempt+1}): {e}")
         if attempt < max_retries - 1:
-            time.sleep(2 * (attempt + 1))
+            time.sleep(3 * (attempt + 1))
     return None
 
 
-# ─── 腾讯财经 API ─────────────────────────────────────────
-
-def _parse_tencent_quote(text: str) -> dict[str, str]:
-    """解析腾讯行情响应格式: v_sh000001="1~上证指数~000001~..." """
-    result = {}
-    for line in text.strip().split("\n"):
-        line = line.strip()
-        if not line or "=" not in line:
-            continue
-        m = re.search(r'v_(\w+)="(.+)"', line)
-        if m:
-            sid = m.group(1)
-            fields = m.group(2).split("~")
-            if len(fields) >= 5:
-                result[sid] = {
-                    "name": fields[1],
-                    "price": fields[3],
-                    "change_pct": fields[5] if len(fields) > 5 else "0",
-                    "change_amt": fields[4] if len(fields) > 4 else "0",
-                }
-    return result
-
+# ═══ 指数行情（腾讯 + 新浪备用）══════════════════════════════════════
 
 def fetch_index_quotes() -> dict[str, Any]:
-    """获取主要指数行情（腾讯 + 新浪备用）"""
     code_map = {
         "sh000001": "000001", "sz399001": "399001", "sz399006": "399006",
         "sh000688": "000688", "sh000300": "000300", "sh000905": "000905",
@@ -68,43 +45,42 @@ def fetch_index_quotes() -> dict[str, Any]:
         "000688": "科创50", "000300": "沪深300", "000905": "中证500",
     }
 
-    # 尝试腾讯
+    # 腾讯优先
     try:
         codes = ",".join(code_map.keys())
         url = f"http://qt.gtimg.cn/q={codes}"
         resp = _safe_get(url, extra_headers={"Referer": "https://finance.qq.com"})
-        if resp is not None:
+        if resp:
             resp.encoding = "gbk"
-            parsed = _parse_tencent_quote(resp.text)
             result = {}
-            for tx_code, c in code_map.items():
-                if tx_code in parsed:
-                    p = parsed[tx_code]
-                    result[c] = {
-                        "name": name_map[c],
-                        "price": float(p.get("price", 0) or 0),
-                        "change_pct": float(p.get("change_pct", 0) or 0),
-                        "change_amt": float(p.get("change_amt", 0) or 0),
-                        "volume": 0,
-                        "amount": 0,
-                    }
+            for line in resp.text.strip().split("\n"):
+                m = re.search(r'v_(\w+)="(.+)"', line)
+                if m:
+                    sid = m.group(1)
+                    fields = m.group(2).split("~")
+                    if sid in code_map and len(fields) >= 6:
+                        result[code_map[sid]] = {
+                            "name": name_map[code_map[sid]],
+                            "price": float(fields[3] or 0),
+                            "change_pct": float(fields[5] or 0),
+                            "change_amt": float(fields[4] or 0),
+                            "volume": 0, "amount": 0,
+                        }
             if result:
                 logger.info(f"腾讯: 获取指数行情 {len(result)} 条")
                 return result
     except Exception as e:
-        logger.warning(f"腾讯指数行情失败: {e}")
+        logger.warning(f"腾讯指数失败: {e}")
 
-    # 降级到新浪
-    return _fallback_sina_index()
+    return _sina_index_fallback()
 
 
-def _fallback_sina_index() -> dict[str, Any]:
-    """新浪指数（备用）"""
+def _sina_index_fallback() -> dict[str, Any]:
     try:
         codes = "sh000001,sz399001,sz399006,sh000688,sh000300,sh000905"
         url = f"http://hq.sinajs.cn/list={codes}"
         resp = _safe_get(url, extra_headers={"Referer": "https://finance.sina.com.cn"})
-        if resp is None:
+        if not resp:
             return {}
         resp.encoding = "gbk"
         name_map = {
@@ -124,118 +100,120 @@ def _fallback_sina_index() -> dict[str, Any]:
                         "price": float(vals[1] or 0),
                         "change_pct": float(vals[3] or 0),
                         "change_amt": float(vals[2] or 0),
-                        "volume": float(vals[8] or 0) if len(vals) > 8 else 0,
-                        "amount": float(vals[9] or 0) if len(vals) > 9 else 0,
+                        "volume": 0, "amount": 0,
                     }
-        logger.info(f"新浪备用: 获取指数行情 {len(result)} 条")
+        logger.info(f"新浪: 获取指数行情 {len(result)} 条")
         return result
     except Exception as e:
-        logger.error(f"新浪备用也失败了: {e}")
+        logger.error(f"新浪指数也失败: {e}")
         return {}
 
 
+# ═══ 板块涨跌榜（东方财富 - 仅此一个仍使用东财，不行就兜底空） ═══
+
 def fetch_sector_performance() -> list[dict[str, Any]]:
-    """获取行业板块涨跌幅（腾讯财经）"""
     try:
-        # 腾讯财经行业板块接口
-        url = "http://qt.gtimg.cn/q=pt_hy"
-        resp = _safe_get(url, extra_headers={"Referer": "https://finance.qq.com"})
-        if resp is None:
-            return _fallback_sina_sectors()
-        resp.encoding = "gbk"
-        text = resp.text
-        sectors = []
-        # 腾讯行业板块格式: v_pt_hy_sz="板块号~板块名~涨跌幅~..."
-        for line in text.split("\n"):
-            m = re.search(r'v_pt_hy_\w+="(.+)"', line)
-            if m:
-                parts = m.group(1).split("~")
-                if len(parts) >= 3 and parts[1]:
-                    try:
-                        pct = float(parts[2] or 0)
-                    except ValueError:
-                        pct = 0.0
-                    sectors.append({"name": parts[1], "change_pct": pct, "leader": ""})
-        # 按涨跌幅排序
-        sectors.sort(key=lambda x: abs(x["change_pct"]), reverse=True)
-        result = sectors[:30] if len(sectors) > 30 else sectors
-        logger.info(f"腾讯: 获取行业板块 {len(result)} 条")
-        return result
+        url = (
+            "https://push2.eastmoney.com/api/qt/clist/get?"
+            "pn=1&pz=30&po=1&np=1&fs=m:90+t:3&fid=f3"
+            "&fields=f2,f3,f14,f128"
+        )
+        resp = _safe_get(url)
+        if resp:
+            data = resp.json()
+            sectors = []
+            if data.get("data") and data["data"].get("diff"):
+                for item in data["data"]["diff"]:
+                    sectors.append({
+                        "name": str(item.get("f14", "")),
+                        "change_pct": float(item.get("f3", 0) or 0),
+                        "leader": str(item.get("f128", "")),
+                    })
+            if sectors:
+                logger.info(f"东财: 获取行业板块 {len(sectors)} 条")
+                return sectors
     except Exception as e:
-        logger.warning(f"腾讯板块数据失败: {e}")
-        return _fallback_sina_sectors()
-
-
-def _fallback_sina_sectors() -> list[dict[str, Any]]:
-    """新浪板块数据（备用——返回空，日后再完善）"""
-    logger.warning("暂无板块备用源")
+        logger.warning(f"东财板块失败: {e}")
     return []
 
 
+# ═══ 涨跌幅榜（新浪 API） ═══
+
 def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
-    """获取涨跌幅榜（腾讯财经）"""
     result = {"gainers": [], "losers": []}
     try:
-        # 腾讯 A 股全量行情（取前 2000 条够了）
-        url = "http://qt.gtimg.cn/q=r_ash"
-        resp = _safe_get(url, extra_headers={"Referer": "https://finance.qq.com"})
-        if resp is None:
-            return result
-        resp.encoding = "gbk"
-        stocks = []
-        for line in resp.text.split("\n"):
-            m = re.search(r'v_sz\w+="(.+)"', line)
-            if m:
-                parts = m.group(1).split("~")
-                if len(parts) >= 6:
-                    try:
-                        pct = float(parts[6] or 0)
-                    except ValueError:
-                        pct = 0.0
-                    stocks.append({
-                        "code": parts[0],
-                        "name": parts[1],
-                        "price": float(parts[3] or 0),
-                        "change_pct": pct,
+        # 新浪 A 股涨幅榜（JSON 接口）
+        url = (
+            "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
+            "Market_Center.getHQNodeData?page=1&num=20&sort=changepercent"
+            "&asc=0&node=hs_a&symbol=&_s_r_a=auto"
+        )
+        resp = _safe_get(url, extra_headers={"Referer": "https://vip.stock.finance.sina.com.cn"})
+        if resp:
+            data = resp.json()
+            if isinstance(data, list):
+                for item in data:
+                    result["gainers"].append({
+                        "code": str(item.get("symbol", "")),
+                        "name": str(item.get("name", "")),
+                        "price": float(item.get("trade", 0) or 0),
+                        "change_pct": float(item.get("changepercent", 0) or 0),
                     })
 
-        stocks.sort(key=lambda x: x["change_pct"], reverse=True)
-        result["gainers"] = stocks[:20]
-        result["losers"] = list(reversed(stocks[-20:]))
-        logger.info(f"腾讯: 涨跌幅榜各 {len(result['gainers'])}/{len(result['losers'])} 条")
+        # 跌幅榜
+        url = (
+            "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
+            "Market_Center.getHQNodeData?page=1&num=20&sort=changepercent"
+            "&asc=1&node=hs_a&symbol=&_s_r_a=auto"
+        )
+        resp = _safe_get(url, extra_headers={"Referer": "https://vip.stock.finance.sina.com.cn"})
+        if resp:
+            data = resp.json()
+            if isinstance(data, list):
+                for item in data:
+                    result["losers"].append({
+                        "code": str(item.get("symbol", "")),
+                        "name": str(item.get("name", "")),
+                        "price": float(item.get("trade", 0) or 0),
+                        "change_pct": float(item.get("changepercent", 0) or 0),
+                    })
+
+        logger.info(f"新浪: 涨跌幅榜各 {len(result['gainers'])}/{len(result['losers'])} 条")
         return result
     except Exception as e:
         logger.error(f"涨跌榜获取失败: {e}")
         return result
 
 
+# ═══ 市场概况 ═══
+
 def fetch_market_overview() -> dict[str, Any]:
-    """获取全市场概况（从涨跌榜数据推算）"""
     try:
-        url = "http://qt.gtimg.cn/q=r_ash"
-        resp = _safe_get(url, extra_headers={"Referer": "https://finance.qq.com"})
-        if resp is None:
+        # 获取全量数据来统计
+        url = (
+            "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
+            "Market_Center.getHQNodeData?page=1&num=5000&sort=changepercent"
+            "&asc=0&node=hs_a&symbol=&_s_r_a=auto"
+        )
+        resp = _safe_get(url, extra_headers={"Referer": "https://vip.stock.finance.sina.com.cn"}, timeout=30)
+        if not resp:
             return _empty_overview()
-        resp.encoding = "gbk"
-        total = 0
+        data = resp.json()
+        if not isinstance(data, list):
+            return _empty_overview()
+
+        total = len(data)
         up = down = flat = 0
-        for line in resp.text.split("\n"):
-            m = re.search(r'v_sz\w+="(.+)"', line)
-            if m:
-                parts = m.group(1).split("~")
-                if len(parts) >= 6:
-                    total += 1
-                    try:
-                        pct = float(parts[6] or 0)
-                    except ValueError:
-                        pct = 0.0
-                    if pct > 0:
-                        up += 1
-                    elif pct < 0:
-                        down += 1
-                    else:
-                        flat += 1
-        logger.info(f"腾讯: 市场概况 total={total} up={up} down={down}")
+        for item in data:
+            pct = float(item.get("changepercent", 0) or 0)
+            if pct > 0:
+                up += 1
+            elif pct < 0:
+                down += 1
+            else:
+                flat += 1
+
+        logger.info(f"新浪: 市场概况 total={total} up={up} down={down}")
         return {
             "total": total, "up": up, "down": down, "flat": flat,
             "total_amount": 0,
