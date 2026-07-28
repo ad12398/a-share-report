@@ -161,11 +161,6 @@ def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
 def fetch_market_overview() -> dict[str, Any]:
     """获取全市场概况（东方财富）"""
     try:
-        url = (
-            "https://push2.eastmoney.com/api/qt/clist/get?"
-            "pn=1&pz=1&np=1&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23"
-            "&fid=f3&fields=f2,f3,f4,f5,f6,f12,f14"
-        )
         # 获取全量数据的涨跌统计
         url_stat = (
             "https://push2.eastmoney.com/api/qt/clist/get?"
@@ -173,31 +168,41 @@ def fetch_market_overview() -> dict[str, Any]:
             "&fid=f3&fields=f3,f6"
         )
         resp = requests.get(url_stat, headers=HEADERS, timeout=20)
+        if not resp.text or not resp.text.strip():
+            logger.warning("市场概况 API 返回空内容")
+            return _empty_overview()
+        if resp.status_code != 200:
+            logger.warning(f"市场概况 API HTTP {resp.status_code}")
+            return _empty_overview()
         data = resp.json()
-        total = 0
+        if not data.get("data") or not data["data"].get("diff"):
+            logger.warning("市场概况 API 返回空数据")
+            return _empty_overview()
+
+        items = data["data"]["diff"]
+        total = len(items)
         up = down = flat = 0
         total_amount = 0
-        if data.get("data") and data["data"].get("diff"):
-            items = data["data"]["diff"]
-            total = len(items)
-            for item in items:
-                pct = float(item.get("f3", 0) or 0)
-                if pct > 0:
-                    up += 1
-                elif pct < 0:
-                    down += 1
-                else:
-                    flat += 1
-                total_amount += float(item.get("f6", 0) or 0)
+        for item in items:
+            pct = float(item.get("f3", 0) or 0)
+            if pct > 0:
+                up += 1
+            elif pct < 0:
+                down += 1
+            else:
+                flat += 1
+            total_amount += float(item.get("f6", 0) or 0)
 
+        logger.info(f"东财: 市场概况 total={total} up={up} down={down}")
         return {
-            "total": total,
-            "up": up,
-            "down": down,
-            "flat": flat,
+            "total": total, "up": up, "down": down, "flat": flat,
             "total_amount": total_amount,
             "up_ratio": round(up / total * 100, 1) if total > 0 else 0,
         }
     except Exception as e:
         logger.error(f"市场概况获取失败: {e}")
-        return {"total": 0, "up": 0, "down": 0, "flat": 0, "total_amount": 0, "up_ratio": 0}
+        return _empty_overview()
+
+
+def _empty_overview() -> dict[str, Any]:
+    return {"total": 0, "up": 0, "down": 0, "flat": 0, "total_amount": 0, "up_ratio": 0}
