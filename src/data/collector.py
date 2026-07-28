@@ -1,4 +1,4 @@
-"""鏁版嵁閲囬泦涓婚€昏緫 鈥斺€?澶氭簮鑱氬悎 + 浜ゅ弶鏍￠獙锛堢函 HTTP锛屾棤 akshare 渚濊禆锛?""
+"""数据采集主逻辑 —— 多源聚合 + 交叉校验（纯 HTTP，无 akshare 依赖）"""
 
 import logging
 import re
@@ -18,33 +18,35 @@ HEADERS = {
 
 
 def collect_all_data(slot: str) -> dict[str, Any]:
-    """閲囬泦鎵€鏈夋暟鎹紝鎸夋姤鍛婃椂娈佃皟鏁村唴瀹广€?""
-    logger.info(f"寮€濮嬮噰闆嗘暟鎹?(slot={slot})")
+    """采集所有数据，按报告时段调整内容。"""
+    logger.info(f"开始采集数据 (slot={slot})")
 
-    # 鎸囨暟琛屾儏锛堜富婧?+ 澶囩敤婧愶級
+    # 指数行情（主源 + 备用源）
     index_data = akshare_source.fetch_index_quotes()
     index_backup = sina_source.fetch_index_quotes()
 
-    # 鏉垮潡琛ㄧ幇
+    # 板块表现
     sector_data = akshare_source.fetch_sector_performance()
 
-    # 娑ㄨ穼姒?    movers_data = akshare_source.fetch_top_movers()
+    # 涨跌榜
+    movers_data = akshare_source.fetch_top_movers()
 
-    # 甯傚満姒傚喌
+    # 市场概况
     overview_data = akshare_source.fetch_market_overview()
 
-    # 浜ゅ弶鏍￠獙鎸囨暟
+    # 交叉校验指数
     if index_backup:
         index_data = validate_index_quotes(index_data, index_backup)
 
-    # 鐩樹腑鍙婃敹鐩樻暟鎹細鍖楀悜璧勯噾 & 榫欒檸姒?    north_data: dict = {}
+    # 盘中及收盘数据：北向资金 & 龙虎榜
+    north_data: dict = {}
     dragon_data: list = []
     if slot in ("1030", "1130", "1400", "1500"):
         north_data = eastmoney_source.fetch_north_flow()
         if slot in ("1400", "1500"):
             dragon_data = eastmoney_source.fetch_dragon_tiger()
 
-    # 鐩樺墠绠€鎶ョ壒娈婃暟鎹細闅斿缇庤偂
+    # 盘前简报特殊数据：隔夜美股
     global_data: dict = {}
     if slot == "0925":
         global_data = _fetch_overnight_global()
@@ -61,15 +63,15 @@ def collect_all_data(slot: str) -> dict[str, Any]:
         "_validation": index_data.pop("_validation", {}),
     }
 
-    logger.info(f"鏁版嵁閲囬泦瀹屾垚 (slot={slot})")
+    logger.info(f"数据采集完成 (slot={slot})")
     return result
 
 
 def _fetch_overnight_global() -> dict[str, Any]:
-    """鑾峰彇闅斿鍏ㄧ悆甯傚満鏁版嵁锛堟柊娴?+ 涓滄柟璐㈠瘜锛屾棤闇€ akshare锛?""
+    """获取隔夜全球市场数据（新浪 + 东方财富，无需 akshare）"""
     result = {}
 
-    # 绾虫柉杈惧厠鎸囨暟锛堟柊娴級
+    # 纳斯达克指数（新浪）
     try:
         url = "http://hq.sinajs.cn/list=gb_ixic"
         resp = requests.get(url, headers={"Referer": "https://finance.sina.com.cn"}, timeout=15)
@@ -79,14 +81,14 @@ def _fetch_overnight_global() -> dict[str, Any]:
             vals = m.group(1).split(",")
             if len(vals) >= 2:
                 result["us"] = {
-                    "index": "绾虫柉杈惧厠",
+                    "index": "纳斯达克",
                     "price": float(vals[1] or 0),
                     "change_pct": float(vals[2] or 0) if len(vals) > 2 else 0,
                 }
     except Exception:
         pass
 
-    # 瀵屾椂A50鏈熻揣
+    # 富时A50期货
     try:
         url = "http://hq.sinajs.cn/list=nf_A50"
         resp = requests.get(url, headers={"Referer": "https://finance.sina.com.cn"}, timeout=15)
