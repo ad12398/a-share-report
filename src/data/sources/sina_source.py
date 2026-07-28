@@ -39,10 +39,14 @@ def fetch_index_quotes() -> dict[str, Any]:
                 sid = match.group(1)
                 data = match.group(2).split(",")
                 if len(data) >= 4:
+                    # Sina 格式: [0]名字 [1]今开 [2]昨收 [3]当前价
+                    price = float(data[3]) if len(data) > 3 else 0
+                    prev_close = float(data[2]) if len(data) > 2 else 0
+                    change_pct = round((price - prev_close) / prev_close * 100, 2) if prev_close else 0
                     result[name_map.get(sid, sid)] = {
                         "name": data[0] if len(data) > 0 else "",
-                        "price": float(data[1]) if len(data) > 1 else 0,
-                        "change_pct": float(data[3]) if len(data) > 3 else 0,
+                        "price": price,
+                        "change_pct": change_pct,
                     }
         logger.info(f"sina: 获取指数行情 {len(result)} 条")
         return result
