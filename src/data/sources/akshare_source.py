@@ -67,7 +67,8 @@ def fetch_index_quotes() -> dict[str, Any]:
                             "price": float(fields[3] or 0),
                             "change_pct": float(fields[5] or 0),
                             "change_amt": float(fields[4] or 0),
-                            "volume": 0, "amount": 0,
+                            "volume": float(fields[6] or 0) if len(fields) > 6 else 0,
+                            "amount": float(fields[7] or 0) if len(fields) > 7 else 0,
                         }
             if result:
                 logger.info(f"腾讯: 获取指数行情 {len(result)} 条")
