@@ -1,4 +1,4 @@
-"""鏁版嵁婧?鈥斺€?鐩存帴 HTTP 璇锋眰涓滄柟璐㈠瘜/鏂版氮 API锛屼笉渚濊禆 akshare 灏佽"""
+"""数据源 —— 直接 HTTP 请求东方财富/新浪 API，不依赖 akshare 封装"""
 
 import json
 import logging
@@ -17,9 +17,9 @@ HEADERS = {
 
 
 def fetch_index_quotes() -> dict[str, Any]:
-    """鑾峰彇涓昏鎸囨暟瀹炴椂琛屾儏锛堜笢鏂硅储瀵岋級"""
+    """获取主要指数实时行情（东方财富）"""
     try:
-        # 涓滄柟璐㈠瘜鎸囨暟琛屾儏 API
+        # 东方财富指数行情 API
         url = (
             "https://push2.eastmoney.com/api/qt/ulist.np/get?"
             "fltt=2&secids=1.000001,0.399001,0.399006,1.000688,1.000300,1.000905"
@@ -28,13 +28,13 @@ def fetch_index_quotes() -> dict[str, Any]:
         resp = requests.get(url, headers=HEADERS, timeout=15)
         data = resp.json()
         if not data.get("data") or not data["data"].get("diff"):
-            logger.warning("涓滄柟璐㈠瘜鎸囨暟 API 杩斿洖绌烘暟鎹?)
+            logger.warning("东方财富指数 API 返回空数据")
             return _fallback_sina_index()
 
         result = {}
         name_map = {
-            "000001": "涓婅瘉鎸囨暟", "399001": "娣辫瘉鎴愭寚", "399006": "鍒涗笟鏉挎寚",
-            "000688": "绉戝垱50", "000300": "娌繁300", "000905": "涓瘉500",
+            "000001": "上证指数", "399001": "深证成指", "399006": "创业板指",
+            "000688": "科创50", "000300": "沪深300", "000905": "中证500",
         }
         for item in data["data"]["diff"]:
             code = str(item.get("f12", ""))
@@ -47,15 +47,15 @@ def fetch_index_quotes() -> dict[str, Any]:
                     "volume": float(item.get("f5", 0) or 0),
                     "amount": float(item.get("f6", 0) or 0),
                 }
-        logger.info(f"涓滆储: 鑾峰彇鎸囨暟琛屾儏 {len(result)} 鏉?)
+        logger.info(f"东财: 获取指数行情 {len(result)} 条")
         return result
     except Exception as e:
-        logger.error(f"涓滆储鎸囨暟琛屾儏鑾峰彇澶辫触: {e}")
+        logger.error(f"东财指数行情获取失败: {e}")
         return _fallback_sina_index()
 
 
 def _fallback_sina_index() -> dict[str, Any]:
-    """澶囩敤锛氭柊娴寚鏁拌鎯?""
+    """备用：新浪指数行情"""
     try:
         codes = "sh000001,sz399001,sz399006,sh000688,sh000300,sh000905"
         url = f"http://hq.sinajs.cn/list={codes}"
@@ -63,9 +63,9 @@ def _fallback_sina_index() -> dict[str, Any]:
         resp.encoding = "gbk"
         result = {}
         name_map = {
-            "sh000001": ("000001", "涓婅瘉鎸囨暟"), "sz399001": ("399001", "娣辫瘉鎴愭寚"),
-            "sz399006": ("399006", "鍒涗笟鏉挎寚"), "sh000688": ("000688", "绉戝垱50"),
-            "sh000300": ("000300", "娌繁300"), "sh000905": ("000905", "涓瘉500"),
+            "sh000001": ("000001", "上证指数"), "sz399001": ("399001", "深证成指"),
+            "sz399006": ("399006", "创业板指"), "sh000688": ("000688", "科创50"),
+            "sh000300": ("000300", "沪深300"), "sh000905": ("000905", "中证500"),
         }
         for line in resp.text.strip().split("\n"):
             m = re.search(r'hq_str_(\w+)="(.+)"', line)
@@ -81,15 +81,15 @@ def _fallback_sina_index() -> dict[str, Any]:
                         "volume": float(vals[8] or 0) if len(vals) > 8 else 0,
                         "amount": float(vals[9] or 0) if len(vals) > 9 else 0,
                     }
-        logger.info(f"鏂版氮澶囩敤: 鑾峰彇鎸囨暟琛屾儏 {len(result)} 鏉?)
+        logger.info(f"新浪备用: 获取指数行情 {len(result)} 条")
         return result
     except Exception as e:
-        logger.error(f"鏂版氮澶囩敤涔熷け璐ヤ簡: {e}")
+        logger.error(f"新浪备用也失败了: {e}")
         return {}
 
 
 def fetch_sector_performance() -> list[dict[str, Any]]:
-    """鑾峰彇琛屼笟鏉垮潡娑ㄨ穼姒滐紙涓滄柟璐㈠瘜锛?""
+    """获取行业板块涨跌榜（东方财富）"""
     try:
         url = (
             "https://push2.eastmoney.com/api/qt/clist/get?"
@@ -106,18 +106,19 @@ def fetch_sector_performance() -> list[dict[str, Any]]:
                     "change_pct": float(item.get("f3", 0) or 0),
                     "leader": str(item.get("f128", "")),
                 })
-        logger.info(f"涓滆储: 鑾峰彇琛屼笟鏉垮潡 {len(sectors)} 鏉?)
+        logger.info(f"东财: 获取行业板块 {len(sectors)} 条")
         return sectors
     except Exception as e:
-        logger.error(f"鏉垮潡鏁版嵁鑾峰彇澶辫触: {e}")
+        logger.error(f"板块数据获取失败: {e}")
         return []
 
 
 def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
-    """鑾峰彇娑ㄥ箙姒滃拰璺屽箙姒滃墠 20锛堜笢鏂硅储瀵岋級"""
+    """获取涨幅榜和跌幅榜前 20（东方财富）"""
     result = {"gainers": [], "losers": []}
     try:
-        # 娑ㄥ箙姒?        url_up = (
+        # 涨幅榜
+        url_up = (
             "https://push2.eastmoney.com/api/qt/clist/get?"
             "pn=1&pz=20&po=1&np=1&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23&fid=f3"
             "&fields=f2,f3,f12,f14"
@@ -133,7 +134,8 @@ def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
                     "change_pct": float(item.get("f3", 0) or 0),
                 })
 
-        # 璺屽箙姒?        url_down = (
+        # 跌幅榜
+        url_down = (
             "https://push2.eastmoney.com/api/qt/clist/get?"
             "pn=1&pz=20&po=0&np=1&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23&fid=f3"
             "&fields=f2,f3,f12,f14"
@@ -149,22 +151,23 @@ def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
                     "change_pct": float(item.get("f3", 0) or 0),
                 })
 
-        logger.info(f"涓滆储: 娑ㄨ穼骞呮鍚?{len(result['gainers'])}/{len(result['losers'])} 鏉?)
+        logger.info(f"东财: 涨跌幅榜各 {len(result['gainers'])}/{len(result['losers'])} 条")
         return result
     except Exception as e:
-        logger.error(f"娑ㄨ穼姒滆幏鍙栧け璐? {e}")
+        logger.error(f"涨跌榜获取失败: {e}")
         return result
 
 
 def fetch_market_overview() -> dict[str, Any]:
-    """鑾峰彇鍏ㄥ競鍦烘鍐碉紙涓滄柟璐㈠瘜锛?""
+    """获取全市场概况（东方财富）"""
     try:
         url = (
             "https://push2.eastmoney.com/api/qt/clist/get?"
             "pn=1&pz=1&np=1&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23"
             "&fid=f3&fields=f2,f3,f4,f5,f6,f12,f14"
         )
-        # 鑾峰彇鍏ㄩ噺鏁版嵁鐨勬定璺岀粺璁?        url_stat = (
+        # 获取全量数据的涨跌统计
+        url_stat = (
             "https://push2.eastmoney.com/api/qt/clist/get?"
             "pn=1&pz=5000&np=1&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23"
             "&fid=f3&fields=f3,f6"
@@ -196,5 +199,5 @@ def fetch_market_overview() -> dict[str, Any]:
             "up_ratio": round(up / total * 100, 1) if total > 0 else 0,
         }
     except Exception as e:
-        logger.error(f"甯傚満姒傚喌鑾峰彇澶辫触: {e}")
+        logger.error(f"市场概况获取失败: {e}")
         return {"total": 0, "up": 0, "down": 0, "flat": 0, "total_amount": 0, "up_ratio": 0}
