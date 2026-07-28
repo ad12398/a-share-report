@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.data.calendar import is_trading_day
 from src.data.collector import collect_all_data
+from src.data.cleaner import clean_data_for_ai
 from src.analysis.deepseek_client import generate_report, format_data_for_prompt
 from src.analysis.prompts import (
     SLOT_PROMPT_MAP, SLOT_LABEL, SYSTEM_PROMPT,
@@ -65,7 +66,10 @@ def run(slot: str):
 
     # 2. 数据采集
     logger.info("Step 1/5: 采集市场数据...")
-    data = collect_all_data(slot)
+    raw_data = collect_all_data(slot)
+
+    # 2.5 数据清洗
+    data = clean_data_for_ai(raw_data)
 
     # 3. 构建 prompt
     logger.info("Step 2/5: 构建分析 prompt...")
