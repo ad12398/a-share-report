@@ -44,6 +44,7 @@ def render_report(
         overview=data.get("overview", {}),
         chart_data=json.dumps(chart_data or {}, ensure_ascii=False),
         movers=data.get("movers", {}),
+        commodities=data.get("commodities", {}),
         north_flow=data.get("north_flow", {}),
         sectors=data.get("sectors", []),
     )
