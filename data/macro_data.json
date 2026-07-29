@@ -1,0 +1,53 @@
+{
+  "_updated": "2026-07-28",
+  "_note": "每月中旬统计局发布后更新。当前为2026年6月/上半年数据。",
+  "cpi": {
+    "period": "2026年1-6月",
+    "yoy": 1.0,
+    "core_yoy": 1.2,
+    "unit": "%",
+    "source": "国家统计局 2026-07-15发布"
+  },
+  "ppi": {
+    "period": "2026年6月",
+    "yoy": 4.1,
+    "mom": -0.3,
+    "unit": "%",
+    "source": "国家统计局 2026-07-15发布"
+  },
+  "pmi": {
+    "manufacturing": 50.3,
+    "services": 50.4,
+    "period": "2026年6月",
+    "note": "制造业PMI高于50处于扩张区间，服务业PMI同步扩张",
+    "source": "国家统计局 2026-06-30发布"
+  },
+  "m2": {
+    "balance_trillion": 356.71,
+    "yoy": 8.0,
+    "m1_yoy": 4.0,
+    "period": "2026年6月末",
+    "source": "中国人民银行 2026-07-15发布"
+  },
+  "social_financing": {
+    "increment_month_billion": 3364.5,
+    "stock_yoy": 7.4,
+    "period": "2026年6月",
+    "note": "社融增量33,645亿元，同比少增8,606亿元",
+    "source": "中国人民银行 2026-07-15发布"
+  },
+  "lpr": {
+    "lpr_1y": 3.0,
+    "lpr_5y": 3.5,
+    "reverse_repo_7d": 1.40,
+    "updated": "2026-07-20",
+    "note": "LPR连续14个月维持不变",
+    "source": "全国银行间同业拆借中心"
+  },
+  "interest_rate": {
+    "net_interest_margin": 1.40,
+    "period": "2026年Q1",
+    "note": "商业银行净息差历史最低水平",
+    "source": "银保监会"
+  }
+}
