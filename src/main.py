@@ -3,10 +3,12 @@
 import argparse
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 # 确保项目根目录在 Python 路径中
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+BEIJING_TZ = timezone(timedelta(hours=8))
 
 from src.data.calendar import is_trading_day
 from src.data.collector import collect_all_data
@@ -120,7 +122,7 @@ def run(slot: str):
 
     # 7. 更新搜索索引
     logger.info("Step 5/5: 更新索引和首页...")
-    now = datetime.now()
+    now = datetime.now(BEIJING_TZ)
     title = f"{now.strftime('%Y-%m-%d')} {SLOT_LABEL.get(slot, slot)}"
     updated_index = add_report_to_index(slot, title, safe_report, data)
 
