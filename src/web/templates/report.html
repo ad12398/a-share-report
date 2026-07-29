@@ -53,13 +53,11 @@
     <div class="chart-box" id="losers-chart"></div>
   </div>
 
-  <!-- 行业板块图表（待修复，新浪接口返回格式需调整） -->
-  <!--
+  <!-- 行业板块图表 -->
   <div class="chart-container" id="sector-container">
     <div class="chart-title">📈 行业板块涨跌幅 TOP 20</div>
     <div class="chart-box" id="sector-chart"></div>
   </div>
-  -->
 
   <!-- 分析报告 -->
   <div class="report-section">
@@ -135,10 +133,9 @@
     window.addEventListener('resize', function() { chart.resize(); });
   }
 
+  renderBar('sector-chart', chartData.sectors, true);
   renderBar('gainers-chart', chartData.gainers, true);
   renderBar('losers-chart', chartData.losers, true);
-  // 板块数据暂时隐藏（新浪格式待修复）
-  // renderBar('sector-chart', chartData.sectors, true);
 })();
 </script>
 
