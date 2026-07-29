@@ -248,6 +248,7 @@ def fetch_market_overview() -> dict[str, Any]:
     """
     try:
         total = up = down = flat = limit_up = limit_down = 0
+        turnover_sum = 0.0
         base_url = (
             "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
             "Market_Center.getHQNodeData?node=hs_a&symbol=&_s_r_a=auto&num=100&sort=symbol"
@@ -269,12 +270,16 @@ def fetch_market_overview() -> dict[str, Any]:
                 else: flat += 1
                 if pct >= 9.5: limit_up += 1
                 if pct <= -9.5: limit_down += 1
+                # 换手率累加
+                tor = float(item.get("turnoverratio", 0) or 0)
+                turnover_sum += tor
 
-        logger.info(f"新浪: 市场概况 sampled total={total} up={up} down={down} 涨停≈{limit_up} 跌停≈{limit_down}")
+        avg_turnover = round(turnover_sum / total, 2) if total > 0 else 0
+        logger.info(f"新浪: 市场概况 sampled total={total} up={up} down={down} 涨停≈{limit_up} 跌停≈{limit_down} 均换手={avg_turnover}%")
         return {
             "total": total, "up": up, "down": down, "flat": flat,
             "limit_up": limit_up, "limit_down": limit_down,
-            "total_amount": 0,
+            "total_amount": 0, "avg_turnover": avg_turnover,
             "up_ratio": round(up / total * 100, 1) if total > 0 else 0,
         }
     except Exception as e:
@@ -283,4 +288,4 @@ def fetch_market_overview() -> dict[str, Any]:
 
 
 def _empty_overview() -> dict[str, Any]:
-    return {"total": 0, "up": 0, "down": 0, "flat": 0, "total_amount": 0, "up_ratio": 0}
+    return {"total": 0, "up": 0, "down": 0, "flat": 0, "total_amount": 0, "up_ratio": 0, "limit_up": 0, "limit_down": 0, "avg_turnover": 0}
