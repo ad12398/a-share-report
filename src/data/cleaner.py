@@ -106,10 +106,18 @@ def _clean_movers(data: dict[str, Any]):
             if not isinstance(s, dict):
                 continue
             pct = s.get("change_pct", 0)
-            # 个股涨跌幅 >30% 硬过滤（A 股涨停板上限 30%，北交所）
-            if abs(pct) > 30:
-                logger.warning(f"清洗: {key} {s.get('name', '?')} change_pct={pct} >30%，过滤")
+            name = s.get("name", "")
+            # 新股/次新股：科创板和创业板前5日无涨跌停限制，北交所±30%
+            # N=首日上市, C=次新股(前5日)
+            is_ipo = name.startswith("N") or name.startswith("C")
+            # 个股涨跌幅 >30% 硬过滤（A 股常规涨跌停上限 30%，北交所）
+            # 但新股/次新股除外——它们可能真实涨超100%
+            if abs(pct) > 30 and not is_ipo:
+                logger.warning(f"清洗: {key} {name} change_pct={pct} >30%，过滤")
                 continue
+            if is_ipo and abs(pct) > 30:
+                s["_ipo_note"] = "新股/次新股，无涨跌幅限制或限制放宽，涨幅为真实数据"
+                logger.info(f"清洗: {key} {name} change_pct={pct} 新股/次新股，保留")
             # PE/PB 为负或异常大 → 标记不删
             pe = s.get("pe", 0)
             pb = s.get("pb", 0)
