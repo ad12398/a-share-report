@@ -41,11 +41,25 @@ def _parse_futures(text: str, price_idx: int, prev_idx: int, name: str, unit: st
 
 
 def _parse_global_index(text: str) -> dict[str, Any] | None:
+    """新浪全球指数格式兼容两种：
+    int_sp500: 名称,价格,涨跌额,涨跌幅
+    gb_inx:    名称,价格,涨跌幅,时间,涨跌额,...
+    判断依据：vals[3] 是否是时间格式（含 : 或 -）
+    """
     m = re.search(r'"(.+)"', text)
     if not m: return None
     vals = m.group(1).split(",")
     if len(vals) < 4: return None
-    return {"name": vals[0], "price": float(vals[1] or 0), "change_pct": float(vals[3] or 0), "unit": "点"}
+    name = vals[0]
+    price = float(vals[1] or 0)
+    # 判断第三种字段是时间还是涨跌额
+    third = vals[3].strip()
+    if ":" in third or "-" in third:
+        # gb_* 格式：vals[2]=涨跌幅, vals[3]=时间
+        return {"name": name, "price": price, "change_pct": float(vals[2] or 0), "unit": "点"}
+    else:
+        # int_* 格式：vals[2]=涨跌额, vals[3]=涨跌幅
+        return {"name": name, "price": price, "change_pct": float(vals[3] or 0), "unit": "点"}
 
 
 # ─── 主入口 ──────────────────────────────────────────────
