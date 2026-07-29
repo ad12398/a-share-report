@@ -70,6 +70,49 @@
   </div>
   {% endif %}
 
+  <!-- 宏观数据 KPI -->
+  {% if macro and macro.get("cpi") %}
+  <div class="kpi-row">
+    {% if macro.cpi %}
+    <div class="kpi-card">
+      <div class="label">CPI {{ macro.cpi.period or '' }} {{ macro.cpi.unit or '%' }}</div>
+      <div class="value">{{ "%.1f"|format(macro.cpi.yoy) }}%</div>
+      <div class="change" style="color:var(--text-muted);">核心CPI {{ "%.1f"|format(macro.cpi.core_yoy) }}%</div>
+    </div>
+    {% endif %}
+    {% if macro.ppi %}
+    <div class="kpi-card">
+      <div class="label">PPI {{ macro.ppi.period }} {{ macro.ppi.unit or '%' }}</div>
+      <div class="value">{{ "%.1f"|format(macro.ppi.yoy) }}%</div>
+      <div class="change {% if macro.ppi.yoy >= 0 %}up{% else %}down{% endif %}">
+        {% if macro.ppi.mom %}{% if macro.ppi.mom >= 0 %}+{% endif %}{{ "%.1f"|format(macro.ppi.mom) }}% MoM{% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% if macro.pmi %}
+    <div class="kpi-card">
+      <div class="label">PMI {{ macro.pmi.period }}</div>
+      <div class="value">{{ "%.1f"|format(macro.pmi.manufacturing) }}</div>
+      <div class="change" style="color:var(--text-muted);">服务业 {{ macro.pmi.services }}</div>
+    </div>
+    {% endif %}
+    {% if macro.m2 %}
+    <div class="kpi-card">
+      <div class="label">M2 {{ macro.m2.period }}</div>
+      <div class="value">{{ "%.1f"|format(macro.m2.yoy) }}%</div>
+      <div class="change" style="color:var(--text-muted);">M1 {{ "%.1f"|format(macro.m2.m1_yoy) }}%</div>
+    </div>
+    {% endif %}
+    {% if macro.lpr %}
+    <div class="kpi-card">
+      <div class="label">LPR {{ macro.lpr.updated or '' }}</div>
+      <div class="value">{{ "%.1f"|format(macro.lpr.lpr_1y) }}% / {{ "%.1f"|format(macro.lpr.lpr_5y) }}%</div>
+      <div class="change" style="color:var(--text-muted);">1Y / 5Y 贷款</div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
   <!-- 行业板块图表 -->
   <div class="chart-container" id="sector-container">
     <div class="chart-title">📈 行业板块涨跌幅 TOP 20</div>
