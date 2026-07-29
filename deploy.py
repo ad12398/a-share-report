@@ -65,7 +65,6 @@ def deploy():
     # 获取 slot
     slot = sys.argv[1] if len(sys.argv) > 1 else None
     if not slot:
-        from datetime import datetime
         now = datetime.now(BEIJING_TZ)
         hour = now.hour
         minute = now.minute
