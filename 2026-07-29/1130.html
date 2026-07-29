@@ -23,7 +23,7 @@
   <!-- 导航 -->
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
     <a href="/a-share-report/index.html" style="color:var(--accent-blue);text-decoration:none;">← 返回首页</a>
-    <span style="color:var(--text-muted);font-size:13px;">报告生成时间: 2026-07-29 10:35</span>
+    <span style="color:var(--text-muted);font-size:13px;">报告生成时间: 2026-07-29 10:48</span>
   </div>
 
   <!-- KPI 指标卡片 -->
@@ -32,9 +32,9 @@
     
     <div class="kpi-card">
       <div class="label">上证指数</div>
-      <div class="value">3813.90</div>
-      <div class="change up">
-        +0.02%
+      <div class="value">3797.66</div>
+      <div class="change down">
+        -0.41%
       </div>
     </div>
     
@@ -42,9 +42,9 @@
     
     <div class="kpi-card">
       <div class="label">深证成指</div>
-      <div class="value">13581.25</div>
-      <div class="change up">
-        +0.53%
+      <div class="value">13485.33</div>
+      <div class="change down">
+        -0.18%
       </div>
     </div>
     
@@ -52,9 +52,9 @@
     
     <div class="kpi-card">
       <div class="label">创业板指</div>
-      <div class="value">3353.99</div>
-      <div class="change up">
-        +0.81%
+      <div class="value">3323.15</div>
+      <div class="change down">
+        -0.12%
       </div>
     </div>
     
@@ -62,9 +62,9 @@
     
     <div class="kpi-card">
       <div class="label">科创50</div>
-      <div class="value">1648.53</div>
+      <div class="value">1626.61</div>
       <div class="change down">
-        -2.65%
+        -3.95%
       </div>
     </div>
     
@@ -72,9 +72,9 @@
     
     <div class="kpi-card">
       <div class="label">沪深300</div>
-      <div class="value">4576.81</div>
-      <div class="change up">
-        +0.16%
+      <div class="value">4557.75</div>
+      <div class="change down">
+        -0.26%
       </div>
     </div>
     
@@ -82,9 +82,9 @@
     
     <div class="kpi-card">
       <div class="label">中证500</div>
-      <div class="value">7473.20</div>
-      <div class="change up">
-        +0.40%
+      <div class="value">7408.12</div>
+      <div class="change down">
+        -0.47%
       </div>
     </div>
     
@@ -110,9 +110,9 @@
     
     <div class="kpi-card">
       <div class="label">伦敦金 (美元/盎司)</div>
-      <div class="value">4031.84</div>
+      <div class="value">4033.56</div>
       <div class="change up">
-        +0.08%
+        +0.13%
       </div>
     </div>
     
@@ -120,9 +120,9 @@
     
     <div class="kpi-card">
       <div class="label">COMEX黄金 (美元/盎司)</div>
-      <div class="value">4090.94</div>
+      <div class="value">4093.33</div>
       <div class="change down">
-        -0.19%
+        -0.13%
       </div>
     </div>
     
@@ -132,7 +132,7 @@
       <div class="label">WTI原油 (美元/桶)</div>
       <div class="value">82.35</div>
       <div class="change up">
-        +0.11%
+        +0.12%
       </div>
     </div>
     
@@ -140,9 +140,9 @@
     
     <div class="kpi-card">
       <div class="label">LME铜 (美元/吨)</div>
-      <div class="value">13661.81</div>
+      <div class="value">13646.36</div>
       <div class="change down">
-        -0.17%
+        -0.28%
       </div>
     </div>
     
@@ -152,7 +152,7 @@
       <div class="label">在岸人民币 (USD/CNY)</div>
       <div class="value">6.77</div>
       <div class="change down">
-        -0.01%
+        -0.03%
       </div>
     </div>
     
@@ -237,62 +237,64 @@
   <div class="chart-container" id="sector-container">
     <div class="chart-title">📈 行业板块涨跌幅 TOP 20</div>
     <div class="chart-box" id="sector-chart"></div>
+    <div class="chart-empty" id="sector-empty" style="display:none;color:var(--text-muted);text-align:center;padding:40px;">
+      板块数据暂不可用（API 请求受限），请稍后刷新<br>
+      <small style="color:var(--text-muted);">涨幅榜和跌幅榜图表仍可正常查看</small>
+    </div>
   </div>
 
   <!-- 分析报告 -->
   <div class="report-section">
     <h1>午盘总结 — 量化分析报告</h1>
-    <div class="meta">生成时间: 2026-07-29 10:35 | 模型: DeepSeek</div>
+    <div class="meta">生成时间: 2026-07-29 10:48 | 模型: DeepSeek</div>
     <div class="content">
-      <p></p><h3>📊 市场概览</h3>
-<p>上午市场呈现典型的结构性分化格局：<strong>深强沪弱、小盘成长优于权重价值</strong>。沪指平盘震荡仅微涨0.02%，而创业板指在部分科技与消费股带动下走强，收涨0.81%。真正的异常信号在科创板（科创50跌2.65%），显示硬科技内部出现剧烈分歧和获利了结压力。</p>
+      <h3>市场概览</h3>
+<p>上午A股呈震荡分化格局，三大指数集体收跌但个股涨多跌少，全市场上涨比例55.3%。科创50大跌3.95%，成为领跌宽基，而创业板指仅微跌0.12%，资金从高估值科技向低位消费、教育方向切换的迹象明显。</p>
 
-<h3>📈 核心指标</h3>
+<h3>核心指标</h3>
 <ul>
-<li><strong>涨跌比 1.84:1</strong>（516涨/280跌），市场宽度尚可，并非普跌。但仔细看，涨幅主要集中在少数超跌小盘股，<strong>中位数涨幅远低于指数表现</strong>，资金集中度较高。</li>
-<li><strong>成交额数据缺失</strong>，但从板块量比推算，<strong>半日成交约在7200-7800亿区间</strong>，属中等偏下水平，未现明显增量资金入场，仍是存量博弈。</li>
-<li><strong>北向资金缺失</strong>，结合汇率（在岸人民币6.7711，小幅升值），外资动向不明显。但从权重股（沪深300仅涨0.16%）表现看，北水大概率呈小幅净流出或中性状态。</li>
+<li><strong>涨跌比</strong>：上涨553家，下跌438家，平9家，上涨比率55.3%，涨停11家，跌停15家。跌停数多于涨停，强势股亏钱效应突出。</li>
+<li><strong>成交额</strong>：日内成交额数据缺失，但平均换手率达2.34%（半日水平偏高），量价关系呈现“放量滞涨+指数下跌”的负面组合。</li>
+<li><strong>北向资金</strong>：今日数据暂缺，但离岸人民币升值至6.7711，理论上利于外资流入，需午后关注实际资金动向。</li>
 </ul>
 
-<h3>🔥 板块热点</h3>
+<h3>板块热点</h3>
 <ul>
-<li><strong>领涨方向（来自涨停榜结构）</strong>：
-    <br>① <strong>超跌低市值品种</strong>：天晟新材、全通教育单日20%涨停，PE极高或为负，纯粹资金博弈，<strong>无基本面支撑，持续性存疑</strong>。
-    <br>② <strong>部分消费/教育</strong>：欢乐家、均瑶健康涨停，带有防御属性，但领涨的消费分支品类分散，未形成合力。
-    <br>③ <strong>ST板块</strong>：*ST元道、ST豆神大幅异动，这是市场风偏降低、主线缺失时的典型特征。</li>
-<li><strong>领跌方向</strong>：
-    <br>① <strong>半导体/硬科技</strong>：茂莱光学(-14.67%)、兆易创新(-9.56%)、微导纳米(-11.61%) 等集体重挫，是科创50暴跌的直接原因。高位高估值科技股遭遇集中性抛盘。
-    <br>② <strong>AI概念中军松动</strong>：紫光股份(-9.38%)、福晶科技(-9.98%) 破位下行，前期主线人工智能进入实质性调整分化期。</li>
+<li><strong>领涨方向</strong>：教育（全通教育+20%、ST豆神+13.8%）、消费食品（骑士乳业+17.6%、均瑶健康+10.1%）、部分医疗（中红医疗+20%）逆势活跃，多为超跌+小市值品种，无明显板块效应，博弈性质浓厚。</li>
+<li><strong>领跌方向</strong>：半导体设备与材料重挫，科创50成分股成重灾区——茂莱光学（-17.9%）、微导纳米（-13.0%）、甬矽电子（-11.4%）等跌幅超10%，反映市场对高估值科技股的风险偏好急剧收缩。</li>
+<li><strong>驱动因素</strong>：全球科技股分化（隔夜纳斯达克微跌、A股内部存量博弈），叠加中报季对盈利确定性的审视，资金撤离预期不确定的高估值领域，转向类现金型消费股避险。</li>
 </ul>
 
-<h3>⚙️ 技术信号</h3>
+<h3>技术信号</h3>
 <ul>
-<li><strong>上证指数</strong>：平开未上冲，原地踏步。连续多日在3,800点关口上方窄幅消化，日K线呈小十字星。MACD动能柱缩短，<strong>变盘临近</strong>，若下午不能放量上攻，60分钟可能形成顶背离结构。</li>
-<li><strong>创业板指</strong>：收盘站上3,350，维持5日均线之上强势。但分时图显示上涨斜率趋缓，<strong>3,370-3,400区域为密集套牢区</strong>，一次性突破概率低。</li>
-<li><strong>科创50</strong>：跳空低开低走，单日长阴线抹去前三个交易日涨幅。<strong>顶部"M头"雏形初现</strong>，颈线位在1,620点附近，若有效跌破，调整空间和时间将拉长。</li>
+<li><strong>上证指数</strong>：跳空低开在3823，盘中失守3800点，逼近30日均线（约3790），MACD红柱缩短，若午后不能回升，日线级别将形成“顶分型”信号。</li>
+<li><strong>科创50</strong>：放量长阴跌破多条均线，RSI（6日）快速下穿至30下方进入弱势区，KDJ死叉发散，阶段性头部迹象明显，短期应回避。</li>
+<li><strong>创业板指</strong>：相对抗跌，守住5日线（约3315），但量能不足，反弹力度存疑。</li>
 </ul>
 
-<h3>🔍 量化视角</h3>
+<h3>量化视角</h3>
 <ul>
-<li><strong>资金流向</strong>：量价背离严重。指数表面的平稳掩盖了内部激烈的资金迁徙——从高位AI/半导体板块持续流出，腾挪至年内跌幅巨大的小盘股和部分消费品种进行超跌反弹。<strong>这种“高位换低位”的轮动，本质上并非增量牛市驱动，而是风偏下行期的被动防御。</strong></li>
-<li><strong>量价关系</strong>：上涨个股中，大量“20cm”涨停股为PE为负或PE异常高的筹码博弈品种，缩量封板，可参与度低。而领跌的硬科技股带量下跌，如老牌龙头兆易创新，显示出机构调仓的坚决性。</li>
-<li><strong>市场宽度</strong>：虽然涨多跌少，但涨停仅8家（剔除新股后更少），涨跌幅超过5%的个股数量比失衡，市场真实的盈利效应并不如指数所展示的强。</li>
+<li><strong>量价背离</strong>：平均换手率2.34%与指数普跌形成“放量跌”组合，说明抛压主动释放，特别是科创50半日成交量达724万手（昨日全天约900万手），出货特征显著。</li>
+<li><strong>市场宽度</strong>：虽然全市场涨多跌少，但涨停家数仅11家，且涨幅超10%的个股中多只ST股和无业绩支撑的品种，显示活跃资金并未形成合力，市场宽度指标虚高。</li>
+<li><strong>资金流</strong>：从高价、高PE（如茂莱光学PE 365倍、精智达PE 605倍）大幅撤离，流向低价、低PE或负PE的“困境反转”标的，风格切换凶悍。</li>
 </ul>
 
-<h3>🏛 宏观背景</h3>
+<h3>宏观背景</h3>
 <ul>
-<li><strong>通胀与增长</strong>：6月CPI同比仅1.0%，PPI同比4.1%但环比已转跌，PMI持续微扩于50.3。基本面处于 <strong>“弱复苏与弱通胀” 组合</strong>，对资源品和高估值科技构成压力，有利于中小盘题材和必选消费的逻辑演绎。</li>
-<li><strong>流动性</strong>：M2增速8.0%，但社融数据显示同比少增明显。LPR连续14个月未动，市场流动性呈 <strong>“总量足、活性低、短期淤积于银行间”</strong> 的特征，这决定了股市只能支撑轮动而非普涨。7天逆回购利率1.4%的极低水平，锁定了无风险利率，对权益资产估值底部形成支撑。</li>
+<li><strong>通胀与增长</strong>：上半年CPI同比1.0%，核心CPI 1.2%，国内需求弱复苏；PPI同比4.1%但环比转降，上游价格对中下游的挤压减弱。6月制造业PMI 50.3，服务业50.4，扩张力度边际放缓。</li>
+<li><strong>流动性</strong>：M2同比8.0%，社融同比少增，LPR连续14个月未动（1年期3.0%，5年期3.5%），商业银行净息差仅1.4%，总量宽松受限，结构性工具为主。政策面处于“观察期”，短期降息概率低。</li>
+<li><strong>市场环境</strong>：低通胀与不强刺激的组合下，A股难以出现全面性行情，结构分化是常态。高位高估值板块在业绩验证期面临压力，低位有安全边际的品种受到防御性配置支撑。</li>
 </ul>
 
-<h3>⚠️ 风险提示</h3>
+<h3>风险提示</h3>
 <ul>
-<li><strong>主线崩塌风险</strong>：以科创50和部分AI中军为锚的硬科技主线出现“断头铡刀”式阴线，是今日最大负反馈。若午后无法收回部分跌幅，可能引发高位股的连锁止损盘。</li>
-<li><strong>超跌反弹陷阱</strong>：领涨的20cm小票多为绩差股或亏损股，是典型的“指数搭台期间”的过度投机产物，流动性极差，追高风险极大，不构成新的主线。</li>
-<li><strong>下午展望</strong>：预计午后上证指数将维持窄幅拉锯，重点是看 <strong>沪深300能否在4,570点企稳</strong>。创业板指大概率冲高回落，短期涨幅过大需消化。主要风险敞口仍在科创板，警惕其继续拖累市场情绪。在主线不明朗、量能无显著放大的背景下，仓位控制胜于择股。</li>
+<li><strong>科创50补跌风险</strong>：半导体板块大规模资金出逃，若下午不能止跌，可能引发连锁止损盘，拖累整体市场情绪。</li>
+<li><strong>跌停数量</strong>：上午跌停15家已超过涨停11家，前期强势股（如新莱应材、华凯易佰）出现崩跌，需警惕小微盘股的流动性负反馈。</li>
+<li><strong>量能陷阱</strong>：虽然换手率较高，但指数下跌意味着是抛售放量，若午后无增量资金接盘，弱势可能延续至尾盘。</li>
+<li><strong>外部扰动</strong>：隔夜美股道指上涨但纳指下跌，全球资金从成长向价值切换的趋势若强化，对A股科技板块形成估值压力。</li>
 </ul>
-<p></p><hr><p></p>
-<p><strong>⚠️ 免责声明：本报告由 AI 自动生成，仅供参考，不构成任何投资建议。投资有风险，入市需谨慎。报告中的数据来源于公开接口，不对其准确性做任何保证。</strong></p>
+
+<p style="color:#888; font-size:12px;">⚠️ 免责声明：本报告由 AI 自动生成，仅供参考，不构成任何投资建议。投资有风险，入市需谨慎。报告中的数据来源于公开接口，不对其准确性做任何保证。</p>
     </div>
   </div>
 
@@ -306,25 +308,25 @@
           <thead><tr><th>名称</th><th>涨幅</th></tr></thead>
           <tbody>
           
-          <tr><td>sz300169 天晟新材</td><td class="up">+20.09%</td></tr>
-          
           <tr><td>sz300359 全通教育</td><td class="up">+20.05%</td></tr>
           
           <tr><td>sz300530 领湃科技</td><td class="up">+20.02%</td></tr>
           
           <tr><td>sz300997 欢乐家</td><td class="up">+20.00%</td></tr>
           
+          <tr><td>sz301112 信邦智能</td><td class="up">+20.00%</td></tr>
+          
           <tr><td>sz300981 中红医疗</td><td class="up">+19.98%</td></tr>
           
           <tr><td>bj920786 骑士乳业</td><td class="up">+17.55%</td></tr>
           
-          <tr><td>bj920779 武汉蓝电</td><td class="up">+17.54%</td></tr>
+          <tr><td>bj920779 武汉蓝电</td><td class="up">+15.38%</td></tr>
           
-          <tr><td>sz301139 *ST元道</td><td class="up">+16.67%</td></tr>
+          <tr><td>sz300169 天晟新材</td><td class="up">+14.73%</td></tr>
           
-          <tr><td>sz301112 信邦智能</td><td class="up">+16.35%</td></tr>
+          <tr><td>sz300492 华图山鼎</td><td class="up">+13.85%</td></tr>
           
-          <tr><td>sz300010 ST豆神</td><td class="up">+14.29%</td></tr>
+          <tr><td>sz300010 ST豆神</td><td class="up">+13.78%</td></tr>
           
           </tbody>
         </table>
@@ -336,23 +338,23 @@
           
           <tr><td>bj920305 云创退</td><td class="down">-24.56%</td></tr>
           
-          <tr><td>bj920176 维琪科技</td><td class="down">-20.63%</td></tr>
+          <tr><td>bj920176 维琪科技</td><td class="down">-18.44%</td></tr>
           
-          <tr><td>sh688502 茂莱光学</td><td class="down">-14.67%</td></tr>
+          <tr><td>sh688502 茂莱光学</td><td class="down">-17.86%</td></tr>
           
-          <tr><td>sz301234 五洲医疗</td><td class="down">-11.83%</td></tr>
+          <tr><td>sz301392 汇成真空</td><td class="down">-13.61%</td></tr>
           
-          <tr><td>sh688147 微导纳米</td><td class="down">-11.61%</td></tr>
+          <tr><td>sz300260 新莱应材</td><td class="down">-13.54%</td></tr>
           
-          <tr><td>sz300592 华凯易佰</td><td class="down">-11.04%</td></tr>
+          <tr><td>sh688371 菲沃泰</td><td class="down">-13.30%</td></tr>
           
-          <tr><td>sz300260 新莱应材</td><td class="down">-10.93%</td></tr>
+          <tr><td>sh688147 微导纳米</td><td class="down">-13.02%</td></tr>
           
-          <tr><td>sz301392 汇成真空</td><td class="down">-10.81%</td></tr>
+          <tr><td>sz300592 华凯易佰</td><td class="down">-12.57%</td></tr>
           
-          <tr><td>sh688371 菲沃泰</td><td class="down">-10.54%</td></tr>
+          <tr><td>sz301165 锐捷网络</td><td class="down">-11.61%</td></tr>
           
-          <tr><td>sh603065 宿迁联盛</td><td class="down">-10.03%</td></tr>
+          <tr><td>sh688362 甬矽电子</td><td class="down">-11.40%</td></tr>
           
           </tbody>
         </table>
@@ -370,7 +372,7 @@
 
 <script>
 (function() {
-  var chartData = {"gainers": [{"name": "天晟新材", "change_pct": 20.089}, {"name": "全通教育", "change_pct": 20.054}, {"name": "领湃科技", "change_pct": 20.024}, {"name": "欢乐家", "change_pct": 20.0}, {"name": "中红医疗", "change_pct": 19.981}, {"name": "骑士乳业", "change_pct": 17.55}, {"name": "武汉蓝电", "change_pct": 17.54}, {"name": "*ST元道", "change_pct": 16.667}, {"name": "信邦智能", "change_pct": 16.351}, {"name": "ST豆神", "change_pct": 14.286}], "losers": [{"name": "云创退", "change_pct": -24.561}, {"name": "维琪科技", "change_pct": -20.634}, {"name": "茂莱光学", "change_pct": -14.666}, {"name": "五洲医疗", "change_pct": -11.833}, {"name": "微导纳米", "change_pct": -11.61}, {"name": "华凯易佰", "change_pct": -11.045}, {"name": "新莱应材", "change_pct": -10.93}, {"name": "汇成真空", "change_pct": -10.813}, {"name": "菲沃泰", "change_pct": -10.537}, {"name": "宿迁联盛", "change_pct": -10.025}]};
+  var chartData = {"gainers": [{"name": "全通教育", "change_pct": 20.054}, {"name": "领湃科技", "change_pct": 20.024}, {"name": "欢乐家", "change_pct": 20.0}, {"name": "信邦智能", "change_pct": 20.0}, {"name": "中红医疗", "change_pct": 19.981}, {"name": "骑士乳业", "change_pct": 17.55}, {"name": "武汉蓝电", "change_pct": 15.385}, {"name": "天晟新材", "change_pct": 14.732}, {"name": "华图山鼎", "change_pct": 13.848}, {"name": "ST豆神", "change_pct": 13.776}], "losers": [{"name": "云创退", "change_pct": -24.561}, {"name": "维琪科技", "change_pct": -18.441}, {"name": "茂莱光学", "change_pct": -17.855}, {"name": "汇成真空", "change_pct": -13.608}, {"name": "新莱应材", "change_pct": -13.542}, {"name": "菲沃泰", "change_pct": -13.297}, {"name": "微导纳米", "change_pct": -13.015}, {"name": "华凯易佰", "change_pct": -12.575}, {"name": "锐捷网络", "change_pct": -11.612}, {"name": "甬矽电子", "change_pct": -11.403}]};
   var colorGreen = '#3fb950';
   var colorRed = '#f85149';
 
@@ -400,6 +402,12 @@
   renderBar('sector-chart', chartData.sectors, true);
   renderBar('gainers-chart', chartData.gainers, true);
   renderBar('losers-chart', chartData.losers, true);
+
+  // 板块数据为空时显示提示
+  if (!chartData.sectors || chartData.sectors.length === 0) {
+    document.getElementById('sector-chart').style.display = 'none';
+    document.getElementById('sector-empty').style.display = 'block';
+  }
 })();
 </script>
 
