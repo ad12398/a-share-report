@@ -53,6 +53,23 @@
     <div class="chart-box" id="losers-chart"></div>
   </div>
 
+  <!-- 商品 & 汇率 KPI -->
+  {% if commodities %}
+  <div class="kpi-row">
+    {% for key, item in commodities.items() %}
+    {% if item and item.get("name") %}
+    <div class="kpi-card">
+      <div class="label">{{ item.name }} ({{ item.unit or '' }})</div>
+      <div class="value">{{ "%.2f"|format(item.price) if item.price else "--" }}</div>
+      <div class="change {% if item.change_pct >= 0 %}up{% else %}down{% endif %}">
+        {% if item.change_pct >= 0 %}+{% endif %}{{ "%.2f"|format(item.change_pct) if item.change_pct else "0" }}%
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <!-- 行业板块图表 -->
   <div class="chart-container" id="sector-container">
     <div class="chart-title">📈 行业板块涨跌幅 TOP 20</div>
