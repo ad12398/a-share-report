@@ -2,10 +2,14 @@
 import base64
 import json
 import os
+import ssl
 import sys
 import urllib.request
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
+
+# Windows Server SSL 证书兼容
+ssl._create_default_https_context = ssl._create_unverified_context
 
 TOKEN = os.environ.get("GH_TOKEN", "")
 REPO = "ad12398/a-share-report"
