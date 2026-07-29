@@ -175,16 +175,32 @@ def _sina_sectors_fallback() -> list[dict[str, Any]]:
             sectors = []
             for value in data.values():
                 fields = value.split(",")
-                if len(fields) >= 6:
+                if len(fields) < 5:
+                    continue
+                # 涨跌幅字段：fields[4] 是涨跌幅，fields[5] 可能是成交量
+                # 用启发式检测：涨跌幅应该在 -20~+20 之间
+                pct = 0.0
+                for idx in (4, 5):
+                    if idx >= len(fields):
+                        continue
                     try:
-                        pct = float(fields[5] or 0)
+                        v = float(fields[idx] or 0)
+                        if -25 <= v <= 25:
+                            pct = v
+                            break
+                    except ValueError:
+                        continue
+                # 如果启发式没找到，回退到 fields[4]
+                if pct == 0.0:
+                    try:
+                        pct = float(fields[4] or 0)
                     except ValueError:
                         pct = 0.0
-                    sectors.append({
-                        "name": fields[1],
-                        "change_pct": pct,
-                        "leader": "",
-                    })
+                sectors.append({
+                    "name": fields[1],
+                    "change_pct": pct,
+                    "leader": "",
+                })
             if not sectors:
                 logger.warning(f"新浪板块 ({proto}) 解析为空")
                 continue
