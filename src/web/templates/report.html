@@ -142,7 +142,7 @@
           <thead><tr><th>名称</th><th>涨幅</th></tr></thead>
           <tbody>
           {% for s in movers.gainers[:10] %}
-          <tr><td>{{ s.code }} {{ s.name }}{% if s.name.startswith("N") or s.name.startswith("C") %} <span style="background:var(--accent-orange);color:#000;font-size:10px;padding:1px 5px;border-radius:3px;font-weight:700;">新股</span>{% endif %}</td><td class="up">+{{ "%.2f"|format(s.change_pct) }}%</td></tr>
+          <tr><td>{{ s.code }} {{ s.name }}{% if s.name.startswith("N") or s.name.startswith("C") %} <span style="background:var(--accent-red);color:#fff;font-size:10px;padding:1px 5px;border-radius:3px;font-weight:700;">新股</span>{% endif %}</td><td class="up">+{{ "%.2f"|format(s.change_pct) }}%</td></tr>
           {% endfor %}
           </tbody>
         </table>
@@ -152,7 +152,7 @@
           <thead><tr><th>名称</th><th>跌幅</th></tr></thead>
           <tbody>
           {% for s in movers.losers[:10] %}
-          <tr><td>{{ s.code }} {{ s.name }}{% if s.name.startswith("N") or s.name.startswith("C") %} <span style="background:var(--accent-orange);color:#000;font-size:10px;padding:1px 5px;border-radius:3px;font-weight:700;">新股</span>{% endif %}</td><td class="down">{{ "%.2f"|format(s.change_pct) }}%</td></tr>
+          <tr><td>{{ s.code }} {{ s.name }}{% if s.name.startswith("N") or s.name.startswith("C") %} <span style="background:var(--accent-red);color:#fff;font-size:10px;padding:1px 5px;border-radius:3px;font-weight:700;">新股</span>{% endif %}</td><td class="down">{{ "%.2f"|format(s.change_pct) }}%</td></tr>
           {% endfor %}
           </tbody>
         </table>
