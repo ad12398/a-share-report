@@ -69,6 +69,9 @@ def fetch_index_quotes() -> dict[str, Any]:
                         result[code_map[sid]] = {
                             "name": name_map[code_map[sid]],
                             "price": price,
+                            "open": float(fields[5] or 0) if len(fields) > 5 else 0,
+                            "high": 0,  # 腾讯指数无日内高低，用新浪补充
+                            "low": 0,
                             "change_pct": change_pct,
                             "change_amt": change_amt,
                             "volume": float(fields[6] or 0) if len(fields) > 6 else 0,
@@ -103,13 +106,16 @@ def _sina_index_fallback() -> dict[str, Any]:
                 sid, vals = m.group(1), m.group(2).split(",")
                 if sid in name_map and len(vals) >= 4:
                     code, cname = name_map[sid]
-                    # Sina 格式: [0]名字 [1]今开 [2]昨收 [3]当前价
+                    # Sina: [0]名 [1]今开 [2]昨收 [3]当前 [4]最高 [5]最低
                     price = float(vals[3] or 0) if len(vals) > 3 else 0
                     prev_close = float(vals[2] or 0) if len(vals) > 2 else 0
                     change_pct = round((price - prev_close) / prev_close * 100, 2) if prev_close else 0
                     result[code] = {
                         "name": cname,
                         "price": price,
+                        "open": float(vals[1] or 0) if len(vals) > 1 else 0,
+                        "high": float(vals[4] or 0) if len(vals) > 4 else 0,
+                        "low": float(vals[5] or 0) if len(vals) > 5 else 0,
                         "change_pct": change_pct,
                         "change_amt": round(price - prev_close, 2),
                         "volume": float(vals[8] or 0) if len(vals) > 8 else 0,
@@ -202,6 +208,8 @@ def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
                         "name": str(item.get("name", "")),
                         "price": float(item.get("trade", 0) or 0),
                         "change_pct": float(item.get("changepercent", 0) or 0),
+                        "pe": float(item.get("per", 0) or 0),
+                        "pb": float(item.get("pb", 0) or 0),
                     })
 
         # 跌幅榜
@@ -220,6 +228,8 @@ def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
                         "name": str(item.get("name", "")),
                         "price": float(item.get("trade", 0) or 0),
                         "change_pct": float(item.get("changepercent", 0) or 0),
+                        "pe": float(item.get("per", 0) or 0),
+                        "pb": float(item.get("pb", 0) or 0),
                     })
 
         logger.info(f"新浪: 涨跌幅榜各 {len(result['gainers'])}/{len(result['losers'])} 条")
@@ -237,7 +247,7 @@ def fetch_market_overview() -> dict[str, Any]:
     用 sort=symbol 排序可获得代表性样本，而非全是涨/跌的极端值。
     """
     try:
-        total = up = down = flat = 0
+        total = up = down = flat = limit_up = limit_down = 0
         base_url = (
             "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
             "Market_Center.getHQNodeData?node=hs_a&symbol=&_s_r_a=auto&num=100&sort=symbol"
@@ -257,10 +267,13 @@ def fetch_market_overview() -> dict[str, Any]:
                 if pct > 0: up += 1
                 elif pct < 0: down += 1
                 else: flat += 1
+                if pct >= 9.5: limit_up += 1
+                if pct <= -9.5: limit_down += 1
 
-        logger.info(f"新浪: 市场概况 sampled total={total} up={up} down={down}")
+        logger.info(f"新浪: 市场概况 sampled total={total} up={up} down={down} 涨停≈{limit_up} 跌停≈{limit_down}")
         return {
             "total": total, "up": up, "down": down, "flat": flat,
+            "limit_up": limit_up, "limit_down": limit_down,
             "total_amount": 0,
             "up_ratio": round(up / total * 100, 1) if total > 0 else 0,
         }
