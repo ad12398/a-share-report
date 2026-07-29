@@ -8,6 +8,7 @@ import requests
 
 from src.data.sources import akshare_source, sina_source, eastmoney_source, commodities_source
 from src.data.validator import validate_index_quotes
+from src.data.macro_loader import load_macro_data
 
 logger = logging.getLogger("a-share-report")
 
@@ -59,6 +60,9 @@ def collect_all_data(slot: str) -> dict[str, Any]:
     if validation_info.get("warnings"):
         logger.warning(f"数据校验警告: {validation_info['warnings']}")
 
+    # 宏观数据（从本地 JSON 加载）
+    macro_data = load_macro_data()
+
     result = {
         "slot": slot,
         "index": index_data,
@@ -69,6 +73,7 @@ def collect_all_data(slot: str) -> dict[str, Any]:
         "dragon_tiger": dragon_data,
         "commodities": commodities_data,
         "global": global_data,
+        "macro": macro_data,
     }
 
     logger.info(f"数据采集完成 (slot={slot})")
