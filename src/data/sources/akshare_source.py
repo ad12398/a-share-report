@@ -154,36 +154,98 @@ def fetch_sector_performance() -> list[dict[str, Any]]:
 
 
 def _sina_sectors_fallback() -> list[dict[str, Any]]:
-    """新浪行业板块数据"""
+    """新浪行业板块数据 — 尝试 HTTP 和 HTTPS"""
+    urls = [
+        ("http://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php", "HTTP"),
+        ("https://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php", "HTTPS"),
+    ]
+    for url, proto in urls:
+        try:
+            logger.info(f"新浪板块尝试 ({proto}): {url}")
+            resp = _safe_get(url, extra_headers={"Referer": "https://finance.sina.com.cn"}, max_retries=2, timeout=25)
+            if not resp:
+                logger.warning(f"新浪板块 ({proto}) 无响应")
+                continue
+            text = resp.text
+            json_start = text.find("{")
+            if json_start == -1:
+                logger.warning(f"新浪板块 ({proto}) 返回非JSON: {text[:200]}")
+                continue
+            data = json.loads(text[json_start:])
+            sectors = []
+            for value in data.values():
+                fields = value.split(",")
+                if len(fields) >= 6:
+                    try:
+                        pct = float(fields[5] or 0)
+                    except ValueError:
+                        pct = 0.0
+                    sectors.append({
+                        "name": fields[1],
+                        "change_pct": pct,
+                        "leader": "",
+                    })
+            if not sectors:
+                logger.warning(f"新浪板块 ({proto}) 解析为空")
+                continue
+            sectors.sort(key=lambda x: abs(x["change_pct"]), reverse=True)
+            result = sectors[:30]
+            logger.info(f"新浪: 获取行业板块 {len(result)} 条 ({proto})")
+            return result
+        except Exception as e:
+            logger.warning(f"新浪板块失败 ({proto}): {e}")
+            continue
+
+    # 新浪 newSinaHy.php 完全失败，尝试腾讯行业板块
+    return _tencent_sectors_fallback()
+
+
+def _tencent_sectors_fallback() -> list[dict[str, Any]]:
+    """腾讯行业板块数据 — 查询申万行业指数作为板块代理"""
+    # 申万一级行业指数代码（腾讯 qt.gtimg.cn 支持 sz 前缀）
+    sw_codes = {
+        "sz399997": "食品饮料", "sz399998": "煤炭", "sz399999": "有色金属",
+        "sz399389": "房地产", "sz399390": "汽车", "sz399391": "家用电器",
+        "sz399392": "电力设备", "sz399393": "纺织服饰", "sz399394": "商贸零售",
+        "sz399395": "农林牧渔", "sz399396": "钢铁", "sz399397": "石油石化",
+        "sz399398": "基础化工", "sz399399": "建筑材料", "sz399986": "银行",
+        "sz399987": "非银金融", "sz399988": "医药生物", "sz399989": "电子",
+        "sz399990": "计算机", "sz399991": "通信", "sz399992": "传媒",
+        "sz399993": "国防军工", "sz399994": "公用事业", "sz399995": "建筑装饰",
+        "sz399996": "交通运输", "sz399966": "环保",
+    }
     try:
-        url = "http://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php"
-        resp = _safe_get(url, extra_headers={"Referer": "https://vip.stock.finance.sina.com.cn"})
+        code_str = ",".join(sw_codes.keys())
+        url = f"http://qt.gtimg.cn/q={code_str}"
+        resp = _safe_get(url, extra_headers={"Referer": "https://finance.qq.com"}, max_retries=2, timeout=20)
         if not resp:
             return []
-        text = resp.text
-        json_start = text.find("{")
-        if json_start == -1:
-            return []
-        data = json.loads(text[json_start:])
+        resp.encoding = "gbk"
         sectors = []
-        for value in data.values():
-            fields = value.split(",")
-            if len(fields) >= 6:
-                try:
-                    pct = float(fields[5] or 0)
-                except ValueError:
-                    pct = 0.0
-                sectors.append({
-                    "name": fields[1],
-                    "change_pct": pct,
-                    "leader": "",
-                })
+        for line in resp.text.strip().split("\n"):
+            m = re.search(r'v_(\w+)="(.+)"', line)
+            if not m:
+                continue
+            sid = m.group(1)
+            fields = m.group(2).split("~")
+            if sid not in sw_codes or len(fields) < 5:
+                continue
+            price = float(fields[3] or 0)
+            prev_close = float(fields[4] or 0)
+            change_pct = round((price - prev_close) / prev_close * 100, 2) if prev_close else 0
+            if abs(change_pct) > 30:
+                continue
+            sectors.append({
+                "name": sw_codes[sid],
+                "change_pct": change_pct,
+                "leader": "",
+            })
         sectors.sort(key=lambda x: abs(x["change_pct"]), reverse=True)
         result = sectors[:30]
-        logger.info(f"新浪: 获取行业板块 {len(result)} 条")
+        logger.info(f"腾讯: 获取行业板块 {len(result)} 条")
         return result
     except Exception as e:
-        logger.warning(f"新浪板块失败: {e}")
+        logger.warning(f"腾讯板块失败: {e}")
         return []
 
 
