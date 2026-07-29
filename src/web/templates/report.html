@@ -117,6 +117,10 @@
   <div class="chart-container" id="sector-container">
     <div class="chart-title">📈 行业板块涨跌幅 TOP 20</div>
     <div class="chart-box" id="sector-chart"></div>
+    <div class="chart-empty" id="sector-empty" style="display:none;color:var(--text-muted);text-align:center;padding:40px;">
+      板块数据暂不可用（API 请求受限），请稍后刷新<br>
+      <small style="color:var(--text-muted);">涨幅榜和跌幅榜图表仍可正常查看</small>
+    </div>
   </div>
 
   <!-- 分析报告 -->
@@ -196,6 +200,12 @@
   renderBar('sector-chart', chartData.sectors, true);
   renderBar('gainers-chart', chartData.gainers, true);
   renderBar('losers-chart', chartData.losers, true);
+
+  // 板块数据为空时显示提示
+  if (!chartData.sectors || chartData.sectors.length === 0) {
+    document.getElementById('sector-chart').style.display = 'none';
+    document.getElementById('sector-empty').style.display = 'block';
+  }
 })();
 </script>
 
