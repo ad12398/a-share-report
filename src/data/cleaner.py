@@ -16,6 +16,7 @@ def clean_data_for_ai(raw_data: dict[str, Any]) -> dict[str, Any]:
     _clean_sectors(data)
     _clean_movers(data)
     _clean_commodities(data)
+    _clean_macro(data)
 
     data.pop("_validation", None)
     return data
@@ -67,6 +68,13 @@ def _clean_overview(data: dict[str, Any]):
     # 涨停/跌停计数为 0 且 total > 100：标记（交易日不可能没有涨跌停）
     if total > 100 and overview.get("limit_up", 0) == 0 and overview.get("limit_down", 0) == 0:
         notes.append("涨跌停计数可能不完整")
+
+    # 换手率异常
+    turnover = overview.get("avg_turnover", 0)
+    if turnover == 0 and total > 100:
+        notes.append("换手率数据暂缺")
+    elif turnover > 20:
+        notes.append(f"平均换手率 {turnover}% 极高，请核实")
 
     if notes:
         overview["_note"] = "；".join(notes)
@@ -148,3 +156,32 @@ def _clean_commodities(data: dict[str, Any]):
 
         if notes:
             item["_note"] = "；".join(notes)
+
+
+# ─── 宏观数据 ────────────────────────────────────────────
+
+def _clean_macro(data: dict[str, Any]):
+    macro = data.get("macro", {})
+    if not macro:
+        data["macro"] = {"_note": "宏观数据暂缺，请更新 macro_data.json"}
+        return
+
+    updated = macro.get("_updated", "")
+    notes = []
+    # 检查时效性：超过 45 天未更新就标记
+    from datetime import datetime, timedelta
+    try:
+        update_date = datetime.strptime(updated, "%Y-%m-%d")
+        if datetime.now() - update_date > timedelta(days=45):
+            notes.append(f"宏观数据最后更新于 {updated}，已超过45天，可能过时")
+    except ValueError:
+        notes.append("宏观数据日期格式异常")
+
+    # 检查关键字段是否存在
+    required = ["cpi", "ppi", "pmi", "m2", "lpr"]
+    missing = [k for k in required if k not in macro]
+    if missing:
+        notes.append(f"缺少宏观指标: {', '.join(missing)}")
+
+    if notes:
+        macro["_note"] = "；".join(notes)
