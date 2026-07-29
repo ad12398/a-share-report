@@ -3,7 +3,7 @@
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -15,10 +15,17 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 TEMPLATE_DIR = PROJECT_ROOT / "src" / "web" / "templates"
 OUTPUT_DIR = PROJECT_ROOT / "reports"
 
+BEIJING_TZ = timezone(timedelta(hours=8))
+
 _env = Environment(
     loader=FileSystemLoader(str(TEMPLATE_DIR)),
     autoescape=True,
 )
+
+
+def _beijing_now() -> datetime:
+    """返回北京时间"""
+    return datetime.now(BEIJING_TZ)
 
 
 def render_report(
@@ -30,7 +37,7 @@ def render_report(
     """渲染单份报告页面"""
     from src.analysis.prompts import SLOT_LABEL
     template = _env.get_template("report.html")
-    now = datetime.now()
+    now = _beijing_now()
     date_str = now.strftime("%Y-%m-%d")
 
     return template.render(
@@ -47,6 +54,7 @@ def render_report(
         commodities=data.get("commodities", {}),
         north_flow=data.get("north_flow", {}),
         sectors=data.get("sectors", []),
+        macro=data.get("macro", {}),
     )
 
 
@@ -75,7 +83,7 @@ def render_archives_page(reports_index: list[dict[str, Any]]) -> str:
 
 def save_report_html(html: str, slot: str) -> str:
     """保存报告 HTML 到文件，返回相对路径"""
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = _beijing_now().strftime("%Y-%m-%d")
     report_dir = OUTPUT_DIR / today
     report_dir.mkdir(parents=True, exist_ok=True)
 
