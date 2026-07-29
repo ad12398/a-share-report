@@ -6,7 +6,7 @@ from typing import Any
 
 import requests
 
-from src.data.sources import akshare_source, sina_source, eastmoney_source
+from src.data.sources import akshare_source, sina_source, eastmoney_source, commodities_source
 from src.data.validator import validate_index_quotes
 
 logger = logging.getLogger("a-share-report")
@@ -33,6 +33,9 @@ def collect_all_data(slot: str) -> dict[str, Any]:
 
     # 市场概况
     overview_data = akshare_source.fetch_market_overview()
+
+    # 大宗商品 & 汇率
+    commodities_data = commodities_source.fetch_all_commodities()
 
     # 交叉校验指数
     if index_backup:
@@ -64,6 +67,7 @@ def collect_all_data(slot: str) -> dict[str, Any]:
         "overview": overview_data,
         "north_flow": north_data,
         "dragon_tiger": dragon_data,
+        "commodities": commodities_data,
         "global": global_data,
     }
 
