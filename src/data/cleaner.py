@@ -1,6 +1,8 @@
 """数据清洗层 —— 原则：能标记就不删除，仅过滤物理不可能值"""
 
+import copy
 import logging
+from datetime import datetime, timedelta
 from typing import Any
 
 logger = logging.getLogger("a-share-report")
@@ -8,7 +10,6 @@ logger = logging.getLogger("a-share-report")
 
 def clean_data_for_ai(raw_data: dict[str, Any]) -> dict[str, Any]:
     """清洗数据，标记 > 删除"""
-    import copy
     data = copy.deepcopy(raw_data)
 
     _clean_index(data)
@@ -169,7 +170,6 @@ def _clean_macro(data: dict[str, Any]):
     updated = macro.get("_updated", "")
     notes = []
     # 检查时效性：超过 45 天未更新就标记
-    from datetime import datetime, timedelta
     try:
         update_date = datetime.strptime(updated, "%Y-%m-%d")
         if datetime.now() - update_date > timedelta(days=45):
