@@ -103,15 +103,15 @@ def run(slot: str):
         logger.info(f"DEBUG: chart_data sectors={len(chart_data['sectors'])}")
     if gainers_list and isinstance(gainers_list, list) and len(gainers_list) > 0:
         chart_data["gainers"] = [
-            {"name": (g.get("name", "") + " [新股]") if (g.get("name", "").startswith("N") or g.get("name", "").startswith("C")) else g.get("name", ""),
-             "change_pct": g.get("change_pct", 0)}
+            {"name": g.get("name", ""), "change_pct": g.get("change_pct", 0),
+             "is_ipo": g.get("name", "").startswith("N") or g.get("name", "").startswith("C")}
             for g in gainers_list[:10]
         ]
         logger.info(f"DEBUG: chart_data gainers={len(chart_data['gainers'])}")
     if losers_list and isinstance(losers_list, list) and len(losers_list) > 0:
         chart_data["losers"] = [
-            {"name": (l.get("name", "") + " [新股]") if (l.get("name", "").startswith("N") or l.get("name", "").startswith("C")) else l.get("name", ""),
-             "change_pct": l.get("change_pct", 0)}
+            {"name": l.get("name", ""), "change_pct": l.get("change_pct", 0),
+             "is_ipo": l.get("name", "").startswith("N") or l.get("name", "").startswith("C")}
             for l in losers_list[:10]
         ]
         logger.info(f"DEBUG: chart_data losers={len(chart_data['losers'])}")
