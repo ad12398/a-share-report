@@ -1,4 +1,4 @@
-"""东方财富数据源 —— 北向资金 & 龙虎榜 & 融资融券（纯 HTTP API + 多端点重试）"""
+"""东方财富 & 同花顺数据源 —— 北向资金 & 龙虎榜 & 融资融券（纯 HTTP API）"""
 
 import logging
 import time
@@ -12,6 +12,14 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                   "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Referer": "https://data.eastmoney.com/",
+}
+
+# 同花顺北向资金 API（零认证，替代东财 push2）
+HEXIN_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
+    "Host": "data.hexin.cn",
+    "Referer": "https://data.hexin.cn/",
 }
 
 # 东财 API 端点（仅尝试 push2，失败快速降级）
@@ -42,42 +50,56 @@ def _try_endpoints(url_path: str, timeout: int = 8, max_retries: int = 1) -> req
 
 
 def fetch_north_flow() -> dict[str, Any]:
-    """获取北向资金当日净流向（东方财富）
+    """获取北向资金当日净流向（同花顺 data.hexin.cn，零认证）
 
-    返回: {"net_flow": float, "net_flow_sh": float, "net_flow_sz": float} 或 {}
+    东财 push2 自 2024-08 起北向数据已失效，改用同花顺 hexin API。
+
+    返回: {
+        "net_flow": float,       # 北向合计净买入（亿）
+        "net_flow_sh": float,    # 沪股通净买入（亿）
+        "net_flow_sz": float,    # 深股通净买入（亿，仅供参考）
+        "source": "hexin",
+    }
     """
     try:
-        # 沪深港通资金流向 K 线（1分钟线，取最新一根）
-        url_path = (
-            "/api/qt/kamt.kline/get?"
-            "fields1=f1,f3&fields2=f2,f4&klt=1&lmt=5"
-        )
-        resp = _try_endpoints(url_path)
-        if resp is None:
+        url = "https://data.hexin.cn/market/hsgtApi/method/dayChart/"
+        resp = requests.get(url, headers=HEXIN_HEADERS, timeout=10)
+        if resp.status_code != 200:
+            logger.warning(f"同花顺北向资金 HTTP {resp.status_code}")
             return {}
         data = resp.json()
-        result = {}
-        if data.get("data"):
-            # 北向资金（沪股通 + 深股通）
-            if data["data"].get("s2n"):
-                items = data["data"]["s2n"]
-                if items:
-                    latest = items[-1]
-                    result["net_flow"] = float(latest.get("f2", 0) or 0)
-                    result["net_flow_sh"] = float(latest.get("f2", 0) or 0)  # s2n = 沪
-            # 深股通
-            if data["data"].get("s2s"):
-                items = data["data"]["s2s"]
-                if items:
-                    latest = items[-1]
-                    sz_flow = float(latest.get("f2", 0) or 0)
-                    if "net_flow" in result:
-                        result["net_flow"] = result["net_flow"] + sz_flow
-                    else:
-                        result["net_flow"] = sz_flow
-                    result["net_flow_sz"] = sz_flow
-        if result:
-            logger.info(f"北向资金: 净流入 {result.get('net_flow', 0):.2f} 亿")
+
+        hgt_values = data.get("hgt", [])
+        sgt_values = data.get("sgt", [])
+
+        if not hgt_values:
+            return {}
+
+        # hgt: 沪股通累计净买入（亿），取最新值
+        sh_flow = float(hgt_values[-1]) if hgt_values else 0.0
+
+        # sgt: 深股通（2024-08 后数据降级，仅供参考）
+        sz_flow = 0.0
+        if sgt_values:
+            # sgt 可能返回余额而非净买入，做启发式判断
+            last_sgt = float(sgt_values[-1])
+            # 如果 > 100 大概率是余额而非净买入，取相邻差值作为净买入
+            if abs(last_sgt) > 100:
+                if len(sgt_values) >= 2:
+                    sz_flow = last_sgt - float(sgt_values[-2])
+                else:
+                    sz_flow = 0.0
+            else:
+                sz_flow = last_sgt
+
+        total_flow = round(sh_flow + sz_flow, 2)
+        result = {
+            "net_flow": total_flow,
+            "net_flow_sh": round(sh_flow, 2),
+            "net_flow_sz": round(sz_flow, 2),
+            "source": "hexin",
+        }
+        logger.info(f"北向资金(同花顺): 合计={total_flow}亿 (沪={sh_flow} 深≈{sz_flow})")
         return result
     except Exception as e:
         logger.error(f"北向资金获取失败: {e}")
