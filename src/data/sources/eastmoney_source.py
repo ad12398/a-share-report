@@ -14,36 +14,30 @@ HEADERS = {
     "Referer": "https://data.eastmoney.com/",
 }
 
-# 东财 API 多端点尝试顺序
+# 东财 API 端点（仅尝试 push2，失败快速降级）
 EM_BASE_URLS = [
     "https://push2.eastmoney.com",
-    "https://push2his.eastmoney.com",
-    "https://push2.eastmoney.com",  # 二次尝试（有时第一次超时是偶然的）
 ]
 
 
-def _try_endpoints(url_path: str, timeout: int = 15, max_retries: int = 2) -> requests.Response | None:
-    """尝试从多个东财端点获取数据"""
+def _try_endpoints(url_path: str, timeout: int = 8, max_retries: int = 1) -> requests.Response | None:
+    """尝试从东财端点获取数据（单次尝试，失败快速返回）"""
     for base in EM_BASE_URLS:
         url = base + url_path
         for attempt in range(max_retries):
             try:
-                logger.info(f"东财请求: {url[:80]}... (attempt {attempt+1})")
+                logger.info(f"东财请求: {url[:80]}...")
                 resp = requests.get(url, headers=HEADERS, timeout=timeout)
                 if resp.status_code == 200 and resp.text and resp.text.strip():
                     return resp
                 logger.warning(f"东财返回异常: status={resp.status_code}, len={len(resp.text) if resp.text else 0}")
             except requests.exceptions.Timeout:
-                logger.warning(f"东财超时: {url[:80]}... (attempt {attempt+1})")
+                logger.warning(f"东财超时: {url[:60]}...")
             except requests.exceptions.ConnectionError as e:
-                logger.warning(f"东财连接失败: {url[:80]}... ({e})")
+                logger.warning(f"东财连接失败: {e}")
             except Exception as e:
                 logger.warning(f"东财请求异常: {e}")
-            if attempt < max_retries - 1:
-                time.sleep(3 * (attempt + 1))
-        # 换端点前等待
-        time.sleep(2)
-    logger.error(f"所有东财端点均失败: {url_path}")
+    logger.warning(f"东财端点不可达: {url_path}")
     return None
 
 
