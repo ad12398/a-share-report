@@ -170,45 +170,91 @@
 
 <script>
 (function() {
+  console.log('[A-Share] 脚本启动, ECharts 版本:', typeof echarts !== 'undefined' ? (echarts.version || 'loaded') : 'NOT LOADED');
+  console.log('[A-Share] chartData:', {{ chart_data | safe }});
+
   var chartData = {{ chart_data | safe }};
   var colorGreen = '#3fb950';
   var colorRed = '#f85149';
 
+  // 诊断: 打印各数据集状态
+  console.log('[A-Share] sectors:', chartData.sectors ? chartData.sectors.length : 'null/undefined');
+  console.log('[A-Share] gainers:', chartData.gainers ? chartData.gainers.length : 'null/undefined');
+  console.log('[A-Share] losers:', chartData.losers ? chartData.losers.length : 'null/undefined');
+
+  if (chartData.sectors && chartData.sectors.length > 0) {
+    console.log('[A-Share] 第一条板块数据样本:', JSON.stringify(chartData.sectors[0]));
+  }
+
   function renderBar(chartId, items, hideIfEmpty) {
+    console.log('[A-Share] renderBar 调用:', chartId, 'items:', items ? items.length : 'null');
     var el = document.getElementById(chartId);
-    if (!items || items.length === 0) {
-      if (hideIfEmpty) { var p = el.parentElement; if (p) p.style.display = 'none'; }
+    if (!el) {
+      console.error('[A-Share] DOM 元素不存在:', chartId);
       return;
     }
-    var chart = echarts.init(el, 'dark');
-    var names = items.map(function(s) {
-      if (s.is_ipo) return s.name + ' [新股]';
-      return s.name;
-    });
-    var values = items.map(function(s) { return s.change_pct; });
-    chart.setOption({
-      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + '<br/>涨跌幅：<b>' + p[0].value.toFixed(2) + '%</b>'; } },
-      grid: { left: '15%', right: '10%', top: 10, bottom: 10 },
-      xAxis: { type: 'value', name: '%', axisLabel: { formatter: '{value}%' }, splitLine: { lineStyle: { color: '#30363d' } } },
-      yAxis: { type: 'category', data: names.reverse(), axisLabel: { color: '#8b949e', fontSize: 11, width: 100, overflow: 'truncate' }, inverse: true },
-      series: [{
-        type: 'bar',
-        data: values.reverse().map(function(v) { return { value: v, itemStyle: { color: v >= 0 ? colorGreen : colorRed } }; }),
-        label: { show: true, position: 'right', color: '#e6edf3', fontSize: 11, formatter: function(p) { return p.value.toFixed(1) + '%'; } }
-      }]
-    });
-    window.addEventListener('resize', function() { chart.resize(); });
+    if (!items || items.length === 0) {
+      console.log('[A-Share]', chartId, '数据为空，' + (hideIfEmpty ? '隐藏容器' : '跳过'));
+      if (hideIfEmpty) {
+        var p = el.parentElement;
+        if (p) p.style.display = 'none';
+      }
+      return;
+    }
+    try {
+      var names = items.map(function(s) {
+        var label = s.name || '(未知)';
+        if (s.is_ipo) label = label + ' [新股]';
+        return label;
+      });
+      var values = items.map(function(s) { return Number(s.change_pct) || 0; });
+
+      console.log('[A-Share]', chartId, 'names[0]:', names[0], 'values[0]:', values[0]);
+
+      // 确保容器有明确高度（echarts dark 主题不会自动设）
+      if (!el.style.height && !el.clientHeight) {
+        el.style.height = '400px';
+      }
+      if (!el.style.width || el.clientWidth === 0) {
+        el.style.width = '100%';
+      }
+
+      var chart = echarts.init(el, 'dark');
+      chart.setOption({
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + '<br/>涨跌幅：<b>' + p[0].value.toFixed(2) + '%</b>'; } },
+        grid: { left: '15%', right: '10%', top: 10, bottom: 10 },
+        xAxis: { type: 'value', name: '%', axisLabel: { formatter: '{value}%' }, splitLine: { lineStyle: { color: '#30363d' } } },
+        yAxis: { type: 'category', data: names.reverse(), axisLabel: { color: '#8b949e', fontSize: 11, width: 100, overflow: 'truncate' }, inverse: true },
+        series: [{
+          type: 'bar',
+          data: values.reverse().map(function(v) { return { value: v, itemStyle: { color: v >= 0 ? colorGreen : colorRed } }; }),
+          label: { show: true, position: 'right', color: '#e6edf3', fontSize: 11, formatter: function(p) { return p.value.toFixed(1) + '%'; } }
+        }]
+      });
+      console.log('[A-Share]', chartId, '渲染完成');
+      window.addEventListener('resize', function() { chart.resize(); });
+    } catch (e) {
+      console.error('[A-Share] renderBar 异常:', chartId, e.message, e.stack);
+    }
   }
 
-  renderBar('sector-chart', chartData.sectors, true);
-  renderBar('gainers-chart', chartData.gainers, true);
-  renderBar('losers-chart', chartData.losers, true);
+  try {
+    renderBar('sector-chart', chartData.sectors, true);
+    renderBar('gainers-chart', chartData.gainers, true);
+    renderBar('losers-chart', chartData.losers, true);
 
-  // 板块数据为空时显示提示
-  if (!chartData.sectors || chartData.sectors.length === 0) {
-    document.getElementById('sector-chart').style.display = 'none';
-    document.getElementById('sector-empty').style.display = 'block';
+    // 板块数据为空时显示提示
+    if (!chartData.sectors || chartData.sectors.length === 0) {
+      var scEl = document.getElementById('sector-chart');
+      var seEl = document.getElementById('sector-empty');
+      if (scEl) scEl.style.display = 'none';
+      if (seEl) seEl.style.display = 'block';
+    }
+  } catch (e) {
+    console.error('[A-Share] 图表渲染流程异常:', e.message, e.stack);
   }
+
+  console.log('[A-Share] 脚本执行完毕');
 })();
 </script>
 
