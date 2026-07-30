@@ -42,11 +42,15 @@ def collect_all_data(slot: str) -> dict[str, Any]:
     if index_backup:
         index_data = validate_index_quotes(index_data, index_backup)
 
-    # 盘中及收盘数据：北向资金 & 龙虎榜
+    # 盘中及收盘数据：北向资金 & 龙虎榜 & 融资融券
     north_data: dict = {}
     dragon_data: list = []
+    margin_data: dict = {}
+    margin_stocks: list = []
     if slot in ("1030", "1130", "1400", "1500"):
         north_data = eastmoney_source.fetch_north_flow()
+        margin_data = eastmoney_source.fetch_margin_trading()
+        margin_stocks = eastmoney_source.fetch_margin_stocks()
         if slot in ("1400", "1500"):
             dragon_data = eastmoney_source.fetch_dragon_tiger()
 
@@ -71,6 +75,8 @@ def collect_all_data(slot: str) -> dict[str, Any]:
         "overview": overview_data,
         "north_flow": north_data,
         "dragon_tiger": dragon_data,
+        "margin_trading": margin_data,
+        "margin_stocks": margin_stocks,
         "commodities": commodities_data,
         "global": global_data,
         "macro": macro_data,
