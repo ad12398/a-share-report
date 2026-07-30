@@ -21,6 +21,7 @@ from src.web.renderer import (
     render_report, render_index_page, render_archives_page,
     save_report_html, save_index_html, save_archives_html,
 )
+from src.web.docx_renderer import render_docx, save_docx
 from src.web.indexer import add_report_to_index, load_index
 from src.utils.logger import setup_logger, report_time
 from src.utils.sanitizer import sanitize_html
@@ -121,6 +122,26 @@ def run(slot: str):
 
     report_html = render_report(slot, safe_report, data, chart_data)
     report_path = save_report_html(report_html, slot)
+
+    # 6.5 生成 Word 文档
+    now = datetime.now(BEIJING_TZ)
+    date_str = now.strftime("%Y-%m-%d")
+    try:
+        slot_label = SLOT_LABEL.get(slot, slot)
+        doc = render_docx(
+            slot, slot_label, date_str,
+            safe_report,
+            data.get("index", {}),
+            data.get("movers", {}),
+            data.get("north_flow", {}),
+            data.get("fund_flow", {}),
+            data.get("macro", {}),
+        )
+        docx_path = save_docx(doc, slot, date_str)
+        logger.info(f"Word 文档已生成: {docx_path}")
+    except Exception as e:
+        logger.warning(f"Word 文档生成失败（非致命）: {e}")
+        docx_path = None
 
     # 7. 更新搜索索引
     logger.info("Step 5/5: 更新索引和首页...")
