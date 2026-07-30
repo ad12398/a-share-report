@@ -67,7 +67,7 @@ def add_report_to_index(
         "time": time_str,
         "slot": slot,
         "title": title,
-        "url": f"{date_str}/{slot}.html",
+        "url": f"reports/{date_str}/{slot}.html",
         "summary": summary,
         "keywords": keywords[:10],
     }
