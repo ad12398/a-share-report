@@ -104,6 +104,7 @@ def deploy():
 
     files_to_push = [
         (f"reports/{today}/{slot}.html", f"report: {today} {slot}"),
+        (f"reports/{today}/{slot}.docx", f"docx: {today} {slot}"),
         (f"reports/index.html", f"index: {today} {slot}"),
         (f"reports/archives.html", f"archives: {today} {slot}"),
     ]
