@@ -37,6 +37,29 @@ def get_sha(path, branch="gh-pages"):
         raise
 
 
+def put_file_binary(path, content_b64, msg, branch="gh-pages"):
+    """推送二进制文件（content_b64 已 base64 编码）"""
+    sha = get_sha(path, branch)
+    payload = {
+        "message": msg,
+        "content": content_b64,
+        "branch": branch,
+    }
+    if sha:
+        payload["sha"] = sha
+    body = json.dumps(payload).encode("utf-8")
+    url = f"https://api.github.com/repos/{REPO}/contents/{path}"
+    req = urllib.request.Request(url, data=body, headers=HEADERS, method="PUT")
+    try:
+        with urllib.request.urlopen(req) as resp:
+            result = json.loads(resp.read())
+            print(f"  OK: {path}")
+            return True
+    except urllib.error.HTTPError as e:
+        print(f"  FAIL: {path} -> {e.read().decode()}")
+        return False
+
+
 def put_file(path, content_str, msg, branch="gh-pages"):
     sha = get_sha(path, branch)
     payload = {
@@ -119,9 +142,15 @@ def deploy():
         if not full_path.exists():
             print(f"  跳过(文件不存在): {path}")
             continue
-        with open(full_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        put_file(path, content, msg)
+        # .docx 是二进制文件，用 base64 编码
+        if path.endswith(".docx"):
+            with open(full_path, "rb") as f:
+                content = base64.b64encode(f.read()).decode("ascii")
+            put_file_binary(path, content, msg)
+        else:
+            with open(full_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            put_file(path, content, msg)
 
     print("部署完成!")
 
