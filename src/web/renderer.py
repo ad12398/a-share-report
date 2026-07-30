@@ -28,6 +28,13 @@ def _beijing_now() -> datetime:
     return datetime.now(BEIJING_TZ)
 
 
+def _safe_script_json(obj: Any) -> str:
+    """将 Python 对象序列化为 JSON，并转义 </ 防止 XSS"""
+    raw = json.dumps(obj, ensure_ascii=False)
+    # 转义 </ 防止破坏 <script> 标签（如低概率的股票名含此序列）
+    return raw.replace("</", "<\\/")
+
+
 def render_report(
     slot: str,
     report_text: str,
@@ -49,7 +56,7 @@ def render_report(
         report_content=report_text,
         index_data=data.get("index", {}),
         overview=data.get("overview", {}),
-        chart_data=json.dumps(chart_data or {}, ensure_ascii=False),
+        chart_data=_safe_script_json(chart_data or {}),
         movers=data.get("movers", {}),
         commodities=data.get("commodities", {}),
         north_flow=data.get("north_flow", {}),
