@@ -233,6 +233,111 @@ def fetch_margin_stocks() -> list[dict[str, Any]]:
         return []
 
 
+# ═══ 新浪资金流聚合（替代融资融券） ═══
+
+# 代表性大盘股（覆盖主要行业），用于聚合市场资金流向
+FUND_FLOW_STOCKS = [
+    "sh600519",  # 贵州茅台（白酒）
+    "sz000858",  # 五粮液（白酒）
+    "sh601318",  # 中国平安（保险）
+    "sh600036",  # 招商银行（银行）
+    "sh600900",  # 长江电力（电力）
+    "sh601166",  # 兴业银行（银行）
+    "sz000333",  # 美的集团（家电）
+    "sh600276",  # 恒瑞医药（医药）
+    "sz002415",  # 海康威视（科技）
+    "sh601398",  # 工商银行（银行）
+    "sz000001",  # 平安银行（银行）
+    "sh600030",  # 中信证券（券商）
+    "sz300750",  # 宁德时代（新能源）
+    "sh601857",  # 中国石油（能源）
+    "sz002594",  # 比亚迪（汽车）
+]
+
+SINA_FLOW_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Referer": "https://vip.stock.finance.sina.com.cn",
+}
+
+
+def _fetch_stock_fund_flow(code: str) -> dict[str, Any] | None:
+    """获取单只股票最近一个交易日资金流向"""
+    try:
+        url = (
+            f"http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
+            f"MoneyFlow.ssl_qsfx_lscjfb?page=1&num=1&sort=opendate&asc=0&daima={code}"
+        )
+        resp = requests.get(url, headers=SINA_FLOW_HEADERS, timeout=10)
+        if resp.status_code != 200:
+            return None
+        data = resp.json()
+        if isinstance(data, list) and len(data) > 0:
+            item = data[0]
+            return {
+                "code": code,
+                "date": str(item.get("opendate", "")),
+                "net_amount": float(item.get("netamount", 0) or 0),           # 净流入（元）
+                "r0_net": float(item.get("r0_net", 0) or 0),                  # 特大单净流入
+                "r1_net": float(item.get("r1_net", 0) or 0),                  # 大单净流入
+                "r2_net": float(item.get("r2_net", 0) or 0),                  # 中单净流入
+                "r3_net": float(item.get("r3_net", 0) or 0),                  # 小单净流入
+                "net_ratio": float(item.get("ratioamount", 0) or 0),          # 净流入占比
+                "turnover": float(item.get("turnover", 0) or 0),              # 换手率
+            }
+        return None
+    except Exception as e:
+        logger.debug(f"资金流 {code} 获取失败: {e}")
+        return None
+
+
+def fetch_market_fund_flow() -> dict[str, Any]:
+    """
+    聚合代表性个股的资金流向，作为市场资金面代理指标（替代融资融券）。
+
+    返回: {
+        "sample_count": int,          # 成功采样的股票数
+        "total_net_amount": float,    # 聚合净流入（亿）
+        "big_order_net": float,       # 大单+特大单净流入（亿）
+        "inflow_count": int,          # 净流入个股数
+        "outflow_count": int,         # 净流出个股数
+        "date": str,                  # 数据日期
+        "source": "sina_moneyflow",   # 数据源标注
+        "_note": str,                 # 说明这是替代指标
+    }
+    """
+    results = []
+    for code in FUND_FLOW_STOCKS:
+        item = _fetch_stock_fund_flow(code)
+        if item:
+            results.append(item)
+        time.sleep(0.2)  # 友好节流，避免触发新浪反爬
+
+    if not results:
+        logger.warning("新浪资金流: 所有股票采样失败")
+        return {}
+
+    inflow = [r for r in results if r["net_amount"] > 0]
+    outflow = [r for r in results if r["net_amount"] < 0]
+
+    total_net = sum(r["net_amount"] for r in results) / 1e8  # 转亿
+    big_net = sum(r["r0_net"] + r["r1_net"] for r in results) / 1e8  # 特大+大单，转亿
+
+    result = {
+        "sample_count": len(results),
+        "total_net_amount": round(total_net, 2),
+        "big_order_net": round(big_net, 2),
+        "inflow_count": len(inflow),
+        "outflow_count": len(outflow),
+        "date": results[0]["date"] if results else "",
+        "source": "sina_moneyflow",
+        "_note": "数据来自新浪资金流（大单/特大单估算），非融资融券官方数据，仅供参考大资金方向",
+    }
+    logger.info(f"资金流(替代两融): {len(results)}股聚合 net={total_net:.1f}亿 big_order={big_net:.1f}亿 "
+                f"涨{len(inflow)}/跌{len(outflow)}")
+    return result
+
+
 # ═══ 诊断工具 ═══
 
 def run_diagnostics() -> dict[str, Any]:
