@@ -89,6 +89,7 @@
 6. **时段边际对比系统** — 新建 `src/analysis/slot_summary.py`，保存每时段关键指标摘要到 `data/last_slot.json`，下一时段 prompt 自动加载"上一时段"和"昨日同期"数据，计算 delta + 标记异常（北向反转、量价异常、板块轮动）。1030 起生效，0925 对比昨日收盘
 7. **龙虎榜数据源迁移** — 东财 push2 阿里云 IP 被封，新建 `src/data/sources/sina_lhb_source.py`，改用新浪 `vInvestConsult/kind/lhb/index.phtml` HTML 页面解析。支持多 dataTable（按上榜类型分组）+ 上榜原因提取。`collector.py` 已切换，`eastmoney_source.py` 废弃函数已删除
 8. **历史报告统计面板** — 新建 `src/web/templates/stats.html`，KPI 卡片 + 4 张 ECharts 图表（市场宽度/北向趋势/指数累计收益/板块轮动热力图）。`renderer.py` 新增 `build_stats_data()` 从 `data/last_slot.json` 历史数据构建统计。数据不足 3 天时显示积累提示。导航栏已加"统计"链接。`slot_summary.py` 改存完整 30 板块 + 写前 `.bak` 备份。`deploy.py` 每次部署自动生成 `stats.html`
+9. **宏观数据 PMI 更新** — 7 月制造业 PMI 49.2%（↓1.1pp，跌破荣枯线），服务业 PMI 49.3%。极端天气+生产淡季致全线回落。更新 `data/macro_data.json`。CPI/PPI/M2 等预计 8 月 10-15 日发布
 
 ### 成交额字段踩坑记录
 - 腾讯 `qt.gtimg.cn` 的 `fields` 位置**不固定**，盘中/盘后偏移可达 4+ 位
@@ -117,7 +118,8 @@ python -B -c "import pathlib, shutil; [shutil.rmtree(d, ignore_errors=True) for 
 - [x] 龙虎榜数据恢复（2026-07-31 已迁移到新浪）
 - [x] 历史报告统计面板（2026-07-31 已完成，需 3 天数据积累后激活）
 - [ ] 注册同花顺量化平台（`quantapi.10jqka.com.cn`）获取真正的融资融券 API
-- [ ] `macro_data.json` 月度更新（每月 10-15 日统计局发布后；手机设每月 10/20 号重复提醒即可）
+- [x] PMI 已更新为 7 月数据（2026-07-31 发布）
+- [ ] `macro_data.json` CPI/PPI/M2 更新（预计 8 月 10-15 日统计局发布）
 
 ### 长期
 - [ ] 盘中实时异动提醒
