@@ -146,6 +146,7 @@ python -B -c "import pathlib, shutil; [shutil.rmtree(d, ignore_errors=True) for 
 8. **`__pycache__` 导致代码更新不生效**: 服务器 curl 更新代码后必须 `rmdir /s /q __pycache__`
 9. **github raw URL 有 CDN 缓存**: 服务器更新代码加随机参数 `?t=%RANDOM%%RANDOM%`，更新后 `findstr` 验证内容正确
 10. **CMD 不支持多行命令**：CMD 无法识别换行符分隔的多行字符串（如 `git commit -m "line1\n\nline2"`）。给 CMD 用户的命令必须用多个 `-m` 拼接或一行写完。用 Bash（Git Bash）可以直接粘贴多行命令。
+11. **本地 Bash 默认 Python 是 3.9**（`D:\Python\python.exe`），不支持 `dict | None` 等 3.10+ 语法。本项目需要 3.12，使用 `c:\Users\Krug2\langchain_demo\venv\Scripts\python.exe`（3.12.4）。不要删 D:\Python（有旧脚本依赖），跑命令时指定 venv 路径即可。
 11. **`setx` 只对新 CMD 窗口生效**: 设置环境变量后必须关掉重开 CMD
 12. **GitHub 的 main.zip 有缓存延迟**: 不要用 ZIP，逐个 `curl -o` 从 `raw.githubusercontent.com` 下载
 
