@@ -59,8 +59,7 @@
 - [x] Token 已更新（2026-07-30 会话结束前更换）
 
 ### 部署 & 定时
-- [x] GitHub Actions 推送工作流
-- [x] `deploy.py` — 生成报告 + 推送 HTML/docx/index 到 gh-pages
+- [x] `deploy.py` — 生成报告 + 推送 HTML/docx/index/stats 到 gh-pages
 - [x] Windows Task Scheduler × 5（09:25 / 10:30 / 11:30 / 14:00 / 15:00）
 - [x] `run_report.bat` — 日志写到 `C:\a-share-report\logs\`
 - [x] 定时任务已设为"交互方式/后台方式"（断开 RDP 也能跑）
@@ -152,29 +151,31 @@ python -B -c "import pathlib, shutil; [shutil.rmtree(d, ignore_errors=True) for 
 13. **GitHub 的 main.zip 有缓存延迟**: 不要用 ZIP，用 `git pull`
 
 ### 部署相关
-14. **GitHub Pages 部署目标分支是 `gh-pages`**: 推送报告到 gh-pages，不是 main
-15. **GitHub Secret Scanning 会拦截 Token**: bat 文件里不能硬编码 Token，必须读环境变量
-16. **Windows 定时任务**: 不加 `/rp 密码` 则离线不跑；加 `/rp` 确保"无论用户是否登录都要运行"
-17. **`.docx` 是二进制文件**: `deploy.py` 用 `open(..., "rb")` 读，base64 编码后推送
+14. **不要建 GitHub Actions 自动部署** — 和服务器 Windows Task Scheduler 冲突。两套系统同时推 gh-pages 会互相覆盖，且 Actions 环境缺少 DeepSeek key / 网络，跑一次失败一次发一次邮件。部署只走服务器 `deploy.py`。
+15. **GitHub Pages 部署目标分支是 `gh-pages`**: 推送报告到 gh-pages，不是 main
+15. **GitHub Pages 部署目标分支是 `gh-pages`**: 推送报告到 gh-pages，不是 main
+16. **GitHub Secret Scanning 会拦截 Token**: bat 文件里不能硬编码 Token，必须读环境变量
+17. **Windows 定时任务**: 不加 `/rp 密码` 则离线不跑；加 `/rp` 确保"无论用户是否登录都要运行"
+18. **`.docx` 是二进制文件**: `deploy.py` 用 `open(..., "rb")` 读，base64 编码后推送
 
 ### 模板 & 前端
-18. **ECharts 富文本花括号 `{ipo|新股}` 会破坏 JS**: 图表标签用纯文本 `[新股]`
-19. **N/C 前缀新股**: 科创/创业板前5日无涨跌停，100%+ 涨跌幅是真实数据，不要过滤
-20. **`json.dumps` 用 `ensure_ascii=False`**: 否则中文变 `\uXXXX`
-21. **`| safe` + `<script>` = XSS 风险**: 必须用 `_safe_script_json()` 转义 `</` → `<\/`
-22. **板块 >30% 硬过滤**（cleaner 处理），新股除外
-23. **网页地址是 `/a-share-report/reports/`**，不是根路径。所有链接必须含 `reports/` 前缀
+19. **ECharts 富文本花括号 `{ipo|新股}` 会破坏 JS**: 图表标签用纯文本 `[新股]`
+20. **N/C 前缀新股**: 科创/创业板前5日无涨跌停，100%+ 涨跌幅是真实数据，不要过滤
+21. **`json.dumps` 用 `ensure_ascii=False`**: 否则中文变 `\uXXXX`
+22. **`| safe` + `<script>` = XSS 风险**: 必须用 `_safe_script_json()` 转义 `</` → `<\/`
+23. **板块 >30% 硬过滤**（cleaner 处理），新股除外
+24. **网页地址是 `/a-share-report/reports/`**，不是根路径。所有链接必须含 `reports/` 前缀
 
 ### 数据源相关
-24. **腾讯 `qt.gtimg.cn` 指数成交额字段位置不固定** — 绝对不要用固定索引。正确做法：遍历所有 fields，动态搜索 `数字/数字/大数字` 格式的复合字段，`split("/")` 取第三部分
-25. **`__pycache__` 散布在 src/ 所有子目录** — 用 `python -B` 或 `pathlib.Path('src').rglob('__pycache__')` 递归清
-26. **成交额单位** — 腾讯 API 返回的 amount 是元。转两次：先 `/1e4` 得万元（存入 data），再 `/1e4` 得亿元（显示用）。两市成交额只在 `main.py` 和 `renderer.py` 两处计算，要改一起改
-27. **服务器装 git 了** — 更新代码用 `git fetch origin main && git reset --hard origin/main`，不要用 curl
+25. **腾讯 `qt.gtimg.cn` 指数成交额字段位置不固定** — 绝对不要用固定索引。正确做法：遍历所有 fields，动态搜索 `数字/数字/大数字` 格式的复合字段，`split("/")` 取第三部分
+26. **`__pycache__` 散布在 src/ 所有子目录** — 用 `python -B` 或 `pathlib.Path('src').rglob('__pycache__')` 递归清
+27. **成交额单位** — 腾讯 API 返回的 amount 是元。转两次：先 `/1e4` 得万元（存入 data），再 `/1e4` 得亿元（显示用）。两市成交额只在 `main.py` 和 `renderer.py` 两处计算，要改一起改
+28. **服务器装 git 了** — 更新代码用 `git fetch origin main && git reset --hard origin/main`，不要用 curl
 
 ### 服务器运维
-28. **定时任务 5 个时段均正常触发** — 0925/1030/1130/1400/1500
-29. **GitHub Token 90 天有效** — 到期前 GitHub 会邮件提醒，服务器 `setx GH_TOKEN "新Token"` 即可
-30. **`data/last_slot.json` 写入前自动备份** — 同路径 `.json.bak`，写入中断可恢复
+29. **定时任务 5 个时段均正常触发** — 0925/1030/1130/1400/1500
+30. **GitHub Token 90 天有效** — 到期前 GitHub 会邮件提醒，服务器 `setx GH_TOKEN "新Token"` 即可
+31. **`data/last_slot.json` 写入前自动备份** — 同路径 `.json.bak`，写入中断可恢复
 
 ---
 
@@ -208,4 +209,3 @@ python -B -c "import pathlib, shutil; [shutil.rmtree(d, ignore_errors=True) for 
 | `data/last_slot.json` | 🆕 时段摘要历史（自动积累，统计面板数据源） |
 | `data/index.json` | 搜索索引（部署时推送到 gh-pages） |
 | `assets/css/dashboard.css` | 暗色仪表盘样式 |
-| `.github/workflows/report.yml` | GitHub Actions |
