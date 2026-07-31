@@ -74,11 +74,11 @@ def run(slot: str):
     # 2.5 数据清洗
     data = clean_data_for_ai(raw_data)
 
-    # 2.6 计算两市总成交额（腾讯 API 万元→亿），注入 overview 让 DeepSeek 可见
+    # 2.6 计算两市总成交额（仅上证+深证，腾讯万元→亿），注入 overview 让 DeepSeek 可见
     total_amt = 0.0
-    for idx_val in data.get("index", {}).values():
-        if isinstance(idx_val, dict) and idx_val.get("amount", 0):
-            total_amt += float(idx_val["amount"]) / 1e4
+    for code, idx_val in data.get("index", {}).items():
+        if code in ("000001", "399001") and isinstance(idx_val, dict):
+            total_amt += float(idx_val.get("amount", 0)) / 1e4
     if data.get("overview"):
         data["overview"]["total_amount"] = round(total_amt, 0)
     logger.info(f"两市总成交额: {data['overview'].get('total_amount', 0):.0f} 亿")
