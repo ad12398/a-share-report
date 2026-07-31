@@ -78,6 +78,24 @@
   </div>
   {% endif %}
 
+  <!-- 外围联动 KPI -->
+  {% if linked_markets %}
+  <div class="kpi-row">
+    {% for key, item in linked_markets.items() %}
+    {% if item and item.get("name") %}
+    <div class="kpi-card" style="border-left: 2px solid var(--accent-purple);">
+      <div class="label">{{ item.name }} <span style="color:var(--text-muted);font-size:10px;">实时联动</span></div>
+      <div class="value">{{ "%.2f"|format(item.price) if item.price else "--" }}</div>
+      <div class="change {% if item.change_pct >= 0 %}up{% else %}down{% endif %}">
+        {% if item.change_pct >= 0 %}+{% endif %}{{ "%.2f"|format(item.change_pct) if item.change_pct else "0" }}%
+        {% if item.get("note") %}<span style="font-size:10px;color:var(--text-muted);"> {{ item.note }}</span>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <!-- 宏观数据 KPI -->
   {% if macro and macro.get("cpi") %}
   <div class="kpi-row">
