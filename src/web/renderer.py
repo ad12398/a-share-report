@@ -67,6 +67,7 @@ def render_report(
         movers=data.get("movers", {}),
         commodities=data.get("commodities", {}),
         north_flow=data.get("north_flow", {}),
+        linked_markets=data.get("linked_markets", {}),
         sectors=data.get("sectors", []),
         macro=data.get("macro", {}),
         total_amount=f"{total_amount:.0f}" if total_amount > 0 else "",
