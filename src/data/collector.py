@@ -6,7 +6,7 @@ from typing import Any
 
 import requests
 
-from src.data.sources import akshare_source, sina_source, eastmoney_source, commodities_source, linked_markets_source
+from src.data.sources import akshare_source, sina_source, eastmoney_source, commodities_source, linked_markets_source, sina_lhb_source
 from src.data.validator import validate_index_quotes
 from src.data.macro_loader import load_macro_data
 
@@ -53,7 +53,7 @@ def collect_all_data(slot: str) -> dict[str, Any]:
         north_data = eastmoney_source.fetch_north_flow()
         fund_flow_data = eastmoney_source.fetch_market_fund_flow()
         if slot in ("1400", "1500"):
-            dragon_data = eastmoney_source.fetch_dragon_tiger()
+            dragon_data = sina_lhb_source.fetch_daily_lhb()
 
     # 盘前简报特殊数据：隔夜美股
     global_data: dict = {}
