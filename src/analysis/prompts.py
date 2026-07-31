@@ -27,10 +27,11 @@ SYSTEM_PROMPT = """你是一位资深量化交易分析师，专注于 A 股市�
 输出使用 HTML 段落格式（<p>、<h3>、<ul><li>），避免使用 ``` 代码块。"""
 
 
-def build_pre_market_prompt(data: dict[str, Any]) -> str:
+def build_pre_market_prompt(data: dict[str, Any], comparison_text: str = "") -> str:
     """盘前简报 prompt (09:25)"""
     return f"""请生成一份 A 股盘前简报（开盘前）。
 
+    {comparison_text + chr(10) + chr(10) if comparison_text else ""}
 ## 隔夜全球市场数据
 {_format_json(data.get("global", {}))}
 
@@ -49,10 +50,11 @@ def build_pre_market_prompt(data: dict[str, Any]) -> str:
 {DISCLAIMER}"""
 
 
-def build_morning_prompt(data: dict[str, Any]) -> str:
+def build_morning_prompt(data: dict[str, Any], comparison_text: str = "") -> str:
     """早盘分析 prompt (10:30)"""
     return f"""请生成一份 A 股早盘分析报告（开盘后 1 小时）。
 
+    {comparison_text + chr(10) + chr(10) if comparison_text else ""}
 ## 实时行情数据
 {_format_json(data)}
 
@@ -67,10 +69,11 @@ def build_morning_prompt(data: dict[str, Any]) -> str:
 {DISCLAIMER}"""
 
 
-def build_midday_prompt(data: dict[str, Any]) -> str:
+def build_midday_prompt(data: dict[str, Any], comparison_text: str = "") -> str:
     """午盘总结 prompt (11:30)"""
     return f"""请生成一份 A 股午盘总结报告（上午收盘后）。
 
+    {comparison_text + chr(10) + chr(10) if comparison_text else ""}
 ## 行情数据
 {_format_json(data)}
 
@@ -85,10 +88,11 @@ def build_midday_prompt(data: dict[str, Any]) -> str:
 {DISCLAIMER}"""
 
 
-def build_afternoon_prompt(data: dict[str, Any]) -> str:
+def build_afternoon_prompt(data: dict[str, Any], comparison_text: str = "") -> str:
     """午后更新 prompt (14:00)"""
     return f"""请生成一份 A 股午后市场更新报告。
 
+    {comparison_text + chr(10) + chr(10) if comparison_text else ""}
 ## 实时数据
 {_format_json(data)}
 
@@ -102,10 +106,11 @@ def build_afternoon_prompt(data: dict[str, Any]) -> str:
 {DISCLAIMER}"""
 
 
-def build_close_prompt(data: dict[str, Any]) -> str:
+def build_close_prompt(data: dict[str, Any], comparison_text: str = "") -> str:
     """收盘报告 prompt (15:00)"""
     return f"""请生成一份完整的 A 股收盘复盘报告。
 
+    {comparison_text + chr(10) + chr(10) if comparison_text else ""}
 ## 全日行情数据
 {_format_json(data)}
 
@@ -141,7 +146,7 @@ SLOT_LABEL = {
 }
 
 
-def _format_json(data: dict[str, Any]) -> str:
+def _format_json(data: dict[str, Any], comparison_text: str = "") -> str:
     """将数据格式化为 prompt 友好文本"""
     import json
     return json.dumps(data, ensure_ascii=False, indent=2, default=str)
