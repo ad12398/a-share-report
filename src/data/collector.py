@@ -6,7 +6,7 @@ from typing import Any
 
 import requests
 
-from src.data.sources import akshare_source, sina_source, eastmoney_source, commodities_source
+from src.data.sources import akshare_source, sina_source, eastmoney_source, commodities_source, linked_markets_source
 from src.data.validator import validate_index_quotes
 from src.data.macro_loader import load_macro_data
 
@@ -37,6 +37,9 @@ def collect_all_data(slot: str) -> dict[str, Any]:
 
     # 大宗商品 & 汇率
     commodities_data = commodities_source.fetch_all_commodities()
+
+    # 外围市场联动（A50 + 恒生科技 + 离岸人民币）
+    linked_data = linked_markets_source.fetch_linked_markets()
 
     # 交叉校验指数
     if index_backup:
@@ -75,6 +78,7 @@ def collect_all_data(slot: str) -> dict[str, Any]:
         "dragon_tiger": dragon_data,
         "fund_flow": fund_flow_data,
         "commodities": commodities_data,
+        "linked_markets": linked_data,
         "global": global_data,
         "macro": macro_data,
     }
