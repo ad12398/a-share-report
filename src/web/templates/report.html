@@ -40,6 +40,13 @@
     </div>
     {% endif %}
     {% endfor %}
+    {% if total_amount %}
+    <div class="kpi-card" style="border-color:var(--accent-orange);">
+      <div class="label">两市成交额</div>
+      <div class="value">{{ total_amount }}<span style="font-size:14px;color:var(--text-muted);"> 亿</span></div>
+      <div class="change" style="color:var(--text-muted);">沪深京三市</div>
+    </div>
+    {% endif %}
   </div>
 
   <!-- 涨幅榜图表（主力，数据稳定） -->
