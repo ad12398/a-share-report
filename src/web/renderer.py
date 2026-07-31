@@ -47,12 +47,12 @@ def render_report(
     now = _beijing_now()
     date_str = now.strftime("%Y-%m-%d")
 
-    # 计算两市总成交额（腾讯 API 返回万元，转亿）
+    # 计算两市总成交额（仅上证+深证，避免子指数重复）
     total_amount = 0.0
     idx_map = data.get("index", {})
-    for idx_val in idx_map.values():
-        if isinstance(idx_val, dict) and idx_val.get("amount", 0):
-            total_amount += float(idx_val["amount"]) / 1e4  # 万 → 亿
+    for code, idx_val in idx_map.items():
+        if code in ("000001", "399001") and isinstance(idx_val, dict):
+            total_amount += float(idx_val.get("amount", 0)) / 1e4  # 万 → 亿
 
     return template.render(
         title=f"{date_str} {SLOT_LABEL.get(slot, slot)} - A股量化报告",
