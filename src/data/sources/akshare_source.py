@@ -68,12 +68,13 @@ def fetch_index_quotes() -> dict[str, Any]:
                         change_amt = round(price - prev_close, 2)
                         # 成交量: fields[6] = 手数
                         vol_val = float(fields[6] or 0) if len(fields) > 6 else 0
-                        # 成交额: fields[31] = "价格/成交量/成交额(元)"，取最后一个 / 后为元，转万元
+                        # 成交额: 动态搜索 "价格/成交量/成交额(元)" 格式的字段（位置不固定）
                         amt_val = 0.0
-                        if len(fields) > 31 and "/" in fields[31]:
-                            parts = fields[31].split("/")
-                            if len(parts) == 3 and parts[2]:
+                        for f in fields:
+                            parts = f.split("/")
+                            if len(parts) == 3 and len(parts[2]) > 9 and parts[2].isdigit():
                                 amt_val = float(parts[2]) / 1e4  # 元 → 万元
+                                break
                         if amt_val == 0.0 and len(fields) > 6:
                             amt_val = float(fields[6] or 0) * 100  # volume 手数估算，不精确
                         result[code_map[sid]] = {
