@@ -132,6 +132,16 @@ def deploy():
         (f"reports/archives.html", f"archives: {today} {slot}"),
     ]
 
+    # 生成并推送统计面板
+    try:
+        from src.web.renderer import render_stats_page, save_stats_html
+        stats_html = render_stats_page()
+        stats_path = save_stats_html(stats_html)
+        files_to_push.append((f"reports/stats.html", f"stats: {today} {slot}"))
+        print(f"统计面板已生成")
+    except Exception as e:
+        print(f"统计面板生成失败: {e}")
+
     # 推送搜索索引（如果存在）
     index_json = PROJECT_ROOT / "data" / "index.json"
     if index_json.exists():

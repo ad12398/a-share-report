@@ -30,11 +30,10 @@ def save_summary(slot: str, date_str: str, data: dict[str, Any]):
             "change_pct": info.get("change_pct", 0),
         }
 
-    # 提取领涨/领跌板块 TOP 3
+    # 提取完整板块排名（用于统计面板热力图）
     sectors = data.get("sectors", [])
     sectors_sorted = sorted(sectors, key=lambda s: s.get("change_pct", 0), reverse=True)
-    top3 = [s.get("name", "") for s in sectors_sorted[:3]]
-    bottom3 = [s.get("name", "") for s in sectors_sorted[-3:]]
+    sectors_all = [{"name": s.get("name", ""), "change_pct": s.get("change_pct", 0)} for s in sectors_sorted[:30]]
 
     entry = {
         "slot": slot,
@@ -47,8 +46,7 @@ def save_summary(slot: str, date_str: str, data: dict[str, Any]):
             "up_ratio": data.get("overview", {}).get("up_ratio", 0),
             "total_amount": data.get("overview", {}).get("total_amount", 0),
         },
-        "sectors_top": top3,
-        "sectors_bottom": bottom3,
+        "sectors": sectors_all,
     }
 
     # 读取已有文件（保留 history）
@@ -68,6 +66,14 @@ def save_summary(slot: str, date_str: str, data: dict[str, Any]):
 
     payload = {"latest": entry, "history": history}
     SUMMARY_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    # 写入前备份旧文件，防写入中断损坏
+    if SUMMARY_PATH.exists():
+        try:
+            SUMMARY_PATH.rename(SUMMARY_PATH.with_suffix(".json.bak"))
+        except OSError:
+            pass
+
     SUMMARY_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     logger.info(f"时段摘要已保存: {date_str} {slot}")
 
@@ -130,9 +136,12 @@ def build_comparison(prev_data: dict[str, Any] | None, data: dict[str, Any]) -> 
 
     lines: list[str] = []
     current = _extract_current(data)
-    # 从 data 提取当前领涨板块 TOP 3
+    # 从 data 提取当前领涨板块 TOP 3（兼容旧格式 sectors_top）
     sectors = data.get("sectors", [])
-    curr_top3 = [s.get("name", "") for s in sorted(sectors, key=lambda x: x.get("change_pct", 0), reverse=True)[:3]] if sectors else []
+    if sectors:
+        curr_top3 = [s.get("name", "") for s in sorted(sectors, key=lambda x: x.get("change_pct", 0), reverse=True)[:3]]
+    else:
+        curr_top3 = []
 
     # ── 上一时段 ──
     prev = prev_data.get("prev")
@@ -243,7 +252,13 @@ def _make_comparison(prev: dict[str, Any], current: dict[str, Any], label: str, 
                 flags.append(f"⚠️ 成交额异常{vol_label} ({amt_delta:+.1f}%)")
 
     # ── 板块轮动 ──
-    prev_top3 = set(prev.get("sectors_top", []))
+    # 兼容旧格式 sectors_top/list 和新格式 sectors/dict-list
+    prev_sectors = prev.get("sectors", prev.get("sectors_top", []))
+    prev_top3: set[str] = set()
+    if prev_sectors and isinstance(prev_sectors[0], dict):
+        prev_top3 = set(s.get("name", "") for s in prev_sectors[:3])
+    elif prev_sectors:
+        prev_top3 = set(str(s) for s in prev_sectors[:3])
     curr_top3_set = set(curr_top3)
     if prev_top3 and curr_top3_set:
         overlap = prev_top3 & curr_top3_set
