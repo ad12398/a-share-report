@@ -66,6 +66,9 @@ def fetch_index_quotes() -> dict[str, Any]:
                         prev_close = float(fields[4] or 0)
                         change_pct = round((price - prev_close) / prev_close * 100, 2) if prev_close else 0
                         change_amt = round(price - prev_close, 2)
+                        # 腾讯指数成交额在 fields[33]（万元），fields[7] 为 0
+                        vol_val = float(fields[6] or 0) if len(fields) > 6 else 0
+                        amt_val = float(fields[33] or 0) if len(fields) > 33 else float(fields[7] or 0)
                         result[code_map[sid]] = {
                             "name": name_map[code_map[sid]],
                             "price": price,
@@ -74,8 +77,8 @@ def fetch_index_quotes() -> dict[str, Any]:
                             "low": 0,
                             "change_pct": change_pct,
                             "change_amt": change_amt,
-                            "volume": float(fields[6] or 0) if len(fields) > 6 else 0,
-                            "amount": float(fields[7] or 0) if len(fields) > 7 else 0,
+                            "volume": vol_val,
+                            "amount": amt_val,
                         }
             if result:
                 logger.info(f"腾讯: 获取指数行情 {len(result)} 条")
