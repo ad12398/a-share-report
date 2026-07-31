@@ -88,6 +88,7 @@
 5. **外围市场联动 KPI** — 恒生科技/离岸人民币/富时A50 三指标紫色边框卡片。新建 `src/data/sources/linked_markets_source.py`，新浪 `hq.sinajs.cn`，3 线程并发
 6. **时段边际对比系统** — 新建 `src/analysis/slot_summary.py`，保存每时段关键指标摘要到 `data/last_slot.json`，下一时段 prompt 自动加载"上一时段"和"昨日同期"数据，计算 delta + 标记异常（北向反转、量价异常、板块轮动）。1030 起生效，0925 对比昨日收盘
 7. **龙虎榜数据源迁移** — 东财 push2 阿里云 IP 被封，新建 `src/data/sources/sina_lhb_source.py`，改用新浪 `vInvestConsult/kind/lhb/index.phtml` HTML 页面解析。支持多 dataTable（按上榜类型分组）+ 上榜原因提取。`collector.py` 已切换，`eastmoney_source.py` 废弃函数已删除
+8. **历史报告统计面板** — 新建 `src/web/templates/stats.html`，KPI 卡片 + 4 张 ECharts 图表（市场宽度/北向趋势/指数累计收益/板块轮动热力图）。`renderer.py` 新增 `build_stats_data()` 从 `data/last_slot.json` 历史数据构建统计。数据不足 3 天时显示积累提示。导航栏已加"统计"链接。`slot_summary.py` 改存完整 30 板块 + 写前 `.bak` 备份。`deploy.py` 每次部署自动生成 `stats.html`
 
 ### 成交额字段踩坑记录
 - 腾讯 `qt.gtimg.cn` 的 `fields` 位置**不固定**，盘中/盘后偏移可达 4+ 位
@@ -101,7 +102,6 @@ curl -o 文件1 URL1; curl -o 文件2 URL2; ...
 
 # 新方式
 cd C:\a-share-report && git fetch origin main && git reset --hard origin/main
-rmdir /s /q src\__pycache__   # 注意：可能散布在子目录
 python -B -c "import pathlib, shutil; [shutil.rmtree(d, ignore_errors=True) for d in pathlib.Path('src').rglob('__pycache__')]"
 ```
 
@@ -113,17 +113,17 @@ python -B -c "import pathlib, shutil; [shutil.rmtree(d, ignore_errors=True) for 
 - [x] 明早 9:25 验证定时任务自动运行（2026-07-31 已完成）
 - [x] 成交额数据修复（2026-07-31 已完成）
 - [x] 外围市场联动 KPI（2026-07-31 已完成）
-- [x] 时段边际对比系统（2026-07-31 已完成，首次运行后生效）
+- [x] 时段边际对比系统（2026-07-31 已完成）
+- [x] 龙虎榜数据恢复（2026-07-31 已迁移到新浪）
+- [x] 历史报告统计面板（2026-07-31 已完成，需 3 天数据积累后激活）
 - [ ] 注册同花顺量化平台（`quantapi.10jqka.com.cn`）获取真正的融资融券 API
-- [ ] 龙虎榜数据恢复（依赖东财 push2，目前仍被封）
-- [ ] `macro_data.json` 月度更新（每月 10-15 日统计局发布后）
-- [ ] 如果以后再换 Token，只需 `setx GH_TOKEN "新Token"` + 重开 CMD
+- [ ] `macro_data.json` 月度更新（每月 10-15 日统计局发布后；手机设每月 10/20 号重复提醒即可）
 
 ### 长期
 - [ ] 盘中实时异动提醒
 - [ ] 钉钉/微信机器人推送
-- [ ] 历史报告统计面板
-- [ ] 边际对比系统补充"昨日同期"数据积累（需 2 个交易日以上历史）
+- [ ] 龙虎榜营业部明细深度分析（新浪 JSONP API 已能通，待单独开发）
+- [ ] 边际对比系统跨日数据积累（自动化运行中，2 周后数据成熟）
 
 ---
 
@@ -142,41 +142,37 @@ python -B -c "import pathlib, shutil; [shutil.rmtree(d, ignore_errors=True) for 
 7. **龙虎榜数据源已切换为新浪** — 东财 push2 全封，不要再用。新源 `sina_lhb_source.py`，HTML 解析，字段比东财更丰富（多了收盘价/成交量/成交额）
 
 ### 代码相关
-7. **Python 函数内不要 `import datetime`**: 会和模块级 `datetime` 冲突导致 `UnboundLocalError`
-8. **`__pycache__` 导致代码更新不生效**: 服务器 curl 更新代码后必须 `rmdir /s /q __pycache__`
-9. **github raw URL 有 CDN 缓存**: 服务器更新代码加随机参数 `?t=%RANDOM%%RANDOM%`，更新后 `findstr` 验证内容正确
+8. **Python 函数内不要 `import datetime`**: 会和模块级 `datetime` 冲突导致 `UnboundLocalError`
+9. **`__pycache__` 导致代码更新不生效**: 服务器更新代码后须清 `__pycache__`
 10. **CMD 不支持多行命令**：CMD 无法识别换行符分隔的多行字符串（如 `git commit -m "line1\n\nline2"`）。给 CMD 用户的命令必须用多个 `-m` 拼接或一行写完。用 Bash（Git Bash）可以直接粘贴多行命令。
 11. **本地 Bash 默认 Python 是 3.9**（`D:\Python\python.exe`），不支持 `dict | None` 等 3.10+ 语法。本项目需要 3.12，使用 `c:\Users\Krug2\langchain_demo\venv\Scripts\python.exe`（3.12.4）。不要删 D:\Python（有旧脚本依赖），跑命令时指定 venv 路径即可。
-11. **`setx` 只对新 CMD 窗口生效**: 设置环境变量后必须关掉重开 CMD
-12. **GitHub 的 main.zip 有缓存延迟**: 不要用 ZIP，逐个 `curl -o` 从 `raw.githubusercontent.com` 下载
+12. **`setx` 只对新 CMD 窗口生效**: 设置环境变量后必须关掉重开 CMD
+13. **GitHub 的 main.zip 有缓存延迟**: 不要用 ZIP，用 `git pull`
 
 ### 部署相关
-13. **`push_files.py` Token 用命令行传参**: 进程列表可见，用完改回环境变量读法
-14. **`.docx` 是二进制文件**: `deploy.py` 用 `open(..., "rb")` 读，base64 编码后推送
-15. **GitHub Pages 部署目标分支是 `gh-pages`**: 推送报告到 gh-pages，不是 main
-16. **GitHub Secret Scanning 会拦截 Token**: bat 文件里不能硬编码 Token，必须读环境变量
-17. **Windows 定时任务**: 不加 `/rp 密码` 则离线不跑；加 `/rp` 确保"无论用户是否登录都要运行"
-18. **chcp 65001 会导致 Python urllib 编码错误**: 推送时切回 `chcp 437`
-19. **报告 HTML 缩成 14 字节**: 模板文件被覆盖成 `404: Not Found`，重新 curl 下载即可
+14. **GitHub Pages 部署目标分支是 `gh-pages`**: 推送报告到 gh-pages，不是 main
+15. **GitHub Secret Scanning 会拦截 Token**: bat 文件里不能硬编码 Token，必须读环境变量
+16. **Windows 定时任务**: 不加 `/rp 密码` 则离线不跑；加 `/rp` 确保"无论用户是否登录都要运行"
+17. **`.docx` 是二进制文件**: `deploy.py` 用 `open(..., "rb")` 读，base64 编码后推送
 
 ### 模板 & 前端
-20. **ECharts 富文本花括号 `{ipo|新股}` 会破坏 JS**: 图表标签用纯文本 `[新股]`
-21. **N/C 前缀新股**: 科创/创业板前5日无涨跌停，100%+ 涨跌幅是真实数据，不要过滤
-22. **`json.dumps` 用 `ensure_ascii=False`**: 否则中文变 `\uXXXX`
-23. **`| safe` + `<script>` = XSS 风险**: 必须用 `_safe_script_json()` 转义 `</` → `<\/`
-24. **板块 >30% 硬过滤**（cleaner 处理），新股除外
-25. **网页地址是 `/a-share-report/reports/`**，不是根路径。所有链接必须含 `reports/` 前缀
+18. **ECharts 富文本花括号 `{ipo|新股}` 会破坏 JS**: 图表标签用纯文本 `[新股]`
+19. **N/C 前缀新股**: 科创/创业板前5日无涨跌停，100%+ 涨跌幅是真实数据，不要过滤
+20. **`json.dumps` 用 `ensure_ascii=False`**: 否则中文变 `\uXXXX`
+21. **`| safe` + `<script>` = XSS 风险**: 必须用 `_safe_script_json()` 转义 `</` → `<\/`
+22. **板块 >30% 硬过滤**（cleaner 处理），新股除外
+23. **网页地址是 `/a-share-report/reports/`**，不是根路径。所有链接必须含 `reports/` 前缀
 
-### 数据源相关（2026-07-31 新增）
-26. **腾讯 `qt.gtimg.cn` 指数成交额字段位置不固定** — 绝对不要用固定索引（`fields[7]`、`fields[31]`、`fields[33]` 都会变）。正确做法：遍历所有 fields，动态搜索 `数字/数字/大数字` 格式的复合字段，`split("/")` 取第三部分
-27. **`__pycache__` 散布在 src/ 所有子目录** — `rmdir /s /q __pycache__` 只能清根目录的。子目录的要用 `pathlib.Path('src').rglob('__pycache__')` 递归清，或直接用 `python -B` 跳过缓存
-28. **成交额单位** — 腾讯 API 返回的 amount 是元。代码转两次：先 `/1e4` 得万元（存入 data），再 `/1e4` 得亿元（显示用）。两市成交额只在 `main.py` 和 `renderer.py` 两处计算，要改一起改
-29. **服务器装 git 了** — 以后更新代码用 `git fetch origin main && git reset --hard origin/main`，不要用 curl
+### 数据源相关
+24. **腾讯 `qt.gtimg.cn` 指数成交额字段位置不固定** — 绝对不要用固定索引。正确做法：遍历所有 fields，动态搜索 `数字/数字/大数字` 格式的复合字段，`split("/")` 取第三部分
+25. **`__pycache__` 散布在 src/ 所有子目录** — 用 `python -B` 或 `pathlib.Path('src').rglob('__pycache__')` 递归清
+26. **成交额单位** — 腾讯 API 返回的 amount 是元。转两次：先 `/1e4` 得万元（存入 data），再 `/1e4` 得亿元（显示用）。两市成交额只在 `main.py` 和 `renderer.py` 两处计算，要改一起改
+27. **服务器装 git 了** — 更新代码用 `git fetch origin main && git reset --hard origin/main`，不要用 curl
 
-### 服务器运维（2026-07-31 新增）
-30. **定时任务 2026-07-31 首次成功运行** — 5 个时段均正常触发
-31. **GitHub Token 2026-07-30 已换新** — 90 天有效，到期前 GitHub 会邮件提醒，服务器 `setx GH_TOKEN "新Token"` 即可
-32. **Word 下载文件名格式** — `{{ date }} {{ slot[:2] }}时{{ slot[2:] }}分 A股量化报告.docx`，如 `2026-07-31 15时00分 A股量化报告.docx`
+### 服务器运维
+28. **定时任务 5 个时段均正常触发** — 0925/1030/1130/1400/1500
+29. **GitHub Token 90 天有效** — 到期前 GitHub 会邮件提醒，服务器 `setx GH_TOKEN "新Token"` 即可
+30. **`data/last_slot.json` 写入前自动备份** — 同路径 `.json.bak`，写入中断可恢复
 
 ---
 
@@ -185,24 +181,29 @@ python -B -c "import pathlib, shutil; [shutil.rmtree(d, ignore_errors=True) for 
 | 文件 | 作用 |
 |------|------|
 | `src/main.py` | 主入口，`run(slot)` 一次性生成 HTML+docx+索引 |
-| `deploy.py` | 服务器部署：调用 run() + 推送到 GitHub Pages（gh-pages 分支） |
+| `deploy.py` | 服务器部署：调用 run() + 推送 HTML/docx/index/stats 到 gh-pages |
 | `run_report.bat` | Windows Task Scheduler 入口脚本 |
-| `push_files.py` | GitHub Contents API 推送工具（开发用） |
 | `src/data/collector.py` | 多源数据聚合 |
-| `src/data/cleaner.py` | 数据清洗（标记>删除） |
-| `src/data/sources/eastmoney_source.py` | 北向（同花顺hexin）+ 资金流（新浪30股）+ 龙虎榜（东财，已封） |
+| `src/data/cleaner.py` | 数据清洗（标记→删除） |
 | `src/data/sources/akshare_source.py` | 腾讯指数 + 新浪涨跌榜 + 东财/新浪/腾讯板块 |
-| `src/data/sources/commodities_source.py` | 商品/汇率/全球指数 |
+| `src/data/sources/eastmoney_source.py` | 北向（同花顺hexin）+ 资金流（新浪30股）|
 | `src/data/sources/sina_source.py` | 新浪备用指数源 |
+| `src/data/sources/sina_lhb_source.py` | 🆕 龙虎榜（新浪 HTML 解析，替代东财 push2） |
+| `src/data/sources/commodities_source.py` | 商品/汇率/全球指数 |
+| `src/data/sources/linked_markets_source.py` | 外围市场联动（A50+恒生科技+离岸人民币） |
 | `src/data/macro_loader.py` | 宏观数据加载（CPI/PPI/PMI/M2/LPR） |
-| `data/macro_data.json` | 宏观数据 |
 | `src/analysis/deepseek_client.py` | DeepSeek API 调用 |
 | `src/analysis/prompts.py` | 5 时段 prompt 模板 |
-| `src/web/renderer.py` | Jinja2 渲染（含 `_safe_script_json` XSS 防护） |
+| `src/analysis/slot_summary.py` | 时段摘要保存/加载/边际对比 |
+| `src/web/renderer.py` | Jinja2 渲染（含 `_safe_script_json` XSS 防护）+ 统计面板 |
 | `src/web/docx_renderer.py` | HTML→Word（python-docx） |
 | `src/web/indexer.py` | 搜索索引维护 |
-| `src/web/templates/report.html` | 报告 HTML 模板（含下载按钮） |
+| `src/web/templates/report.html` | 报告 HTML 模板 |
 | `src/web/templates/index.html` | 首页模板 |
 | `src/web/templates/archives.html` | 归档页模板 |
+| `src/web/templates/stats.html` | 🆕 统计面板（KPI+ECharts 图表+板块热力图） |
+| `data/macro_data.json` | 宏观数据（月度更新） |
+| `data/last_slot.json` | 🆕 时段摘要历史（自动积累，统计面板数据源） |
+| `data/index.json` | 搜索索引（部署时推送到 gh-pages） |
 | `assets/css/dashboard.css` | 暗色仪表盘样式 |
 | `.github/workflows/report.yml` | GitHub Actions |
