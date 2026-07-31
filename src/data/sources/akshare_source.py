@@ -66,9 +66,16 @@ def fetch_index_quotes() -> dict[str, Any]:
                         prev_close = float(fields[4] or 0)
                         change_pct = round((price - prev_close) / prev_close * 100, 2) if prev_close else 0
                         change_amt = round(price - prev_close, 2)
-                        # 腾讯指数成交额在 fields[33]（万元），fields[7] 为 0
+                        # 成交量: fields[6] = 手数
                         vol_val = float(fields[6] or 0) if len(fields) > 6 else 0
-                        amt_val = float(fields[33] or 0) if len(fields) > 33 else float(fields[7] or 0)
+                        # 成交额: fields[31] = "价格/成交量/成交额(元)"，取最后一个 / 后为元，转万元
+                        amt_val = 0.0
+                        if len(fields) > 31 and "/" in fields[31]:
+                            parts = fields[31].split("/")
+                            if len(parts) == 3 and parts[2]:
+                                amt_val = float(parts[2]) / 1e4  # 元 → 万元
+                        if amt_val == 0.0 and len(fields) > 6:
+                            amt_val = float(fields[6] or 0) * 100  # volume 手数估算，不精确
                         result[code_map[sid]] = {
                             "name": name_map[code_map[sid]],
                             "price": price,
