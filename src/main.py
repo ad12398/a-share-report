@@ -17,6 +17,7 @@ from src.analysis.deepseek_client import generate_report, format_data_for_prompt
 from src.analysis.prompts import (
     SLOT_PROMPT_MAP, SLOT_LABEL, SYSTEM_PROMPT,
 )
+from src.analysis.slot_summary import save_summary, load_previous, build_comparison
 from src.web.renderer import (
     render_report, render_index_page, render_archives_page,
     save_report_html, save_index_html, save_archives_html,
@@ -83,13 +84,21 @@ def run(slot: str):
         data["overview"]["total_amount"] = round(total_amt, 0)
     logger.info(f"两市总成交额: {data['overview'].get('total_amount', 0):.0f} 亿")
 
+    # 2.7 加载上一时段 / 昨日同期摘要，构建边际对比
+    now = datetime.now(BEIJING_TZ)
+    date_str = now.strftime("%Y-%m-%d")
+    prev_data = load_previous(slot, date_str)
+    comparison = build_comparison(prev_data, data)
+    if comparison:
+        logger.info(f"边际对比: 已加载 {'上一时段' if prev_data.get('prev') else ''} {'昨日同期' if prev_data.get('yesterday') else ''}")
+
     # 3. 构建 prompt
     logger.info("Step 2/5: 构建分析 prompt...")
     prompt_builder = SLOT_PROMPT_MAP.get(slot)
     if not prompt_builder:
         logger.error(f"未知时段: {slot}")
         return None
-    user_prompt = prompt_builder(data)
+    user_prompt = prompt_builder(data, comparison_text=comparison)
 
     # 4. 调用 DeepSeek API
     logger.info("Step 3/5: 调用 DeepSeek 生成报告...")
@@ -163,6 +172,12 @@ def run(slot: str):
     save_index_html(index_html)
     archives_html = render_archives_page(updated_index)
     save_archives_html(archives_html)
+
+    # 9. 保存时段摘要（供下一时段 + 明日同期边际对比）
+    try:
+        save_summary(slot, date_str, data)
+    except Exception as e:
+        logger.warning(f"时段摘要保存失败（非致命）: {e}")
 
     logger.info(f"=== 报告生成完成: {report_path} === [{report_time()}]")
     return report_path
