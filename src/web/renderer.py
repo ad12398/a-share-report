@@ -47,6 +47,13 @@ def render_report(
     now = _beijing_now()
     date_str = now.strftime("%Y-%m-%d")
 
+    # 计算两市总成交额（腾讯 API 返回万元，转亿）
+    total_amount = 0.0
+    idx_map = data.get("index", {})
+    for idx_val in idx_map.values():
+        if isinstance(idx_val, dict) and idx_val.get("amount", 0):
+            total_amount += float(idx_val["amount"]) / 1e4  # 万 → 亿
+
     return template.render(
         title=f"{date_str} {SLOT_LABEL.get(slot, slot)} - A股量化报告",
         date=date_str,
@@ -54,7 +61,7 @@ def render_report(
         slot=slot,
         slot_label=SLOT_LABEL.get(slot, slot),
         report_content=report_text,
-        index_data=data.get("index", {}),
+        index_data=idx_map,
         overview=data.get("overview", {}),
         chart_data=_safe_script_json(chart_data or {}),
         movers=data.get("movers", {}),
@@ -62,6 +69,7 @@ def render_report(
         north_flow=data.get("north_flow", {}),
         sectors=data.get("sectors", []),
         macro=data.get("macro", {}),
+        total_amount=f"{total_amount:.0f}" if total_amount > 0 else "",
     )
 
 
