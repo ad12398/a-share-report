@@ -10,6 +10,17 @@ import requests
 
 logger = logging.getLogger("a-share-report")
 
+
+def _median(values: list[float]) -> float:
+    """取中位数，不 import statistics（减少依赖）"""
+    if not values:
+        return 0.0
+    sorted_vals = sorted(values)
+    n = len(sorted_vals)
+    if n % 2 == 1:
+        return sorted_vals[n // 2]
+    return (sorted_vals[n // 2 - 1] + sorted_vals[n // 2]) / 2.0
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                   "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -281,10 +292,10 @@ def _tencent_sectors_fallback() -> list[dict[str, Any]]:
 def fetch_top_movers() -> dict[str, list[dict[str, Any]]]:
     result = {"gainers": [], "losers": []}
     try:
-        # 新浪 A 股涨幅榜（JSON 接口）
+        # 新浪 A 股涨幅榜（num=80 覆盖全部涨停股，用于计算昨日涨停溢价率）
         url = (
             "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
-            "Market_Center.getHQNodeData?page=1&num=20&sort=changepercent"
+            "Market_Center.getHQNodeData?page=1&num=80&sort=changepercent"
             "&asc=0&node=hs_a&symbol=&_s_r_a=auto"
         )
         resp = _safe_get(url, extra_headers={"Referer": "https://vip.stock.finance.sina.com.cn"})
@@ -338,6 +349,7 @@ def fetch_market_overview() -> dict[str, Any]:
     try:
         total = up = down = flat = limit_up = limit_down = 0
         turnover_sum = 0.0
+        amount_list: list[float] = []  # 收集每只股票成交额，取中位数
         base_url = (
             "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
             "Market_Center.getHQNodeData?node=hs_a&symbol=&_s_r_a=auto&num=100&sort=symbol"
@@ -362,13 +374,19 @@ def fetch_market_overview() -> dict[str, Any]:
                 # 换手率累加
                 tor = float(item.get("turnoverratio", 0) or 0)
                 turnover_sum += tor
+                # 成交额（元）→ 转万元
+                amount_val = float(item.get("amount", 0) or 0)
+                if amount_val > 0:
+                    amount_list.append(amount_val)
 
         avg_turnover = round(turnover_sum / total, 2) if total > 0 else 0
-        logger.info(f"新浪: 市场概况 sampled total={total} up={up} down={down} 涨停≈{limit_up} 跌停≈{limit_down} 均换手={avg_turnover}%")
+        median_amount = _median(amount_list) / 1e4 if amount_list else 0  # 元→万元
+        logger.info(f"新浪: 市场概况 sampled total={total} up={up} down={down} 涨停≈{limit_up} 跌停≈{limit_down} 均换手={avg_turnover}% 成交额中位数={median_amount:.0f}万")
         return {
             "total": total, "up": up, "down": down, "flat": flat,
             "limit_up": limit_up, "limit_down": limit_down,
             "total_amount": 0, "avg_turnover": avg_turnover,
+            "median_amount": round(median_amount, 0),
             "up_ratio": round(up / total * 100, 1) if total > 0 else 0,
         }
     except Exception as e:

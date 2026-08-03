@@ -1,9 +1,14 @@
 """各时段 Prompt 模板"""
 
 import json
+import logging
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+import requests
+
+logger = logging.getLogger("a-share-report")
 
 BEIJING_TZ = timezone(timedelta(hours=8))
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -263,7 +268,101 @@ def _compute_persistence(data: dict[str, Any]) -> str:
     else:
         lines.append("- 昨日数据暂缺，方向反转评估跳过（需 1 个交易日积累后生效）")
 
+    # 3. 昨日涨停溢价率（标准算法：中位数）
+    yest_codes = _get_yesterday_limit_codes(yesterday, history)
+    if yest_codes:
+        premium = _calc_limit_up_premium(yest_codes)
+        if premium is not None:
+            prefix = "+" if premium >= 0 else ""
+            if premium >= 3:
+                lines.append(f"- ✅ 昨日涨停溢价率 {prefix}{premium:.1f}%（中位数），打板赚钱效应良好")
+            elif premium >= 0:
+                lines.append(f"- 昨日涨停溢价率 {prefix}{premium:.1f}%（中位数），打板盈亏平衡，追涨需谨慎")
+            else:
+                lines.append(f"- 🚨 昨日涨停溢价率 {prefix}{premium:.1f}%（中位数），打板亏钱效应扩散，短线情绪恶化")
+        else:
+            lines.append("- 昨日涨停溢价率暂缺（部分代码尚未收录在行情源中）")
+    else:
+        lines.append("- 昨日涨停股列表暂缺（需 1 个交易日积累后生效）")
+
     return "\n".join(lines)
+
+
+def _get_yesterday_limit_codes(yesterday: str, history: dict) -> list[dict[str, str]]:
+    """从历史数据中获取昨日涨停股代码列表（优先取 1500 收盘时段）。"""
+    yest_data = history.get(yesterday, {})
+    close = yest_data.get("1500", yest_data.get("1130", yest_data.get("1030", {})))
+    return close.get("limit_up_codes", [])
+
+
+def _calc_limit_up_premium(codes: list[dict[str, str]]) -> float | None:
+    """计算昨日涨停股今日的中位数涨幅（标准算法）。
+
+    通过 hq.sinajs.cn 批量查询实时行情，一次 HTTP 请求。
+    返回 None 表示数据不可用。
+    """
+    if not codes:
+        return None
+
+    # 拼接新浪行情查询代码（sh/sz 前缀由函数判断）
+    symbols = [_sina_symbol(c["code"]) for c in codes if c.get("code")]
+    if not symbols:
+        return None
+
+    # 批量查询（hq.sinajs.cn 单次最多约 50 个）
+    batch_size = 40
+    all_changes: list[float] = []
+
+    for i in range(0, len(symbols), batch_size):
+        batch = symbols[i:i + batch_size]
+        try:
+            url = f"http://hq.sinajs.cn/list={','.join(batch)}"
+            resp = requests.get(
+                url,
+                headers={"Referer": "https://finance.sina.com.cn"},
+                timeout=8,
+            )
+            if resp.status_code != 200:
+                continue
+            resp.encoding = "gbk"
+
+            import re
+            for line in resp.text.strip().split("\n"):
+                m = re.search(r'="(.+)"', line)
+                if not m or not m.group(1).strip():
+                    continue
+                vals = m.group(1).split(",")
+                if len(vals) < 4:
+                    continue
+                try:
+                    price = float(vals[1] or 0)
+                    prev_close = float(vals[2] or 0)
+                    if prev_close > 0:
+                        change = (price - prev_close) / prev_close * 100
+                        if abs(change) < 20:  # 过滤异常值（新股/复牌暴涨等）
+                            all_changes.append(change)
+                except (ValueError, ZeroDivisionError):
+                    continue
+        except Exception as e:
+            logger.debug(f"溢价率查询失败: {e}")
+            continue
+
+    if not all_changes:
+        return None
+
+    # 中位数
+    sorted_changes = sorted(all_changes)
+    n = len(sorted_changes)
+    if n % 2 == 1:
+        return round(sorted_changes[n // 2], 1)
+    return round((sorted_changes[n // 2 - 1] + sorted_changes[n // 2]) / 2, 1)
+
+
+def _sina_symbol(code: str) -> str:
+    """将纯数字代码转为新浪行情前缀格式（sh600xxx / sz000xxx / sz300xxx 等）。"""
+    if code.startswith(("6", "9")):
+        return f"sh{code}"
+    return f"sz{code}"
 
 
 def _compute_warning_lights(data: dict[str, Any], comparison_text: str, persistence_text: str = "") -> str:

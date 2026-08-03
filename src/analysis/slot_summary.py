@@ -35,6 +35,14 @@ def save_summary(slot: str, date_str: str, data: dict[str, Any]):
     sectors_sorted = sorted(sectors, key=lambda s: s.get("change_pct", 0), reverse=True)
     sectors_all = [{"name": s.get("name", ""), "change_pct": s.get("change_pct", 0)} for s in sectors_sorted[:30]]
 
+    # 提取涨停股代码（用于次日计算溢价率，排除新股/涨幅>100%的异常值）
+    gainers = data.get("movers", {}).get("gainers", [])
+    limit_up_codes = [
+        {"code": g["code"], "name": g["name"]}
+        for g in gainers
+        if g.get("change_pct", 0) >= 9.5 and g.get("change_pct", 0) <= 100
+    ]
+
     entry = {
         "slot": slot,
         "date": date_str,
@@ -45,9 +53,11 @@ def save_summary(slot: str, date_str: str, data: dict[str, Any]):
         "overview": {
             "up_ratio": data.get("overview", {}).get("up_ratio", 0),
             "total_amount": data.get("overview", {}).get("total_amount", 0),
+            "median_amount": data.get("overview", {}).get("median_amount", 0),
         },
         "sectors": sectors_all,
         "linked_markets": data.get("linked_markets", {}),
+        "limit_up_codes": limit_up_codes,
     }
 
     # 读取已有文件（保留 history）
