@@ -125,9 +125,13 @@ def deploy():
     print("推送到 GitHub Pages...")
     today = datetime.now(BEIJING_TZ).strftime("%Y-%m-%d")
 
+    # 找 docx 文件名（包含中文，glob 查找）
+    docx_files = sorted(Path(f"reports/{today}").glob("*.docx"))
+    docx_path = f"reports/{today}/{docx_files[0].name}" if docx_files else f"reports/{today}/{slot}.docx"
+
     files_to_push = [
         (f"reports/{today}/{slot}.html", f"report: {today} {slot}"),
-        (f"reports/{today}/{slot}.docx", f"docx: {today} {slot}"),
+        (docx_path, f"docx: {today} {slot}"),
         (f"reports/index.html", f"index: {today} {slot}"),
         (f"reports/archives.html", f"archives: {today} {slot}"),
     ]

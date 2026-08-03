@@ -219,11 +219,18 @@ def render_docx(
 
 
 def save_docx(doc: Document, slot: str, date_str: str) -> str:
-    """保存 Word 文档到 reports 目录，返回相对路径"""
+    """保存 Word 文档到 reports 目录，返回相对路径
+
+    文件名格式: {date} {slot_hour}时{slot_min}分 A股量化报告.docx
+    例如: 2026-08-03 15时00分 A股量化报告.docx
+    """
     report_dir = OUTPUT_DIR / date_str
     report_dir.mkdir(parents=True, exist_ok=True)
 
-    filepath = report_dir / f"{slot}.docx"
+    slot_hour = slot[:2] if len(slot) >= 2 else slot
+    slot_min = slot[2:] if len(slot) >= 4 else "00"
+    filename = f"{date_str} {slot_hour}时{slot_min}分 A股量化报告.docx"
+    filepath = report_dir / filename
     doc.save(str(filepath))
     logger.info(f"Word 文档已保存: {filepath}")
     return str(filepath.relative_to(PROJECT_ROOT))
