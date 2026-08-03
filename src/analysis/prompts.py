@@ -1,6 +1,13 @@
 """各时段 Prompt 模板"""
 
+import json
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
+
+BEIJING_TZ = timezone(timedelta(hours=8))
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+SUMMARY_PATH = PROJECT_ROOT / "data" / "last_slot.json"
 
 DISCLAIMER = (
     "⚠️ 免责声明：本报告由 AI 自动生成，仅供参考，"
@@ -89,8 +96,9 @@ def build_midday_prompt(data: dict[str, Any], comparison_text: str = "") -> str:
 
 
 def build_afternoon_prompt(data: dict[str, Any], comparison_text: str = "") -> str:
-    """午后实战快评 prompt (14:00) — 四模块 + 红黄绿灯"""
-    warning_text = _compute_warning_lights(data, comparison_text)
+    """午后实战快评 prompt (14:00) — 五模块 + 红黄绿灯"""
+    persistence_text = _compute_persistence(data)
+    warning_text = _compute_warning_lights(data, comparison_text, persistence_text)
 
     return f"""请生成一份 A 股午后实战快评（14:00 时段）。
 
@@ -98,7 +106,7 @@ def build_afternoon_prompt(data: dict[str, Any], comparison_text: str = "") -> s
 ## 实时数据
 {_format_json(data)}
 
-## ⚠️ 本时段使用「实战快评」格式（四模块）
+## ⚠️ 本时段使用「实战快评」格式（五模块）
 
 请严格按以下顺序输出，每模块不得跳过，各至少 2 句话：
 
@@ -118,6 +126,10 @@ def build_afternoon_prompt(data: dict[str, Any], comparison_text: str = "") -> s
 - 若权重占比 > 70%，说明资金集中大票，个股活跃度下降
 - 结合板块轮动数据，判断资金是在权重防御还是题材进攻
 
+### 模块五：持续性评估
+
+{persistence_text}
+
 ### 模块六：红黄绿灯
 
 {warning_text}
@@ -125,7 +137,7 @@ def build_afternoon_prompt(data: dict[str, Any], comparison_text: str = "") -> s
 ## 输出规则
 - 每个模块的标题用 <h3>，内容用 <p> + <ul><li>
 - 模块一放在最前面，后面顺序可调整
-- 模块三（盘口博弈）和模块五（持续性评估）本版本暂不输出，不要自行编造
+- 模块三（盘口博弈）本版本暂不输出，不要自行编造
 - 所有边际变化必须引用对比数据中的具体数字
 
 {DISCLAIMER}"""
@@ -177,7 +189,84 @@ def _format_json(data: dict[str, Any], comparison_text: str = "") -> str:
     return json.dumps(data, ensure_ascii=False, indent=2, default=str)
 
 
-def _compute_warning_lights(data: dict[str, Any], comparison_text: str) -> str:
+def _compute_persistence(data: dict[str, Any]) -> str:
+    """模块五：持续性评估——从 last_slot.json 历史计算。
+
+    输出两个信号：
+    1. 涨跌比连续偏多(>70%)或偏空(<40%)的小时数
+    2. 市场宽度方向反转（昨多今空/昨空今多）
+    """
+    if not SUMMARY_PATH.exists():
+        return "暂无历史数据，持续性评估需要至少 1 个交易日积累。"
+
+    try:
+        raw = json.loads(SUMMARY_PATH.read_text(encoding="utf-8"))
+        history = raw.get("history", {})
+    except Exception:
+        return "历史数据读取失败，跳过持续性评估。"
+
+    today = datetime.now(BEIJING_TZ).strftime("%Y-%m-%d")
+    yesterday = (datetime.now(BEIJING_TZ) - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    # 1. 连续偏多/偏空小时数
+    lines: list[str] = []
+    today_data = history.get(today, {})
+    consecutive_bull = 0
+    consecutive_bear = 0
+    for slot in ["1130", "1030"]:  # 从最近往前数，0925 不参与
+        entry = today_data.get(slot, {})
+        up_ratio = entry.get("overview", {}).get("up_ratio", 0) or 0
+        if up_ratio > 70:
+            consecutive_bull += 1
+            if consecutive_bear > 0:
+                break  # 方向变了，停
+        elif up_ratio < 40:
+            consecutive_bear += 1
+            if consecutive_bull > 0:
+                break
+        else:
+            break  # 中间时段，不连续
+
+    if consecutive_bull >= 2:
+        lines.append(f"- ⚠️ 涨跌比已连续 {consecutive_bull} 小时偏多（>70%），持续超 2 小时反转概率大增")
+    elif consecutive_bull == 1:
+        lines.append(f"- 涨跌比连续偏多 1 小时，暂未达到反转预警阈值，下一小时需关注")
+    if consecutive_bear >= 2:
+        lines.append(f"- ⚠️ 涨跌比已连续 {consecutive_bear} 小时偏空（<40%），持续超 2 小时可能出现冰点反弹")
+    elif consecutive_bear == 1:
+        lines.append(f"- 涨跌比连续偏空 1 小时，暂未达到反转预警阈值")
+
+    if not consecutive_bull and not consecutive_bear:
+        lines.append("- 涨跌比未出现连续极端偏多或偏空，市场宽度正常波动")
+
+    # 2. 方向反转判断
+    yesterday_data = history.get(yesterday, {})
+    yesterday_close = yesterday_data.get("1500", yesterday_data.get("1130", {}))
+
+    if yesterday_close:
+        yest_up = yesterday_close.get("overview", {}).get("up_ratio", 0) or 0
+        today_latest = today_data.get("1130", today_data.get("1030", {}))
+        today_up = today_latest.get("overview", {}).get("up_ratio", 0) or 0
+
+        if yest_up and today_up:
+            delta = round(today_up - yest_up, 1)
+            if yest_up > 65 and today_up < 45:
+                lines.append(f"- 🚨 市场宽度反转：昨日偏多（{yest_up:.0f}%）→ 今日转空（{today_up:.0f}%），跌幅 {abs(delta):.0f}pp，追涨亏钱效应扩散")
+            elif yest_up < 35 and today_up > 55:
+                lines.append(f"- 🔄 市场宽度反转：昨日偏空（{yest_up:.0f}%）→ 今日转多（{today_up:.0f}%），情绪修复")
+            elif yest_up > 60 and today_up > 60:
+                lines.append(f"- ✅ 市场宽度延续偏多：昨日 {yest_up:.0f}% → 今日 {today_up:.0f}%，多头情绪持续")
+            elif yest_up < 40 and today_up < 40:
+                lines.append(f"- 市场宽度延续偏空：昨日 {yest_up:.0f}% → 今日 {today_up:.0f}%，弱势未改")
+            else:
+                lines.append(f"- 市场宽度方向：昨日 {yest_up:.0f}% → 今日 {today_up:.0f}%（变化 {delta:+.0f}pp）")
+    else:
+        lines.append("- 昨日数据暂缺，方向反转评估跳过（需 1 个交易日积累后生效）")
+
+    return "\n".join(lines)
+
+
+def _compute_warning_lights(data: dict[str, Any], comparison_text: str, persistence_text: str = "") -> str:
     """根据数据计算红黄绿灯信号，返回 prompt 可注入的文本。
 
     在 Python 端计算保证一致性，AI 只做解读不做判断。
@@ -227,6 +316,12 @@ def _compute_warning_lights(data: dict[str, Any], comparison_text: str) -> str:
         green.append(f"动能加速+北向未出货，上升趋势延续中")
     if not red and not yellow:
         green.append("无红灯或黄灯信号，当前盘面暂时无忧")
+
+    # ── 持续性信号 ──
+    if "连续 2 小时偏多" in persistence_text or "连续 2 小时偏空" in persistence_text:
+        yellow.append("涨跌比连续极端，尾盘反转概率上升，建议减仓观望")
+    if "追涨亏钱效应扩散" in persistence_text:
+        red.append("昨日追涨今日亏损，亏钱效应扩散中，短线资金加速离场")
 
     # 降级：如果红灯 <= 0 and 黄灯 <= 0 and 绿灯 <= 0
     if not red and not yellow and not green:
