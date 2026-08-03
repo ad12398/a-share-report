@@ -188,6 +188,29 @@
   </div>
   {% endif %}
 
+  <!-- 龙虎榜 -->
+  {% if dragon_tiger %}
+  <div class="chart-container">
+    <div class="chart-title">🐉 龙虎榜</div>
+    <table class="data-table">
+      <thead><tr><th>代码</th><th>名称</th><th>收盘价</th><th>涨跌幅</th><th>成交量(万股)</th><th>成交额(万元)</th><th>上榜原因</th></tr></thead>
+      <tbody>
+      {% for s in dragon_tiger[:20] %}
+      <tr>
+        <td>{{ s.code }}</td>
+        <td>{{ s.name }}</td>
+        <td>{{ "%.2f"|format(s.close) }}</td>
+        <td class="{{ 'up' if s.change_pct >= 0 else 'down' }}">{{ "%+.2f"|format(s.change_pct) }}%</td>
+        <td>{{ "%.0f"|format(s.volume) }}</td>
+        <td>{{ "%.0f"|format(s.amount) }}</td>
+        <td>{{ s.reason if s.reason else '-' }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
   <!-- 免责声明 -->
   <div class="disclaimer">
     ⚠️ 免责声明：本报告由 AI 自动生成，仅供参考，不构成任何投资建议。投资有风险，入市需谨慎。报告中的数据来源于公开接口，不对其准确性做任何保证。

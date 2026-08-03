@@ -65,6 +65,7 @@ def render_report(
         overview=data.get("overview", {}),
         chart_data=_safe_script_json(chart_data or {}),
         movers=data.get("movers", {}),
+        dragon_tiger=data.get("dragon_tiger", []),
         commodities=data.get("commodities", {}),
         north_flow=data.get("north_flow", {}),
         linked_markets=data.get("linked_markets", {}),
