@@ -29,7 +29,7 @@ def validate_index_quotes(primary: dict, secondary: dict) -> dict:
     if warnings:
         logger.warning(f"指数交叉校验发现 {len(warnings)} 个异常")
     else:
-        logger.info("指数交叉校验通过 ✓")
+        logger.info("指数交叉校验通过")
 
     return primary | {"_validation": {"warnings": warnings, "passed": len(warnings) == 0}}
 
@@ -44,7 +44,7 @@ def validate_sector_data(primary: list, secondary: list) -> list:
     overlap = len(set(primary_names) & set(secondary_names))
 
     if overlap >= len(primary_names) * 0.7:  # 70% 重叠率
-        logger.info(f"板块交叉校验通过 ✓（前10名重叠 {overlap}）")
+        logger.info(f"板块交叉校验通过（前10名重叠 {overlap}）")
     else:
         logger.warning(f"板块交叉校验异常：前10名仅重叠 {overlap}")
 
