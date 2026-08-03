@@ -90,6 +90,20 @@
 8. **历史报告统计面板** — 新建 `src/web/templates/stats.html`，KPI 卡片 + 4 张 ECharts 图表（市场宽度/北向趋势/指数累计收益/板块轮动热力图）。`renderer.py` 新增 `build_stats_data()` 从 `data/last_slot.json` 历史数据构建统计。数据不足 3 天时显示积累提示。导航栏已加"统计"链接。`slot_summary.py` 改存完整 30 板块 + 写前 `.bak` 备份。`deploy.py` 每次部署自动生成 `stats.html`
 9. **宏观数据 PMI 更新** — 7 月制造业 PMI 49.2%（↓1.1pp，跌破荣枯线），服务业 PMI 49.3%。极端天气+生产淡季致全线回落。更新 `data/macro_data.json`。CPI/PPI/M2 等预计 8 月 10-15 日发布
 
+## 2026-08-03 今日完成
+
+1. **定时任务 bat 修复** — 中文注释在 GBK CMD 下导致 `%1` 参数无法展开。`run_report.bat` 所有注释改为纯 ASCII，`%1` 正常传递。同时删掉日志里 Unicode 字符（`✓` → 移除），避免 GBK 编码 crash
+2. **docx 文件名修复** — 之前文件存在服务器上是 `1500.docx`，靠 HTML `download` 属性覆盖中文名。GitHub Pages 不保证支持该属性。现在 `save_docx()` 直接存为 `2026-08-03 15时00分 A股量化报告.docx`，`deploy.py` 用 glob 找文件推送
+3. **网站报告加龙虎榜表格** — 之前龙虎榜数据只传 DeepSeek 不在网页展示。`report.html` 新增表格（代码/名称/收盘价/涨跌幅/成交量/成交额/上榜原因），`renderer.py` 传入 `dragon_tiger` 变量
+4. **删掉冗余 GitHub Actions** — `.github/workflows/report.yml` 和 Windows Task Scheduler 两套系统冲突，Actions 环境缺 DeepSeek key 反复发失败邮件。已删除，HANDOFF 加坑 #14
+5. **服务器 git 分支修复** — 服务器上是 `master`，远程是 `main`。改为 `main` 并同步
+6. **1400 实战快评** — 重写 `build_afternoon_prompt`，Python 端计算红黄绿灯（`_compute_warning_lights()`）。`slot_summary` 存 `linked_markets` 并计算外围联动 delta（A50/恒生/CNH）+ 背离检测
+7. **模块五持续性评估** — `_compute_persistence()` 读 `last_slot.json` 历史：连续偏多/偏空小时数 + 涨跌比方向反转检测。反转信号触发红/黄灯
+
+### 踩坑记录
+- **GitHub 本地连不上**：本地 Git Bash `git push` 反复超时，但服务器 ECS 正常。原因可能是本地网络 DNS/代理问题。后续优先从服务器推送
+- **服务器 commit 身份**：服务器首次用 `git commit` 需要先配 `user.email` 和 `user.name`
+
 ### 成交额字段踩坑记录
 - 腾讯 `qt.gtimg.cn` 的 `fields` 位置**不固定**，盘中/盘后偏移可达 4+ 位
 - `fields[7]` 不是成交额（永远是 0），`fields[31]` 和 `fields[35]` 位置都会变
@@ -121,24 +135,21 @@ python -B -c "import pathlib, shutil; [shutil.rmtree(d, ignore_errors=True) for 
 - [ ] `macro_data.json` CPI/PPI/M2 更新（预计 8 月 10-15 日统计局发布）
 
 ### 长期
-- [ ] **盘中实战报告升级**（六大模块重构，详见下方）
 - [ ] 盘中实时异动提醒
 - [ ] 钉钉/微信机器人推送
 - [ ] 龙虎榜营业部明细深度分析（新浪 JSONP API 已能通，待单独开发）
 - [ ] 边际对比系统跨日数据积累（自动化运行中，2 周后数据成熟）
 
-#### 盘中实战报告升级（六大模块）
+#### 盘中实战报告升级（五模块已完成，仅 1400 生效）
 
-每模块强制标注边际变化。建议仅 1030 和 1400 两个时段出报告，其余时段噪音大。
-
-| 模块 | 内容 | 数据依赖 |
-|------|------|----------|
-| 一：边际速览 | 动能加速/衰竭、量能同比、涨跌家数 delta | 现有时段摘要可覆盖 |
-| 二：量价微观 | 成交额中位数、预估占比、权重股虹吸判断 | 需新增中位数计算 |
-| 三：盘口博弈 | 涨停封单 TOP5 delta、炸板率、委卖压 | 需新数据源 |
-| 四：内外联动 | A50/恒生/CNH 较上小时变化及联动方向 | 现有数据可覆盖 |
-| 五：持续性 | 涨跌比连续时长、昨日涨停溢价率 | 需溢价计算 |
-| 六：红黄绿灯 | 每模块输出最紧急的 3 个信号 | prompt 工程 |
+| 模块 | 内容 | 状态 |
+|------|------|------|
+| 一：边际速览 | 动能加速/衰竭、量能同比、涨跌家数 delta | ✅ 已完成 |
+| 二：量价结构 | 权重股虹吸判断、资金集中度 | ✅ 已完成 |
+| 三：盘口博弈 | 涨停封单、炸板率、委卖压 | ⬜ 待同花顺 API |
+| 四：内外联动 | A50/恒生/CNH delta + 背离检测 | ✅ 已完成 |
+| 五：持续性 | 涨跌比连续小时数 + 方向反转 | ✅ 已完成 |
+| 六：红黄绿灯 | Python 计算 + AI 解读，三灯信号 | ✅ 已完成 |
 
 ---
 
