@@ -47,6 +47,7 @@ def save_summary(slot: str, date_str: str, data: dict[str, Any]):
             "total_amount": data.get("overview", {}).get("total_amount", 0),
         },
         "sectors": sectors_all,
+        "linked_markets": data.get("linked_markets", {}),
     }
 
     # 读取已有文件（保留 history）
@@ -266,6 +267,39 @@ def _make_comparison(prev: dict[str, Any], current: dict[str, Any], label: str, 
             flags.append(f"⚠️ 板块快速轮动：领涨板块完全替换（{', '.join(curr_top3_set)} 接替 {', '.join(prev_top3)}）")
         elif len(overlap) < 2:
             flags.append(f"板块部分轮动：领涨板块 {', '.join(overlap)} 延续，{', '.join(curr_top3_set - overlap)} 新进")
+
+    # ── 外围联动 ──
+    prev_linked = prev.get("linked_markets", {})
+    curr_linked = current.get("linked_markets", {})
+    if prev_linked and curr_linked:
+        linked_items = []
+        for key, name in [("a50", "富时A50"), ("hstech", "恒生科技"), ("cnh", "离岸人民币")]:
+            p = prev_linked.get(key, {})
+            c = curr_linked.get(key, {})
+            if isinstance(p, dict) and isinstance(c, dict):
+                prev_pct = p.get("change_pct") or 0
+                curr_pct = c.get("change_pct") or 0
+                if prev_pct and curr_pct:
+                    delta = round(curr_pct - prev_pct, 2)
+                    if abs(delta) < 0.1:
+                        continue
+                    # 联动方向判断
+                    if name == "离岸人民币":
+                        direction = "贬值加速" if delta > 0 else "升值"
+                        linked_items.append(f"  {name}：{curr_pct:+.2f}%（较{label} {delta:+.2f}pp，{direction}）")
+                    else:
+                        linked_items.append(f"  {name}：{curr_pct:+.2f}%（较{label} {delta:+.2f}pp）")
+        if linked_items:
+            lines.append("")
+            lines.append(f"⚓ **外围联动**（较{label}）：")
+            lines.extend(linked_items)
+            # 背离检测：A50 跌但上证涨
+            a50_c = curr_linked.get("a50", {})
+            if isinstance(a50_c, dict) and a50_c.get("change_pct", 0) < -0.5:
+                curr_idx = current.get("index", {})
+                上证 = curr_idx.get("上证指数", {})
+                if isinstance(上证, dict) and 上证.get("change_pct", 0) > 0:
+                    flags.append("⚠️ A50期指与上证背离（A50跌、上证涨），外盘不认可内盘涨势，偏空信号")
 
     # ── 汇总异常标记 ──
     if flags:

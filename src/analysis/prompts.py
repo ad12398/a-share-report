@@ -89,19 +89,44 @@ def build_midday_prompt(data: dict[str, Any], comparison_text: str = "") -> str:
 
 
 def build_afternoon_prompt(data: dict[str, Any], comparison_text: str = "") -> str:
-    """午后更新 prompt (14:00)"""
-    return f"""请生成一份 A 股午后市场更新报告。
+    """午后实战快评 prompt (14:00) — 四模块 + 红黄绿灯"""
+    warning_text = _compute_warning_lights(data, comparison_text)
 
-    {comparison_text + chr(10) + chr(10) if comparison_text else ""}
+    return f"""请生成一份 A 股午后实战快评（14:00 时段）。
+
+{comparison_text + chr(10) + chr(10) if comparison_text else ""}
 ## 实时数据
 {_format_json(data)}
 
-## 分析要点
-1. 下午盘面与上午的对比变化
-2. 北向资金的最新动向（是否出现拐点）
-3. 龙虎榜数据解读（如有）
-4. 尾盘展望（最后 1 小时的预判）
-5. 需要盯防的关键价位和技术信号
+## ⚠️ 本时段使用「实战快评」格式（四模块）
+
+请严格按以下顺序输出，每模块不得跳过，各至少 2 句话：
+
+### 模块一：边际速览
+从上面的对比数据中提取核心变化：
+- 指数方向：较上一时段是加速还是衰竭？
+- 量能：放量/缩量幅度，判断市场参与度
+- 涨跌比变化：市场宽度是扩张还是收缩
+
+### 模块四：内外联动
+- A50/恒生/离岸人民币较上一时段的变化方向
+- 外部指标与 A 股是同向还是背离？
+- 如有背离（如 A50 跌但上证涨），重点解读
+
+### 模块二：量价结构
+- 权重股成交占比判断虹吸效应（沪深300成交额/两市成交额）
+- 若权重占比 > 70%，说明资金集中大票，个股活跃度下降
+- 结合板块轮动数据，判断资金是在权重防御还是题材进攻
+
+### 模块六：红黄绿灯
+
+{warning_text}
+
+## 输出规则
+- 每个模块的标题用 <h3>，内容用 <p> + <ul><li>
+- 模块一放在最前面，后面顺序可调整
+- 模块三（盘口博弈）和模块五（持续性评估）本版本暂不输出，不要自行编造
+- 所有边际变化必须引用对比数据中的具体数字
 
 {DISCLAIMER}"""
 
@@ -150,3 +175,69 @@ def _format_json(data: dict[str, Any], comparison_text: str = "") -> str:
     """将数据格式化为 prompt 友好文本"""
     import json
     return json.dumps(data, ensure_ascii=False, indent=2, default=str)
+
+
+def _compute_warning_lights(data: dict[str, Any], comparison_text: str) -> str:
+    """根据数据计算红黄绿灯信号，返回 prompt 可注入的文本。
+
+    在 Python 端计算保证一致性，AI 只做解读不做判断。
+    """
+    red: list[str] = []
+    yellow: list[str] = []
+    green: list[str] = []
+
+    overview = data.get("overview", {})
+    north = data.get("north_flow", {})
+    index_data = data.get("index", {})
+    linked = data.get("linked_markets", {})
+
+    up_ratio = overview.get("up_ratio", 0) or 0
+    net_flow = north.get("net_flow", 0) or 0
+    total_amount = overview.get("total_amount", 0) or 0
+
+    # 上证涨跌幅
+    上证 = index_data.get("000001", {})
+    if isinstance(上证, dict):
+        sh_pct = 上证.get("change_pct", 0) or 0
+    else:
+        sh_pct = 0
+
+    # ── 红灯条件 ──
+    if net_flow < -20 and sh_pct < -0.5:
+        red.append(f"北向大幅净流出 {net_flow:+.1f} 亿，上证 {sh_pct:+.2f}%，外资撤退+指数承压，警惕尾盘继续走弱")
+    elif net_flow < -10 and up_ratio < 40:
+        red.append(f"北向净流出 {net_flow:+.1f} 亿 + 涨跌比仅 {up_ratio:.0f}%，市场情绪接近冰点")
+    if "北向反转" in comparison_text or "北向资金反转" in comparison_text:
+        red.append("北向资金方向逆转，可能触发程序化止损盘")
+
+    # ── 黄灯条件 ──
+    if 45 <= up_ratio <= 55:
+        yellow.append(f"涨跌比 {up_ratio:.0f}% 处于多空平衡区，方向待选，减少仓位等待信号")
+    if -10 <= net_flow <= 5 and net_flow != 0:
+        yellow.append(f"北向 {net_flow:+.1f} 亿不温不火，外资观望中")
+    if "板块快速轮动" in comparison_text or "板块部分轮动" in comparison_text:
+        yellow.append("板块轮动加速，主线不清晰，追涨易被套")
+
+    # ── 绿灯条件 ──
+    if up_ratio > 65 and net_flow > 10:
+        green.append(f"涨跌比 {up_ratio:.0f}% + 北向 {net_flow:+.1f} 亿，量价配合良好，趋势健康")
+    elif up_ratio > 60:
+        green.append(f"涨跌比 {up_ratio:.0f}% 偏暖，多头占主导")
+    if "加速上涨" in comparison_text and net_flow >= 0:
+        green.append(f"动能加速+北向未出货，上升趋势延续中")
+    if not red and not yellow:
+        green.append("无红灯或黄灯信号，当前盘面暂时无忧")
+
+    # 降级：如果红灯 <= 0 and 黄灯 <= 0 and 绿灯 <= 0
+    if not red and not yellow and not green:
+        yellow.append("今日数据无明显极端信号，建议按原计划执行，不做额外调仓")
+
+    parts = []
+    parts.append(f"🔴 **红灯**（危险信号）：{chr(10)}" +
+                 chr(10).join(f"  - {r}" for r in red) if red else "🔴 **红灯**：暂无触发")
+    parts.append(f"🟡 **黄灯**（观望信号）：{chr(10)}" +
+                 chr(10).join(f"  - {y}" for y in yellow) if yellow else "🟡 **黄灯**：暂无触发")
+    parts.append(f"🟢 **绿灯**（进攻信号）：{chr(10)}" +
+                 chr(10).join(f"  - {g}" for g in green) if green else "🟢 **绿灯**：暂无触发")
+
+    return chr(10).join(parts)
