@@ -233,9 +233,9 @@ var _chartData = {{ chart_json | safe }};
       xAxis: { type: 'category', data: sDates, axisLabel: { color: '#8892a4', rotate: 45, fontSize: 10 }, position: 'bottom' },
       yAxis: { type: 'category', data: sNames, axisLabel: { color: '#8892a4', fontSize: 11 } },
       visualMap: {
-        min: -10, max: 10, calculable: true, orient: 'horizontal',
+        min: -5, max: 5, calculable: true, orient: 'horizontal',
         left: 'center', bottom: 5,
-        inRange: { color: ['#4caf50', '#1e2230', '#ef5350'] },
+        inRange: { color: ['#4caf50', '#3a3e4a', '#ef5350'] },
         text: ['涨', '跌'], textStyle: { color: '#8892a4' }
       },
       series: [{
