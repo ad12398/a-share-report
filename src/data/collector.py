@@ -51,20 +51,19 @@ def collect_all_data(slot: str) -> dict[str, Any]:
     fund_flow_data: dict = {}
     if slot in ("1030", "1130", "1400", "1500"):
         north_data = eastmoney_source.fetch_north_flow()
-        # mx-data 补充北向成交额（仅 1400 实战快评调用，节约额度）
-        if slot == "1400":
-            mx_turnover = mx_source.fetch_north_turnover()
-            if mx_turnover:
-                north_data["mx_turnover"] = mx_turnover
-                net = north_data.get("net_flow", 0) or 0
-                total = mx_turnover.get("total_amount", 0) or 0
-                if total > 0 and net != 0:
-                    intensity = round(net / total * 100, 2)
-                    north_data["intensity_pct"] = intensity
-                    north_data["_note"] = (
-                        f"沪股通净买入 {net:+.1f}亿 / 北向成交总额 {total:.0f}亿 = 流量强度 {intensity:+.2f}%。"
-                        f"仅沪股通净买入（深股通净买入自2024年证监会新规后不再公开发布）。"
-                    )
+        # mx-data 补充北向成交额+方向（与 hgt 净买入互补，每日限额10次）
+        mx_turnover = mx_source.fetch_north_turnover()
+        if mx_turnover:
+            north_data["mx_turnover"] = mx_turnover
+            net = north_data.get("net_flow", 0) or 0
+            total = mx_turnover.get("total_amount", 0) or 0
+            if total > 0 and net != 0:
+                intensity = round(net / total * 100, 2)
+                north_data["intensity_pct"] = intensity
+                north_data["_note"] = (
+                    f"沪股通净买入 {net:+.1f}亿 / 北向成交总额 {total:.0f}亿 = 流量强度 {intensity:+.2f}%。"
+                    f"仅沪股通净买入（深股通净买入自2024年证监会新规后不再公开发布）。"
+                )
         fund_flow_data = eastmoney_source.fetch_market_fund_flow()
         if slot in ("1400", "1500"):
             dragon_data = sina_lhb_source.fetch_daily_lhb()
