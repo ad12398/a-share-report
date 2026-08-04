@@ -4,6 +4,7 @@ import json
 import os
 import ssl
 import sys
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -26,7 +27,8 @@ REPORTS_DIR = PROJECT_ROOT / "reports"
 
 
 def get_sha(path, branch="gh-pages"):
-    url = f"https://api.github.com/repos/{REPO}/contents/{path}?ref={branch}"
+    encoded = urllib.parse.quote(path, safe="/")
+    url = f"https://api.github.com/repos/{REPO}/contents/{encoded}?ref={branch}"
     req = urllib.request.Request(url, headers=HEADERS)
     try:
         with urllib.request.urlopen(req) as resp:
@@ -40,6 +42,7 @@ def get_sha(path, branch="gh-pages"):
 def put_file_binary(path, content_b64, msg, branch="gh-pages"):
     """推送二进制文件（content_b64 已 base64 编码）"""
     sha = get_sha(path, branch)
+    encoded = urllib.parse.quote(path, safe="/")
     payload = {
         "message": msg,
         "content": content_b64,
@@ -48,7 +51,7 @@ def put_file_binary(path, content_b64, msg, branch="gh-pages"):
     if sha:
         payload["sha"] = sha
     body = json.dumps(payload).encode("utf-8")
-    url = f"https://api.github.com/repos/{REPO}/contents/{path}"
+    url = f"https://api.github.com/repos/{REPO}/contents/{encoded}"
     req = urllib.request.Request(url, data=body, headers=HEADERS, method="PUT")
     try:
         with urllib.request.urlopen(req) as resp:
@@ -62,6 +65,7 @@ def put_file_binary(path, content_b64, msg, branch="gh-pages"):
 
 def put_file(path, content_str, msg, branch="gh-pages"):
     sha = get_sha(path, branch)
+    encoded = urllib.parse.quote(path, safe="/")
     payload = {
         "message": msg,
         "content": base64.b64encode(content_str.encode("utf-8")).decode("ascii"),
@@ -70,7 +74,7 @@ def put_file(path, content_str, msg, branch="gh-pages"):
     if sha:
         payload["sha"] = sha
     body = json.dumps(payload).encode("utf-8")
-    url = f"https://api.github.com/repos/{REPO}/contents/{path}"
+    url = f"https://api.github.com/repos/{REPO}/contents/{encoded}"
     req = urllib.request.Request(url, data=body, headers=HEADERS, method="PUT")
     try:
         with urllib.request.urlopen(req) as resp:
