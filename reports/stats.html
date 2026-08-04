@@ -65,17 +65,17 @@
   </div>
   <div class="kpi-card">
     <div class="kpi-label">平均涨跌比</div>
-    <div class="kpi-value" style="color:var(--up, #4caf50)">82.6%</div>
+    <div class="kpi-value" style="color:var(--up, #4caf50)">82.4%</div>
     <div class="kpi-sub">上涨占比</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">北向累计</div>
-    <div class="kpi-value" style="color:var(--down, #ef5350)">-92.0</div>
+    <div class="kpi-value" style="color:var(--down, #ef5350)">-70.6</div>
     <div class="kpi-sub">亿元</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">日均成交额</div>
-    <div class="kpi-value">17630</div>
+    <div class="kpi-value">17782</div>
     <div class="kpi-sub">亿元</div>
   </div>
   <div class="kpi-card">
@@ -116,7 +116,7 @@
 
 
 <script>
-var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04"], "up_ratio": [93.8, 70.0, 83.9], "north_flow": [-30.68, -30.68, -30.68], "amount": [22902.0, 19774.0, 10214.0], "index_returns": {"上证指数": [0.94, 0.25, 0.08], "深证成指": [2.89, 1.85, 3.84], "创业板指": [4.15, 2.76, 6.4], "科创50": [4.45, -1.03, 0.47]}, "sector_names": ["次新股", "陶瓷行业", "电子器件", "机械行业", "电子信息", "有色金属", "玻璃行业", "仪器仪表", "医疗器械", "电器行业", "化工行业", "飞机制造", "生物制药", "发电设备", "家具行业", "造纸行业", "印刷包装", "化纤行业", "其它行业", "传媒娱乐", "塑料制品", "服装鞋类", "石油行业", "食品行业", "交通运输", "农药化肥", "公路桥梁", "金融行业", "船舶制造", "酿酒行业"], "sector_dates": ["2026-07-31", "2026-08-03", "2026-08-04"], "sector_data": [[0, null, 2.7100699300699], [0, null, 0.862], [0, null, 0.63725352112676], [null, null, 0.55969072164948], [null, null, 0.49701834862385], [null, null, 0.426], [null, null, 0.37], [null, null, 0.29659574468085], [null, null, 0.25615384615385], [null, null, 0.22203703703704], [null, null, 0.20235714285714], [null, null, 0.20142857142857], [null, null, 0.17648275862069], [null, null, 0.15372881355932], [null, null, 0.13857142857143], [null, null, 0.12545454545455], [null, null, 0.11166666666667], [null, null, 0.10695652173913], [null, null, 0.091906976744186], [null, null, 0.090555555555556], [null, null, 0.067931034482759], [null, null, 0.049555555555556], [null, null, 0.047142857142857], [null, null, -0.044814814814815], [null, null, -0.045333333333333], [null, null, -0.10255813953488], [null, null, -0.10944444444444], [null, null, -0.14340425531915], [null, null, -0.15], [null, null, -0.8253125]]};
+var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04"], "up_ratio": [93.8, 70.0, 83.4], "north_flow": [-30.68, -30.68, -9.28], "amount": [22902.0, 19774.0, 10670.0], "index_returns": {"上证指数": [0.94, 0.25, 0.17], "深证成指": [2.89, 1.85, 4.0], "创业板指": [4.15, 2.76, 6.66], "科创50": [4.45, -1.03, 1.01]}, "sector_names": ["次新股", "陶瓷行业", "电子器件"], "sector_dates": ["2026-07-31", "2026-08-03", "2026-08-04"], "sector_data": [[0, null, null], [0, null, null], [0, null, null]]};
 </script>
 <script>
 (function() {
@@ -223,9 +223,9 @@ var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04"], "up_ratio
       xAxis: { type: 'category', data: sDates, axisLabel: { color: '#8892a4', rotate: 45, fontSize: 10 }, position: 'bottom' },
       yAxis: { type: 'category', data: sNames, axisLabel: { color: '#8892a4', fontSize: 11 } },
       visualMap: {
-        min: -10, max: 10, calculable: true, orient: 'horizontal',
+        min: -5, max: 5, calculable: true, orient: 'horizontal',
         left: 'center', bottom: 5,
-        inRange: { color: ['#4caf50', '#1e2230', '#ef5350'] },
+        inRange: { color: ['#4caf50', '#3a3e4a', '#ef5350'] },
         text: ['涨', '跌'], textStyle: { color: '#8892a4' }
       },
       series: [{
