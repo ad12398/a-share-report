@@ -72,36 +72,22 @@ def fetch_north_flow() -> dict[str, Any]:
         data = resp.json()
 
         hgt_values = data.get("hgt", [])
-        sgt_values = data.get("sgt", [])
 
         if not hgt_values:
             return {}
 
-        # hgt: 沪股通累计净买入（亿），取最新值
+        # hgt: 沪股通当日累计净买入（亿），取最新值 = 当日净流向
+        # sgt: 深股通数据不可靠（返回余额绝对值>100，差值≠净买入），废弃不用
         sh_flow = float(hgt_values[-1]) if hgt_values else 0.0
 
-        # sgt: 深股通（2024-08 后数据降级，仅供参考）
-        sz_flow = 0.0
-        if sgt_values:
-            # sgt 可能返回余额而非净买入，做启发式判断
-            last_sgt = float(sgt_values[-1])
-            # 如果 > 100 大概率是余额而非净买入，取相邻差值作为净买入
-            if abs(last_sgt) > 100:
-                if len(sgt_values) >= 2:
-                    sz_flow = last_sgt - float(sgt_values[-2])
-                else:
-                    sz_flow = 0.0
-            else:
-                sz_flow = last_sgt
-
-        total_flow = round(sh_flow + sz_flow, 2)
         result = {
-            "net_flow": total_flow,
+            "net_flow": round(sh_flow, 2),
             "net_flow_sh": round(sh_flow, 2),
-            "net_flow_sz": round(sz_flow, 2),
-            "source": "hexin",
+            "net_flow_sz": 0.0,
+            "source": "hexin_hgt_only",
+            "_note": "仅沪股通，深股通数据暂缺（同花顺 sgt 返回余额非净买入）",
         }
-        logger.info(f"北向资金(同花顺): 合计={total_flow}亿 (沪={sh_flow} 深≈{sz_flow})")
+        logger.info(f"北向资金(同花顺 沪股通): 净={sh_flow}亿（深股通暂缺）")
         return result
     except Exception as e:
         logger.error(f"北向资金获取失败: {e}")
