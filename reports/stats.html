@@ -52,16 +52,192 @@
 <div class="stats-container">
 
 
-<div class="low-data">
-  <div class="low-data-icon">📊</div>
-  
-  <p>数据积累中（2 个交易日，6 份报告）。<br>图表需要 3 个以上交易日数据，预计 1 个交易日后可用。</p>
-  
+
+<div class="date-range">
+  📅 2026-07-31 — 2026-08-04 ｜ 3 个交易日 ｜ 7 份报告
+</div>
+
+<div class="kpi-row">
+  <div class="kpi-card">
+    <div class="kpi-label">交易日数</div>
+    <div class="kpi-value">3</div>
+    <div class="kpi-sub">天</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">平均涨跌比</div>
+    <div class="kpi-value" style="color:var(--up, #4caf50)">82.7%</div>
+    <div class="kpi-sub">上涨占比</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">北向累计</div>
+    <div class="kpi-value" style="color:var(--down, #ef5350)">-61.4</div>
+    <div class="kpi-sub">亿元</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">日均成交额</div>
+    <div class="kpi-value">17468</div>
+    <div class="kpi-sub">亿元</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">总报告数</div>
+    <div class="kpi-value">7</div>
+    <div class="kpi-sub">份</div>
+  </div>
+</div>
+
+<div class="chart-row">
+  <div class="chart-box">
+    <h3>📈 市场宽度走势（每日涨跌比）</h3>
+    <div class="chart-inner" id="chart-breadth"></div>
+  </div>
+  <div class="chart-box">
+    <h3>💰 北向资金趋势（每日净流入）</h3>
+    <div class="chart-inner" id="chart-north"></div>
+  </div>
+</div>
+
+<div class="chart-row full">
+  <div class="chart-box">
+    <h3>📊 主要指数累计收益率</h3>
+    <div class="chart-inner" id="chart-index"></div>
+  </div>
+</div>
+
+<div class="chart-row full">
+  <div class="chart-box">
+    <h3>🗺️ 板块轮动热力图</h3>
+    <div class="heatmap-inner" id="chart-sector"></div>
+  </div>
 </div>
 
 
+
 </div>
 
+
+<script>
+var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04"], "up_ratio": [93.8, 70.0, 84.3], "north_flow": [-30.68, -30.68, 0], "amount": [22902.0, 19774.0, 9728.0], "index_returns": {"上证指数": [0.94, 0.25, 0.09], "深证成指": [2.89, 1.85, 3.76], "创业板指": [4.15, 2.76, 6.25], "科创50": [4.45, -1.03, 0.52]}, "sector_names": ["次新股", "陶瓷行业", "电子器件", "机械行业", "电子信息", "有色金属", "玻璃行业", "仪器仪表", "医疗器械", "化工行业", "电器行业", "生物制药", "家具行业", "飞机制造", "发电设备", "化纤行业", "造纸行业", "印刷包装", "其它行业", "传媒娱乐", "塑料制品", "服装鞋类", "交通运输", "食品行业", "酒店旅游", "公路桥梁", "农药化肥", "船舶制造", "金融行业", "酿酒行业"], "sector_dates": ["2026-07-31", "2026-08-03", "2026-08-04"], "sector_data": [[0, null, 2.6346853146853], [0, null, 1.048], [0, null, 0.70507042253521], [null, null, 0.52989690721649], [null, null, 0.50316513761468], [null, null, 0.44076923076923], [null, null, 0.39052631578947], [null, null, 0.30042553191489], [null, null, 0.225], [null, null, 0.21814285714286], [null, null, 0.2], [null, null, 0.14158620689655], [null, null, 0.14142857142857], [null, null, 0.13142857142857], [null, null, 0.12423728813559], [null, null, 0.12217391304348], [null, null, 0.12136363636364], [null, null, 0.10611111111111], [null, null, 0.088503875968992], [null, null, 0.082777777777778], [null, null, 0.07], [null, null, 0.047333333333333], [null, null, -0.040533333333333], [null, null, -0.041666666666667], [null, null, -0.045625], [null, null, -0.096111111111111], [null, null, -0.098139534883721], [null, null, -0.13714285714286], [null, null, -0.14425531914894], [null, null, -0.9021875]]};
+</script>
+<script>
+(function() {
+  var darkTheme = {
+    textStyle: { color: '#8892a4' },
+    title: { textStyle: { color: '#d0d5e0' } },
+    legend: { textStyle: { color: '#8892a4' } }
+  };
+
+  // ── 市场宽度 ──
+  (function() {
+    var dom = document.getElementById('chart-breadth');
+    var chart = echarts.init(dom);
+    chart.setOption({
+      tooltip: { trigger: 'axis', valueFormatter: function(v) { return v + '%'; } },
+      grid: { left: 50, right: 20, top: 20, bottom: 35 },
+      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
+      yAxis: { type: 'value', name: '涨跌比 %', axisLabel: { color: '#8892a4' }, min: 0, max: 100,
+        splitLine: { lineStyle: { color: '#2a2e3a' } } },
+      series: [{
+        type: 'line', data: _chartData.up_ratio, smooth: true, symbol: 'circle', symbolSize: 6,
+        lineStyle: { color: '#4fc3f7', width: 2 },
+        itemStyle: { color: '#4fc3f7' },
+        areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: 'rgba(79,195,247,0.3)' },
+          { offset: 1, color: 'rgba(79,195,247,0.02)' }
+        ])},
+        markLine: { silent: true, data: [{ yAxis: 50, lineStyle: { color: '#666', type: 'dashed' } }],
+          label: { formatter: '50%', color: '#666' } }
+      }]
+    });
+    window.addEventListener('resize', function() { chart.resize(); });
+  })();
+
+  // ── 北向资金 ──
+  (function() {
+    var dom = document.getElementById('chart-north');
+    var chart = echarts.init(dom);
+    var vals = _chartData.north_flow;
+    var colors = vals.map(function(v) { return v >= 0 ? '#ef5350' : '#4caf50'; });
+    chart.setOption({
+      tooltip: { trigger: 'axis', valueFormatter: function(v) { return v.toFixed(1) + ' 亿'; } },
+      grid: { left: 55, right: 20, top: 20, bottom: 35 },
+      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
+      yAxis: { type: 'value', name: '亿', axisLabel: { color: '#8892a4' },
+        splitLine: { lineStyle: { color: '#2a2e3a' } } },
+      series: [{
+        type: 'bar', data: vals.map(function(v, i) { return { value: v, itemStyle: { color: colors[i] } }; }),
+      }]
+    });
+    window.addEventListener('resize', function() { chart.resize(); });
+  })();
+
+  // ── 指数累计收益 ──
+  (function() {
+    var dom = document.getElementById('chart-index');
+    var chart = echarts.init(dom);
+    var colors = { '上证指数': '#ef5350', '深证成指': '#4caf50', '创业板指': '#ff9800', '科创50': '#4fc3f7' };
+    var series = [];
+    var returns = _chartData.index_returns;
+    for (var name in returns) {
+      series.push({
+        name: name, type: 'line', data: returns[name], smooth: true, symbol: 'circle', symbolSize: 4,
+        lineStyle: { color: colors[name] || '#ccc', width: 2 },
+        itemStyle: { color: colors[name] || '#ccc' }
+      });
+    }
+    chart.setOption({
+      tooltip: { trigger: 'axis', valueFormatter: function(v) { return v.toFixed(2) + '%'; } },
+      legend: { data: Object.keys(returns), textStyle: { color: '#8892a4' }, bottom: 0 },
+      grid: { left: 55, right: 20, top: 20, bottom: 40 },
+      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
+      yAxis: { type: 'value', name: '累计 %', axisLabel: { color: '#8892a4' },
+        splitLine: { lineStyle: { color: '#2a2e3a' } } },
+      series: series
+    });
+    window.addEventListener('resize', function() { chart.resize(); });
+  })();
+
+  // ── 板块热力图 ──
+  (function() {
+    var dom = document.getElementById('chart-sector');
+    var chart = echarts.init(dom);
+    var sNames = _chartData.sector_names;
+    var sDates = _chartData.sector_dates;
+    var sData = _chartData.sector_data;
+    var matrix = [];
+    for (var i = 0; i < sNames.length; i++) {
+      for (var j = 0; j < sDates.length; j++) {
+        var val = sData[i][j];
+        if (val !== null) {
+          matrix.push([j, i, val]);
+        }
+      }
+    }
+    chart.setOption({
+      tooltip: {
+        position: 'top',
+        formatter: function(p) {
+          return sDates[p.value[0]] + '<br/>' + sNames[p.value[1]] + ': ' + p.value[2].toFixed(2) + '%';
+        }
+      },
+      grid: { left: 90, right: 40, top: 10, bottom: 60 },
+      xAxis: { type: 'category', data: sDates, axisLabel: { color: '#8892a4', rotate: 45, fontSize: 10 }, position: 'bottom' },
+      yAxis: { type: 'category', data: sNames, axisLabel: { color: '#8892a4', fontSize: 11 } },
+      visualMap: {
+        min: -10, max: 10, calculable: true, orient: 'horizontal',
+        left: 'center', bottom: 5,
+        inRange: { color: ['#4caf50', '#1e2230', '#ef5350'] },
+        text: ['涨', '跌'], textStyle: { color: '#8892a4' }
+      },
+      series: [{
+        type: 'heatmap', data: matrix,
+        label: { show: false },
+        emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' } }
+      }]
+    });
+    window.addEventListener('resize', function() { chart.resize(); });
+  })();
+})();
+</script>
 
 
 </body>
