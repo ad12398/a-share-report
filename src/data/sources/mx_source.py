@@ -48,7 +48,7 @@ def fetch_north_turnover() -> dict[str, Any]:
     try:
         resp = requests.post(
             MX_API_URL,
-            json={"toolQuery": "沪深港通 北向资金成交总额 沪股通成交额 深股通成交额 净买卖方向 领涨股"},
+            json={"toolQuery": "北向资金成交总额 沪股通 深股通"},
             headers={"Content-Type": "application/json", "apikey": key},
             timeout=15,
         )
@@ -77,6 +77,7 @@ def _parse_north_turnover(raw: dict[str, Any]) -> dict[str, Any]:
             return {}
 
         table = tables[0].get("table", {})
+        name_map = tables[0].get("nameMap", {})
         dates = table.get("headName", [])
         if not dates:
             return {}
@@ -84,19 +85,25 @@ def _parse_north_turnover(raw: dict[str, Any]) -> dict[str, Any]:
 
         result: dict[str, Any] = {"date": _clean_date(str(dates[latest_idx]))}
 
-        # 按表键中文名匹配（兼容 XXX(板块)、XXX(万) 等后缀）
+        # 按表键匹配（兼容两种情况：数字 ID 需走 nameMap，中文字段名直接匹配）
         for key, values in table.items():
             if key == "headName" or not values:
                 continue
             val = str(values[latest_idx]) if latest_idx < len(values) else ""
 
-            # 剔除括号后缀后再匹配
-            clean_key = key.split("(")[0] if "(" in key else key
-            if clean_key in ("全部A股", "北向资金") or "北向" in clean_key:
-                result["total_amount"] = _parse_amount(val)
-            elif "沪股通" in clean_key:
+            # 先试 nameMap 翻译 → 再剥离括号后缀
+            label = name_map.get(key, key)
+            clean_label = label.split("(")[0] if "(" in label else label
+
+            if "全部A股" in clean_label or "北向" in clean_label or "成交" in clean_label:
+                if "total_amount" not in result or result["total_amount"] == 0:
+                    amt = _parse_amount(val)
+                    # 用最大值为 total（summary 表的总额最大）
+                    if amt > (result.get("total_amount", 0) or 0):
+                        result["total_amount"] = amt
+            elif "沪股通" in clean_label:
                 result["sh_amount"] = _parse_amount(val)
-            elif "深股通" in clean_key:
+            elif "深股通" in clean_label:
                 result["sz_amount"] = _parse_amount(val)
 
         if "total_amount" not in result:
