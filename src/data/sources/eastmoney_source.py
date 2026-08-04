@@ -54,13 +54,15 @@ def _try_endpoints(url_path: str, timeout: int = 8, max_retries: int = 1) -> req
 def fetch_north_flow() -> dict[str, Any]:
     """获取北向资金当日净流向（同花顺 data.hexin.cn，零认证）
 
-    东财 push2 自 2024-08 起北向数据已失效，改用同花顺 hexin API。
+    2024 年起证监会新规隐藏了北向净买入实时数据。
+    目前仅能获取沪股通净买入，深股通数据不可用（返回余额非净买入）。
 
     返回: {
-        "net_flow": float,       # 北向合计净买入（亿）
+        "net_flow": float,       # 沪股通净买入（亿，非北向合计）
         "net_flow_sh": float,    # 沪股通净买入（亿）
-        "net_flow_sz": float,    # 深股通净买入（亿，仅供参考）
-        "source": "hexin",
+        "net_flow_sz": float,    # 深股通（暂缺，监管限制）
+        "source": "hexin_hgt_only",
+        "_note": str,            # ⚠️ 重要：数据仅沪股通，需在报告中说明
     }
     """
     try:
