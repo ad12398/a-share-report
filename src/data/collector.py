@@ -51,11 +51,10 @@ def collect_all_data(slot: str) -> dict[str, Any]:
     fund_flow_data: dict = {}
     if slot in ("1030", "1130", "1400", "1500"):
         north_data = eastmoney_source.fetch_north_flow()
-        # mx-data 补充北向成交额+方向（与 hgt 净买入互补）
+        # mx-data 补充北向成交额+方向（与 hgt 净买入互补，每日限额10次）
         mx_turnover = mx_source.fetch_north_turnover()
         if mx_turnover:
             north_data["mx_turnover"] = mx_turnover
-            # 计算流量强度：净买入 / 成交总额
             net = north_data.get("net_flow", 0) or 0
             total = mx_turnover.get("total_amount", 0) or 0
             if total > 0 and net != 0:
