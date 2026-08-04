@@ -84,17 +84,19 @@ def _parse_north_turnover(raw: dict[str, Any]) -> dict[str, Any]:
 
         result: dict[str, Any] = {"date": _clean_date(str(dates[latest_idx]))}
 
-        # 按表键中文名匹配
+        # 按表键中文名匹配（兼容 XXX(板块)、XXX(万) 等后缀）
         for key, values in table.items():
             if key == "headName" or not values:
                 continue
             val = str(values[latest_idx]) if latest_idx < len(values) else ""
 
-            if "全部A股" in key or "北向" in key:
+            # 剔除括号后缀后再匹配
+            clean_key = key.split("(")[0] if "(" in key else key
+            if clean_key in ("全部A股", "北向资金") or "北向" in clean_key:
                 result["total_amount"] = _parse_amount(val)
-            elif "沪股通" in key:
+            elif "沪股通" in clean_key:
                 result["sh_amount"] = _parse_amount(val)
-            elif "深股通" in key:
+            elif "深股通" in clean_key:
                 result["sz_amount"] = _parse_amount(val)
 
         if "total_amount" not in result:
