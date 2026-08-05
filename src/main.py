@@ -113,6 +113,13 @@ def run(slot: str):
     gainers_list = data.get("movers", {}).get("gainers", [])
     losers_list = data.get("movers", {}).get("losers", [])
 
+    # 0925 盘前：板块/涨跌榜数据全零（未开盘），用昨日收盘数据替代
+    if slot == "0925":
+        yesterday_sectors = _load_yesterday_sectors(date_str)
+        if yesterday_sectors:
+            sector_list = yesterday_sectors
+            logger.info(f"0925 使用昨日板块数据: {len(sector_list)} 条")
+
     chart_data = {}
     if sector_list and isinstance(sector_list, list) and len(sector_list) > 0:
         chart_data["sectors"] = [
@@ -181,6 +188,50 @@ def run(slot: str):
 
     logger.info(f"=== 报告生成完成: {report_path} === [{report_time()}]")
     return report_path
+
+
+def _load_yesterday_sectors(today_str: str) -> list[dict[str, Any]] | None:
+    """从 last_slot.json 加载昨日收盘时的板块数据（供 0925 盘前展示）。
+
+    优先取 1500 收盘时段，缺失则取最后可用时段。
+    """
+    import json
+    from datetime import datetime as _dt
+
+    summary_path = Path(__file__).parent.parent / "data" / "last_slot.json"
+    if not summary_path.exists():
+        return None
+
+    try:
+        d = _dt.strptime(today_str, "%Y-%m-%d")
+        yesterday = (d - timedelta(days=1)).strftime("%Y-%m-%d")
+    except ValueError:
+        return None
+
+    try:
+        payload = json.loads(summary_path.read_text(encoding="utf-8"))
+        history = payload.get("history", {})
+        yest_data = history.get(yesterday, {})
+    except Exception:
+        return None
+
+    if not yest_data:
+        return None
+
+    # 优先 1500 → 最后可用时段
+    entry = yest_data.get("1500") or list(yest_data.values())[-1]
+    raw = entry.get("sectors", entry.get("sectors_top", []))
+    if not raw:
+        return None
+
+    # 统一格式：list of {name, change_pct}
+    result = []
+    for s in raw:
+        if isinstance(s, dict):
+            result.append({"name": s.get("name", ""), "change_pct": s.get("change_pct", 0)})
+        elif isinstance(s, str):
+            result.append({"name": s, "change_pct": 0})
+    return result if result else None
 
 
 def main():
