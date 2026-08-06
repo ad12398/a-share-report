@@ -79,9 +79,9 @@
     <div class="kpi-sub">上涨占比</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label">北向累计</div>
+    <div class="kpi-label">沪股通累计净买入</div>
     <div class="kpi-value" style="color:{{ 'var(--up, #4caf50)' if north_cumulative >= 0 else 'var(--down, #ef5350)' }}">{{ north_cumulative_str }}</div>
-    <div class="kpi-sub">亿元</div>
+    <div class="kpi-sub">亿元（仅沪股通）</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">日均成交额</div>
@@ -101,7 +101,7 @@
     <div class="chart-inner" id="chart-breadth"></div>
   </div>
   <div class="chart-box">
-    <h3>💰 北向资金趋势（每日净流入）</h3>
+    <h3>💰 沪股通净买入趋势（每日）</h3>
     <div class="chart-inner" id="chart-north"></div>
   </div>
 </div>
