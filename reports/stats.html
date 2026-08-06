@@ -54,24 +54,24 @@
 
 
 <div class="date-range">
-  📅 2026-07-31 — 2026-08-05 ｜ 4 个交易日 ｜ 16 份报告
+  📅 2026-07-31 — 2026-08-06 ｜ 5 个交易日 ｜ 17 份报告
 </div>
 
 <div class="kpi-row">
   <div class="kpi-card">
     <div class="kpi-label">交易日数</div>
-    <div class="kpi-value">4</div>
+    <div class="kpi-value">5</div>
     <div class="kpi-sub">天</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">平均涨跌比</div>
-    <div class="kpi-value" style="color:var(--up, #4caf50)">81.6%</div>
+    <div class="kpi-value" style="color:var(--up, #4caf50)">68.6%</div>
     <div class="kpi-sub">上涨占比</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label">北向累计</div>
+    <div class="kpi-label">沪股通累计净买入</div>
     <div class="kpi-value" style="color:var(--down, #ef5350)">-79.9</div>
-    <div class="kpi-sub">亿元</div>
+    <div class="kpi-sub">亿元（仅沪股通）</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">日均成交额</div>
@@ -80,7 +80,7 @@
   </div>
   <div class="kpi-card">
     <div class="kpi-label">总报告数</div>
-    <div class="kpi-value">16</div>
+    <div class="kpi-value">17</div>
     <div class="kpi-sub">份</div>
   </div>
 </div>
@@ -91,7 +91,7 @@
     <div class="chart-inner" id="chart-breadth"></div>
   </div>
   <div class="chart-box">
-    <h3>💰 北向资金趋势（每日净流入）</h3>
+    <h3>💰 沪股通净买入趋势（每日）</h3>
     <div class="chart-inner" id="chart-north"></div>
   </div>
 </div>
@@ -116,7 +116,7 @@
 
 
 <script>
-var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05"], "up_ratio": [93.8, 70.0, 85.3, 77.4], "north_flow": [-30.68, -30.68, -9.28, -9.28], "amount": [22902.0, 19774.0, 21903.0, 26331.0], "index_returns": {"上证指数": [0.94, 0.25, 0.62, 2.11], "深证成指": [2.89, 1.85, 5.18, 7.17], "创业板指": [4.15, 2.76, 8.63, 10.15], "科创50": [4.45, -1.03, 3.04, 7.97]}, "sector_names": ["次新股", "陶瓷行业", "电子器件"], "sector_dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05"], "sector_data": [[0, null, null, null], [0, null, null, null], [0, null, null, null]]};
+var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06"], "up_ratio": [93.8, 70.0, 85.3, 77.4, 16.7], "north_flow": [-30.68, -30.68, -9.28, -9.28, 0], "amount": [22902.0, 19774.0, 21903.0, 26331.0, 0], "index_returns": {"上证指数": [0.94, 0.25, 0.62, 2.11, 2.11], "深证成指": [2.89, 1.85, 5.18, 7.17, 7.17], "创业板指": [4.15, 2.76, 8.63, 10.15, 10.15], "科创50": [4.45, -1.03, 3.04, 7.97, 7.97]}, "sector_names": ["次新股", "陶瓷行业", "电子器件", "影视概念", "锂矿概念", "阿兹海默", "基因测序", "肝素概念", "最近多板", "创新医疗服务"], "sector_dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06"], "sector_data": [[0, null, null, null, null], [0, null, null, null, null], [0, null, null, null, null], [null, null, null, null, 30.0], [null, null, null, null, 30.0], [null, null, null, null, 28.0], [null, null, null, null, 27.0], [null, null, null, null, 23.0], [null, null, null, null, 20.0], [null, null, null, null, 19.0]]};
 </script>
 <script>
 (function() {
