@@ -101,15 +101,19 @@
     <div class="chart-inner" id="chart-breadth"></div>
   </div>
   <div class="chart-box">
-    <h3>💰 北向活跃度 — 成交总额（每日）</h3>
+    <h3>💰 北向活跃度 & 外资占比（每日）</h3>
     <div class="chart-inner" id="chart-north"></div>
   </div>
 </div>
 
-<div class="chart-row full">
+<div class="chart-row">
   <div class="chart-box">
     <h3>📊 主要指数累计收益率</h3>
     <div class="chart-inner" id="chart-index"></div>
+  </div>
+  <div class="chart-box">
+    <h3>🏠 南向资金 — 港股通净买入（每日）</h3>
+    <div class="chart-inner" id="chart-south"></div>
   </div>
 </div>
 
@@ -161,27 +165,80 @@ var _chartData = {{ chart_json | safe }};
     window.addEventListener('resize', function() { chart.resize(); });
   })();
 
-  // ── 北向活跃度 ──
+  // ── 北向活跃度（双轴：柱=成交总额，线=外资占比）──
   (function() {
     var dom = document.getElementById('chart-north');
     var chart = echarts.init(dom);
-    var vals = _chartData.north_turnover;
-    // 活跃度颜色：>300 高=红色系，150-300 中=橙色系，<150 低=灰色
-    var colors = vals.map(function(v) {
+    var turnover = _chartData.north_turnover;
+    var participation = _chartData.north_participation;
+    var colors = turnover.map(function(v) {
       return v > 300 ? '#ef5350' : v > 150 ? '#ff9800' : '#666';
     });
     chart.setOption({
-      tooltip: { trigger: 'axis', valueFormatter: function(v) { return v.toFixed(0) + ' 亿'; } },
+      tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+          var d = params[0].axisValue;
+          var t = params[0].value, p = params[1].value;
+          return d + '<br/>北向成交: ' + t.toFixed(0) + ' 亿<br/>外资占比: ' + p.toFixed(1) + '%';
+        }
+      },
+      legend: { data: ['成交总额', '外资占比'], textStyle: { color: '#8892a4' }, bottom: 0 },
+      grid: { left: 55, right: 55, top: 20, bottom: 40 },
+      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
+      yAxis: [
+        { type: 'value', name: '亿', axisLabel: { color: '#8892a4' },
+          splitLine: { lineStyle: { color: '#2a2e3a' } } },
+        { type: 'value', name: '%', axisLabel: { color: '#8892a4' },
+          splitLine: { show: false }, min: 0 }
+      ],
+      series: [
+        { name: '成交总额', type: 'bar',
+          data: turnover.map(function(v, i) { return { value: v, itemStyle: { color: colors[i] } }; }),
+          markLine: { silent: true, symbol: 'none',
+            data: [
+              { yAxis: 300, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '高', color: '#ef5350' } },
+              { yAxis: 150, lineStyle: { color: '#ff9800', type: 'dashed' }, label: { formatter: '中', color: '#ff9800' } }
+            ]
+          }
+        },
+        { name: '外资占比', type: 'line', yAxisIndex: 1, data: participation,
+          smooth: true, symbol: 'circle', symbolSize: 5,
+          lineStyle: { color: '#4fc3f7', width: 2 },
+          itemStyle: { color: '#4fc3f7' },
+          markLine: { silent: true, symbol: 'none',
+            data: [
+              { yAxis: 10, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '10%', color: '#ef5350' } },
+              { yAxis: 5, lineStyle: { color: '#ff9800', type: 'dashed' }, label: { formatter: '5%', color: '#ff9800' } }
+            ]
+          }
+        }
+      ]
+    });
+    window.addEventListener('resize', function() { chart.resize(); });
+  })();
+
+  // ── 南向资金（正=内资南下/负=回流A股）──
+  (function() {
+    var dom = document.getElementById('chart-south');
+    var chart = echarts.init(dom);
+    var vals = _chartData.south_flow;
+    // 正=南下（偏空A股）红色；负=回流（偏多A股）绿色
+    var colors = vals.map(function(v) { return v >= 0 ? '#ef5350' : '#4caf50'; });
+    chart.setOption({
+      tooltip: { trigger: 'axis', valueFormatter: function(v) { return (v >= 0 ? '+' : '') + v.toFixed(1) + ' 亿'; } },
       grid: { left: 55, right: 20, top: 20, bottom: 35 },
       xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
       yAxis: { type: 'value', name: '亿', axisLabel: { color: '#8892a4' },
         splitLine: { lineStyle: { color: '#2a2e3a' } } },
       series: [{
-        type: 'bar', data: vals.map(function(v, i) { return { value: v, itemStyle: { color: colors[i] } }; }),
+        type: 'bar',
+        data: vals.map(function(v, i) { return { value: v, itemStyle: { color: colors[i] } }; }),
         markLine: { silent: true, symbol: 'none',
           data: [
-            { yAxis: 300, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '高活跃', color: '#ef5350' } },
-            { yAxis: 150, lineStyle: { color: '#ff9800', type: 'dashed' }, label: { formatter: '中活跃', color: '#ff9800' } }
+            { yAxis: 0, lineStyle: { color: '#666', type: 'solid' }, label: { show: false } },
+            { yAxis: 30, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '+30', color: '#ef5350' } },
+            { yAxis: -30, lineStyle: { color: '#4caf50', type: 'dashed' }, label: { formatter: '-30', color: '#4caf50' } }
           ]
         }
       }]

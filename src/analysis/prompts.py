@@ -155,6 +155,16 @@ def build_afternoon_prompt(data: dict[str, Any], comparison_text: str = "") -> s
 - 结合板块轮动数据，判断资金是在权重防御还是题材进攻
 
 ### 模块四：内外联动
+先分析外资偏好，再分析外部联动：
+
+**外资偏好（沪/深风格）：**
+- 沪市占北向成交 {sh_ratio}%（data.north_flow.sh_ratio）
+  - >55%：外资偏价值防御（银行/能源/红利为主），成长股缺少外资支撑
+  - <45%：外资偏成长进攻（科技/新能源为主），价值股被冷落
+  - 40-60%：均衡配置
+- 对比上一时段偏好是否切换 >5pp，如有则重点解读风格轮动
+
+**外部联动：**
 - A50/恒生/离岸人民币较上一时段的变化方向
 - 外部指标与 A 股是同向还是背离？
 - 如有背离（如 A50 跌但上证涨），重点解读
@@ -450,6 +460,9 @@ def _compute_warning_lights(data: dict[str, Any], comparison_text: str, persiste
     # 沪/深偏好极端 = 外资偏防御
     if sh_ratio > 70:
         yellow.append(f"沪市占北向成交 {sh_ratio:.0f}%，外资极度偏向价值防御，成长股缺乏外资支撑")
+    # 外资偏好切换
+    if "外资偏好切换" in comparison_text:
+        yellow.append("外资沪/深偏好切换，资金风格可能轮动，注意持仓结构调整")
     # 南向大幅流入 = 内资外流
     if south_net > 30:
         yellow.append(f"南向净买入 {south_net:.0f} 亿（内资南下），A 股短线资金被分流")

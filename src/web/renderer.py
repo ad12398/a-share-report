@@ -196,6 +196,7 @@ def build_stats_data() -> dict[str, Any]:
     chart_up_ratio: list[float] = []
     chart_north_turnover: list[float] = []
     chart_north_participation: list[float] = []
+    chart_south_flow: list[float] = []
     chart_amount: list[float] = []
 
     # 指数累计收益计算
@@ -209,6 +210,7 @@ def build_stats_data() -> dict[str, Any]:
         chart_up_ratio.append(entry.get("overview", {}).get("up_ratio", 0) or 0)
         chart_north_turnover.append(entry.get("north_flow", {}).get("turnover_total", 0) or 0)
         chart_north_participation.append(entry.get("north_flow", {}).get("participation_pct", 0) or 0)
+        chart_south_flow.append((entry.get("north_flow", {}).get("south_flow", {}) or {}).get("south_net", 0) or 0)
         chart_amount.append(entry.get("overview", {}).get("total_amount", 0) or 0)
 
         idx_data = entry.get("index", {})
@@ -257,6 +259,7 @@ def build_stats_data() -> dict[str, Any]:
         "up_ratio": chart_up_ratio,
         "north_turnover": chart_north_turnover,
         "north_participation": chart_north_participation,
+        "south_flow": chart_south_flow,
         "amount": chart_amount,
         "index_returns": index_cum,
         "sector_names": sector_names,
