@@ -167,6 +167,8 @@ def build_stats_data() -> dict[str, Any]:
     # ── KPI 计算 ──
     up_ratios = []
     north_flows = []
+    north_turnovers = []  # 活跃度信号
+    north_intensities = []  # 强度信号
     amounts = []
     for d in sorted_dates:
         entry = daily[d]
@@ -176,17 +178,24 @@ def build_stats_data() -> dict[str, Any]:
             up_ratios.append(ov["up_ratio"])
         if nf.get("net_flow"):
             north_flows.append(nf["net_flow"])
+        mx = nf.get("mx_turnover", {}) or {}
+        if mx.get("total_amount"):
+            north_turnovers.append(mx["total_amount"])
+        if nf.get("intensity_pct"):
+            north_intensities.append(nf["intensity_pct"])
         if ov.get("total_amount"):
             amounts.append(ov["total_amount"])
 
     avg_up_ratio = round(sum(up_ratios) / len(up_ratios), 1) if up_ratios else 0
     north_cumulative = round(sum(north_flows), 2) if north_flows else 0
     avg_amount = round(sum(amounts) / len(amounts), 0) if amounts else 0
+    avg_intensity = round(sum(north_intensities) / len(north_intensities), 1) if north_intensities else 0
 
     # ── 图表数据 ──
     chart_dates: list[str] = []
     chart_up_ratio: list[float] = []
     chart_north_flow: list[float] = []
+    chart_north_turnover: list[float] = []
     chart_amount: list[float] = []
 
     # 指数累计收益计算
@@ -199,6 +208,7 @@ def build_stats_data() -> dict[str, Any]:
         chart_dates.append(d)
         chart_up_ratio.append(entry.get("overview", {}).get("up_ratio", 0) or 0)
         chart_north_flow.append(entry.get("north_flow", {}).get("net_flow", 0) or 0)
+        chart_north_turnover.append((entry.get("north_flow", {}).get("mx_turnover", {}) or {}).get("total_amount", 0) or 0)
         chart_amount.append(entry.get("overview", {}).get("total_amount", 0) or 0)
 
         idx_data = entry.get("index", {})
@@ -246,6 +256,7 @@ def build_stats_data() -> dict[str, Any]:
         "dates": chart_dates,
         "up_ratio": chart_up_ratio,
         "north_flow": chart_north_flow,
+        "north_turnover": chart_north_turnover,
         "amount": chart_amount,
         "index_returns": index_cum,
         "sector_names": sector_names,
@@ -262,6 +273,7 @@ def build_stats_data() -> dict[str, Any]:
         "north_cumulative_str": f"{north_cumulative:+.1f}",
         "avg_amount": avg_amount,
         "avg_amount_str": f"{avg_amount:.0f}",
+        "avg_intensity": avg_intensity,
         "first_date": sorted_dates[0],
         "last_date": sorted_dates[-1],
         "chart_json": _safe_script_json(chart_json),

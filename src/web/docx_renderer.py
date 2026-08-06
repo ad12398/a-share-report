@@ -152,13 +152,36 @@ def render_docx(
             row[3].text = ""
         doc.add_paragraph()  # 间距
 
-    # 北向资金
+    # 外资流向监测（二维框架：方向+活跃度+强度）
     if north_flow and north_flow.get("net_flow") is not None:
+        # 标题行
         p = doc.add_paragraph()
+        p.add_run("外资流向监测").bold = True
+
+        # ① 方向信号
         net = north_flow["net_flow"]
         direction = "流入" if net >= 0 else "流出"
-        p.add_run(f"北向资金：净{direction} {abs(net):.2f} 亿").bold = True
-        p.add_run(f"  |  沪股通 {north_flow.get('net_flow_sh', 0):.2f} 亿  |  数据源: {north_flow.get('source', '')}")
+        p = doc.add_paragraph()
+        p.add_run(f"  方向信号：沪股通净{direction} {abs(net):.2f} 亿（同花顺hgt，仅沪市）")
+
+        # ② 活跃度信号
+        mx = north_flow.get("mx_turnover", {}) or {}
+        turnover = mx.get("total_amount", 0) or 0
+        if turnover > 0:
+            p = doc.add_paragraph()
+            p.add_run(f"  活跃度：北向成交总额 {turnover:.0f} 亿（沪+深合计）")
+
+        # ③ 流量强度
+        intensity = north_flow.get("intensity_pct", 0) or 0
+        if intensity:
+            intensity_judge = "坚定" if abs(intensity) > 5 else "温和" if abs(intensity) > 2 else "轻仓试探"
+            p = doc.add_paragraph()
+            p.add_run(f"  流量强度：{intensity:+.1f}%（净买入/成交总额，{intensity_judge}）")
+
+        # 数据限制标注
+        run = p.add_run(f"\n  注：深股通净买入自2024年证监会新规后不再公开发布，方向信号仅来自沪股通")
+        run.font.size = Pt(9)
+        run.font.color.rgb = COLOR_MUTED
 
     # 资金流（替代两融）
     if fund_flow and fund_flow.get("sample_count"):

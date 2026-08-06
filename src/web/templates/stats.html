@@ -79,9 +79,9 @@
     <div class="kpi-sub">上涨占比</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label">沪股通累计净买入</div>
+    <div class="kpi-label">外资流向监测</div>
     <div class="kpi-value" style="color:{{ 'var(--up, #4caf50)' if north_cumulative >= 0 else 'var(--down, #ef5350)' }}">{{ north_cumulative_str }}</div>
-    <div class="kpi-sub">亿元（仅沪股通）</div>
+    <div class="kpi-sub">沪股通累计净买入（亿元）</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">日均成交额</div>
@@ -101,7 +101,7 @@
     <div class="chart-inner" id="chart-breadth"></div>
   </div>
   <div class="chart-box">
-    <h3>💰 沪股通净买入趋势（每日）</h3>
+    <h3>💰 外资流向监测 — 沪股通净买入（每日）</h3>
     <div class="chart-inner" id="chart-north"></div>
   </div>
 </div>
@@ -161,7 +161,7 @@ var _chartData = {{ chart_json | safe }};
     window.addEventListener('resize', function() { chart.resize(); });
   })();
 
-  // ── 北向资金 ──
+  // ── 外资流向监测 ──
   (function() {
     var dom = document.getElementById('chart-north');
     var chart = echarts.init(dom);

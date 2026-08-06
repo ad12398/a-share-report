@@ -174,7 +174,7 @@ def build_comparison(prev_data: dict[str, Any] | None, data: dict[str, Any]) -> 
     lines.append("**对比分析要求**（必须执行）：")
     lines.append("1. 在每节分析中引用上述对比数据，注明'较上一时段'或'较昨日同期'的边际变化")
     lines.append("2. 判断当前走势属于：动能加速 / 动能衰竭 / 趋势反转")
-    lines.append("3. 如有 北向反转、量价背离、板块快速轮动 等信号，重点警示")
+    lines.append("3. 如有 沪股通净买入反转、量价背离、板块快速轮动 等信号，重点警示")
     lines.append("4. 简明扼要一句话点睛：\"本时段核心变化是 XXX\"，放在分析开头")
 
     return "\n".join(lines)
@@ -239,17 +239,47 @@ def _make_comparison(prev: dict[str, Any], current: dict[str, Any], label: str, 
 
         lines.append(f"  {name}：{curr_pct:+.2f}%（较{label} {delta:+.2f}pp，{trend}）")
 
-    # ── 北向对比 ──
-    prev_north = prev.get("north_flow", {}).get("net_flow", 0)
-    curr_north = current.get("north_flow", {}).get("net_flow", 0)
-    if prev_north and curr_north:
-        north_delta = round(curr_north - prev_north, 2)
-        north_sign = prev_north * curr_north
-        lines.append(f"  北向资金：{curr_north:+.2f} 亿（较{label} {north_delta:+.2f} 亿）")
-        if north_sign < 0:
-            flags.append("⚠️ 北向资金反转（流入⇄流出切换），必须关注")
-    elif curr_north:
-        lines.append(f"  北向资金：{curr_north:+.2f} 亿（{label}数据暂缺）")
+    # ── 外资流向监测（二维：方向+活跃度+强度） ──
+    prev_north = prev.get("north_flow", {})
+    curr_north = current.get("north_flow", {})
+    prev_net = prev_north.get("net_flow", 0) or 0
+    curr_net = curr_north.get("net_flow", 0) or 0
+    # 北向成交总额（活跃度信号）
+    prev_turnover = (prev_north.get("mx_turnover", {}) or {}).get("total_amount", 0) or 0
+    curr_turnover = (curr_north.get("mx_turnover", {}) or {}).get("total_amount", 0) or 0
+    # 流量强度
+    prev_intensity = prev_north.get("intensity_pct", 0) or 0
+    curr_intensity = curr_north.get("intensity_pct", 0) or 0
+
+    if curr_net:
+        # 方向信号：沪股通净买入
+        if prev_net:
+            north_delta = round(curr_net - prev_net, 2)
+            north_sign = prev_net * curr_net
+            lines.append(f"  沪股通净买入（方向）：{curr_net:+.2f} 亿（较{label} {north_delta:+.2f} 亿）")
+            if north_sign < 0:
+                flags.append("⚠️ 沪股通净买入反转（流入⇄流出切换），必须关注")
+        else:
+            lines.append(f"  沪股通净买入（方向）：{curr_net:+.2f} 亿（{label}数据暂缺）")
+
+        # 活跃度信号：北向成交总额
+        if curr_turnover > 0:
+            if prev_turnover > 0:
+                turnover_delta = round((curr_turnover - prev_turnover) / prev_turnover * 100, 1)
+                lines.append(f"  北向成交总额（活跃度）：{curr_turnover:.0f} 亿（较{label} {turnover_delta:+.1f}%）")
+            else:
+                lines.append(f"  北向成交总额（活跃度）：{curr_turnover:.0f} 亿")
+
+        # 强度信号：流量强度
+        if curr_intensity:
+            if prev_intensity:
+                intensity_delta = round(curr_intensity - prev_intensity, 1)
+                lines.append(f"  流量强度：{curr_intensity:+.1f}%（较{label} {intensity_delta:+.1f}pp）")
+                # 强度反转检测
+                if prev_intensity * curr_intensity < 0:
+                    flags.append("⚠️ 流量强度正负切换，外资态度可能反转")
+            else:
+                lines.append(f"  流量强度：{curr_intensity:+.1f}%")
 
     # ── 成交额对比 ──
     prev_amt = prev.get("overview", {}).get("total_amount", 0)

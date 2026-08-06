@@ -15,10 +15,12 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 SUMMARY_PATH = PROJECT_ROOT / "data" / "last_slot.json"
 
 NORTH_FLOW_NOTE = (
-    "⚠️ 北向资金数据说明：受2024年证监会新规影响，实时北向净买入金额已不再公开发布。"
-    "本报告中的北向资金数据仅为沪股通净买入（同花顺 hgt），不含深股通，"
-    "不等于北向资金合计净买入。请在分析中主动标注此限制，"
-    "使用\"沪股通净买入\"代替\"北向资金\"进行描述。"
+    "⚠️ 外资流向监测说明：本报告使用二维框架分析外资行为——"
+    "① 方向信号（沪股通净买入，同花顺hgt，仅沪市）；"
+    "② 活跃度信号（北向成交总额，沪+深合计，mx-source）；"
+    "③ 流量强度 = 净买入/成交总额。"
+    "深股通净买入自2024年证监会新规后不再公开发布，方向信号仅来自沪股通。"
+    "分析时禁止使用'北向资金'指代净买入数据。"
 )
 
 DISCLAIMER = (
@@ -36,7 +38,7 @@ SYSTEM_PROMPT = """你是一位资深量化交易分析师，专注于 A 股市�
 
 格式要求（在每份报告中严格遵守）：
 1. **市场概览**：2-3 句话概括当前市场状态
-2. **核心指标**：关键数据（涨跌比、成交额、北向资金等）+ 解读
+2. **核心指标**：关键数据（涨跌比、成交额、外资流向监测等）+ 解读
 3. **板块热点**：领涨/领跌板块及驱动因素分析
 4. **技术信号**：关键指数的技术指标状态（MA/MACD/RSI/KDJ）+ 信号解读
 5. **量化视角**：资金流向、量价关系、市场宽度等量化分析
@@ -44,7 +46,15 @@ SYSTEM_PROMPT = """你是一位资深量化交易分析师，专注于 A 股市�
 7. **风险提示**：当前市场的主要风险和关注点
 
 ## 重要数据说明
-- **北向资金**：受2024年证监会新规影响，实时北向净买入金额已不再公开发布。报告中的"北向资金"数据实际仅为沪股通净买入（同花顺hgt），不含深股通。分析时只能写"沪股通净买入"，不得称"北向资金"。
+- **外资流向监测**（二维分析框架）：
+  ① 方向信号：沪股通净买入（同花顺hgt，仅沪市）→ 外资在沪市是买还是卖
+  ② 活跃度信号：北向成交总额（沪+深合计）→ 外资整体参与度高低
+  ③ 流量强度：净买入/成交总额 → 外资买卖的决心有多大
+  ④ 分析口诀：高成交+高净买=坚定看多；高成交+低净买/净卖=博弈激烈偏谨慎；
+     低成交+高净买=轻仓试探；低成交+低净买=外资观望
+- **数据限制**：深股通净买入自2024年证监会新规后不再公开发布。方向信号仅来自沪股通，
+  不能简单等同于北向资金整体方向。分析时一律使用"外资流向监测"或分项指标名称，
+  禁止使用"北向资金"指代净买入数据。
 
 输出使用 HTML 段落格式（<p>、<h3>、<ul><li>），避免使用 ``` 代码块。"""
 
@@ -85,7 +95,7 @@ def build_morning_prompt(data: dict[str, Any], comparison_text: str = "") -> str
 2. 量能异动（成交量是否有超常规放大或萎缩）
 3. 板块轮动方向（资金在哪些板块聚集，哪些流出）
 4. 涨跌比和涨跌停家数的信号意义
-5. 北向资金开盘动向（如有）
+5. 外资流向监测：沪股通净买入开盘方向 + 北向成交活跃度 + 流量强度研判
 6. 技术面关键位置（主要指数靠近支撑还是阻力位）
 
 {DISCLAIMER}"""
@@ -103,7 +113,7 @@ def build_midday_prompt(data: dict[str, Any], comparison_text: str = "") -> str:
 1. 上午盘面整体特征（强势/弱势/震荡）
 2. 涨跌比和成交额解读（今日量能水平）
 3. 领涨/领跌板块的持续性判断
-4. 北向资金的半日流向分析
+4. 外资流向监测：半日沪股通净买入方向 + 北向成交总额活跃度 + 流量强度变化
 5. 下午盘面展望（结合上午走势和历史模式）
 6. 需要注意的异常信号
 
@@ -171,7 +181,7 @@ def build_close_prompt(data: dict[str, Any], comparison_text: str = "") -> str:
 2. **指数分析**：上证/深证/创业板/科创50 分别分析，关注技术指标信号
 3. **量价分析**：今日量能与涨跌幅的匹配程度
 4. **板块轮动**：今日主线板块和杀跌板块的驱动逻辑
-5. **资金面**：北向资金全日净流向、龙虎榜信号
+5. **资金面**：外资流向监测（沪股通全日净流向 + 北向成交活跃度 + 流量强度）、龙虎榜信号
 6. **市场宽度**：涨跌比、新高新低比
 7. **技术信号**：主要指数的 MA/MACD/RSI/KDJ 指标状态
 8. **明日关注**：明日需要重点关注的板块、个股、技术位
@@ -379,6 +389,7 @@ def _compute_warning_lights(data: dict[str, Any], comparison_text: str, persiste
     """根据数据计算红黄绿灯信号，返回 prompt 可注入的文本。
 
     在 Python 端计算保证一致性，AI 只做解读不做判断。
+    外资流向监测使用二维框架：方向（净买入）+ 活跃度（成交总额）+ 强度（净买入/成交总额）。
     """
     red: list[str] = []
     yellow: list[str] = []
@@ -393,6 +404,10 @@ def _compute_warning_lights(data: dict[str, Any], comparison_text: str, persiste
     net_flow = north.get("net_flow", 0) or 0
     total_amount = overview.get("total_amount", 0) or 0
 
+    # 外资流向二维指标
+    north_turnover = (north.get("mx_turnover", {}) or {}).get("total_amount", 0) or 0
+    intensity = north.get("intensity_pct", 0) or 0  # 流量强度（%）
+
     # 上证涨跌幅
     上证 = index_data.get("000001", {})
     if isinstance(上证, dict):
@@ -402,27 +417,37 @@ def _compute_warning_lights(data: dict[str, Any], comparison_text: str, persiste
 
     # ── 红灯条件 ──
     if net_flow < -20 and sh_pct < -0.5:
-        red.append(f"北向大幅净流出 {net_flow:+.1f} 亿，上证 {sh_pct:+.2f}%，外资撤退+指数承压，警惕尾盘继续走弱")
+        red.append(f"沪股通大幅净流出 {net_flow:+.1f} 亿，上证 {sh_pct:+.2f}%，外资沪市撤退+指数承压，警惕尾盘继续走弱")
     elif net_flow < -10 and up_ratio < 40:
-        red.append(f"北向净流出 {net_flow:+.1f} 亿 + 涨跌比仅 {up_ratio:.0f}%，市场情绪接近冰点")
-    if "北向反转" in comparison_text or "北向资金反转" in comparison_text:
-        red.append("北向资金方向逆转，可能触发程序化止损盘")
+        red.append(f"沪股通净流出 {net_flow:+.1f} 亿 + 涨跌比仅 {up_ratio:.0f}%，市场情绪接近冰点")
+    if "沪股通净买入反转" in comparison_text:
+        red.append("沪股通方向逆转，可能触发程序化止损盘")
+    # 高活跃度+坚定出货 = 外资不看好了
+    if north_turnover > 300 and net_flow < -15 and intensity < -5:
+        red.append(f"北向成交 {north_turnover:.0f} 亿（高活跃度）但沪股通净流出 {net_flow:+.1f} 亿（强度 {intensity:+.1f}%），外资高换手+坚定出货，偏空信号极强")
 
     # ── 黄灯条件 ──
     if 45 <= up_ratio <= 55:
         yellow.append(f"涨跌比 {up_ratio:.0f}% 处于多空平衡区，方向待选，减少仓位等待信号")
     if -10 <= net_flow <= 5 and net_flow != 0:
-        yellow.append(f"北向 {net_flow:+.1f} 亿不温不火，外资观望中")
+        yellow.append(f"沪股通 {net_flow:+.1f} 亿不温不火，外资方向不明")
+    if north_turnover < 100 and abs(net_flow) < 10:
+        yellow.append(f"北向成交仅 {north_turnover:.0f} 亿（低活跃度），外资整体观望，内资主导盘面")
+    if abs(intensity) < 2 and north_turnover > 200:
+        yellow.append(f"北向成交 {north_turnover:.0f} 亿但流量强度仅 {intensity:+.1f}%，高换手低净买卖，博弈激烈方向未定")
     if "板块快速轮动" in comparison_text or "板块部分轮动" in comparison_text:
         yellow.append("板块轮动加速，主线不清晰，追涨易被套")
 
     # ── 绿灯条件 ──
     if up_ratio > 65 and net_flow > 10:
-        green.append(f"涨跌比 {up_ratio:.0f}% + 北向 {net_flow:+.1f} 亿，量价配合良好，趋势健康")
+        green.append(f"涨跌比 {up_ratio:.0f}% + 沪股通 {net_flow:+.1f} 亿，量价配合良好，趋势健康")
     elif up_ratio > 60:
         green.append(f"涨跌比 {up_ratio:.0f}% 偏暖，多头占主导")
     if "加速上涨" in comparison_text and net_flow >= 0:
-        green.append(f"动能加速+北向未出货，上升趋势延续中")
+        green.append(f"动能加速+沪股通未出货，上升趋势延续中")
+    # 高活跃度+坚定买入 = 外资看多
+    if north_turnover > 300 and net_flow > 15 and intensity > 5:
+        green.append(f"北向成交 {north_turnover:.0f} 亿（高活跃度）+ 沪股通净买入 {net_flow:+.1f} 亿（强度 {intensity:+.1f}%），外资高换手+坚定看多")
     if not red and not yellow:
         green.append("无红灯或黄灯信号，当前盘面暂时无忧")
 

@@ -46,7 +46,7 @@ def add_report_to_index(
         "title": "...",
         "url": "reports/2026-07-28/0925.html",
         "summary": "报告前100字摘要...",
-        "keywords": ["上证指数", "MACD", "北向资金", ...]
+        "keywords": ["上证指数", "MACD", "沪股通净买入", ...]
     }
     """
     from src.analysis.prompts import SLOT_LABEL
@@ -110,8 +110,8 @@ def _extract_keywords(text: str, data: dict[str, Any]) -> list[str]:
         if isinstance(sector, dict):
             keywords.add(sector.get("name", ""))
 
-    # 北向资金
+    # 外资流向监测
     if data.get("north_flow"):
-        keywords.add("北向资金")
+        keywords.add("外资流向监测")
 
     return list(keywords)
