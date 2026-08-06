@@ -54,7 +54,7 @@
 
 
 <div class="date-range">
-  📅 2026-07-31 — 2026-08-06 ｜ 5 个交易日 ｜ 20 份报告
+  📅 2026-07-31 — 2026-08-06 ｜ 5 个交易日 ｜ 21 份报告
 </div>
 
 <div class="kpi-row">
@@ -65,22 +65,22 @@
   </div>
   <div class="kpi-card">
     <div class="kpi-label">平均涨跌比</div>
-    <div class="kpi-value" style="color:var(--up, #4caf50)">72.8%</div>
+    <div class="kpi-value" style="color:var(--up, #4caf50)">76.7%</div>
     <div class="kpi-sub">上涨占比</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label">外资流向监测</div>
-    <div class="kpi-value" style="color:var(--down, #ef5350)">-46.4</div>
-    <div class="kpi-sub">沪股通累计净买入（亿元）</div>
+    <div class="kpi-label">北向日均活跃度</div>
+    <div class="kpi-value">23580</div>
+    <div class="kpi-sub">北向日均成交（亿元）</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">日均成交额</div>
-    <div class="kpi-value">22404</div>
+    <div class="kpi-value">23191</div>
     <div class="kpi-sub">亿元</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">总报告数</div>
-    <div class="kpi-value">20</div>
+    <div class="kpi-value">21</div>
     <div class="kpi-sub">份</div>
   </div>
 </div>
@@ -91,15 +91,19 @@
     <div class="chart-inner" id="chart-breadth"></div>
   </div>
   <div class="chart-box">
-    <h3>💰 外资流向监测 — 沪股通净买入（每日）</h3>
+    <h3>💰 北向活跃度 & 外资占比（每日）</h3>
     <div class="chart-inner" id="chart-north"></div>
   </div>
 </div>
 
-<div class="chart-row full">
+<div class="chart-row">
   <div class="chart-box">
     <h3>📊 主要指数累计收益率</h3>
     <div class="chart-inner" id="chart-index"></div>
+  </div>
+  <div class="chart-box">
+    <h3>🏠 南向资金 — 港股通净买入（每日）</h3>
+    <div class="chart-inner" id="chart-south"></div>
   </div>
 </div>
 
@@ -116,7 +120,7 @@
 
 
 <script>
-var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06"], "up_ratio": [93.8, 70.0, 85.3, 77.4, 37.7], "north_flow": [-9.28, -9.28, -9.28, -9.28, -9.28], "north_turnover": [0, 0, 20390.0, 23120.0, 23580.0], "amount": [22902.0, 19774.0, 21903.0, 26331.0, 21111.0], "index_returns": {"上证指数": [0.94, 0.25, 0.62, 2.11, 2.36], "深证成指": [2.89, 1.85, 5.18, 7.17, 6.41], "创业板指": [4.15, 2.76, 8.63, 10.15, 8.93], "科创50": [4.45, -1.03, 3.04, 7.97, 7.38]}, "sector_names": ["次新股", "陶瓷行业", "电子器件", "煤炭行业", "有色金属", "石油行业", "化纤行业", "玻璃行业", "化工行业", "水泥行业", "公路桥梁", "食品行业", "仪器仪表", "钢铁行业", "电力行业", "酒店旅游", "金融行业", "造纸行业", "印刷包装", "家电行业", "医疗器械", "传媒娱乐", "生物制药", "开发区", "汽车制造", "发电设备", "船舶制造", "电器行业", "摩托车", "酿酒行业"], "sector_dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06"], "sector_data": [[0, null, null, null, -0.7131724137931], [0, null, null, null, 1.148], [0, null, null, null, 0.088591549295775], [null, null, null, null, 0.44230769230769], [null, null, null, null, 0.31184615384615], [null, null, null, null, 0.14], [null, null, null, null, 0.12478260869565], [null, null, null, null, 0.091578947368421], [null, null, null, null, 0.062142857142857], [null, null, null, null, 0.06], [null, null, null, null, -0.057222222222222], [null, null, null, null, -0.059444444444444], [null, null, null, null, -0.068333333333333], [null, null, null, null, -0.072884615384615], [null, null, null, null, -0.081166666666667], [null, null, null, null, -0.08125], [null, null, null, null, -0.083617021276596], [null, null, null, null, -0.085], [null, null, null, null, -0.092777777777778], [null, null, null, null, -0.1059375], [null, null, null, null, -0.12961538461538], [null, null, null, null, -0.13055555555556], [null, null, null, null, -0.13606896551724], [null, null, null, null, -0.155], [null, null, null, null, -0.18854166666667], [null, null, null, null, -0.19051724137931], [null, null, null, null, -0.20142857142857], [null, null, null, null, -0.21277777777778], [null, null, null, null, -0.22166666666667], [null, null, null, null, -0.229375]]};
+var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06"], "up_ratio": [93.8, 70.0, 85.3, 77.4, 56.8], "north_turnover": [0, 0, 0, 0, 23580.0], "north_participation": [0, 0, 0, 0, 0], "south_flow": [0, 0, 0, 0, -2.13], "amount": [22902.0, 19774.0, 21903.0, 26331.0, 25044.0], "index_returns": {"上证指数": [0.94, 0.25, 0.62, 2.11, 2.71], "深证成指": [2.89, 1.85, 5.18, 7.17, 6.94], "创业板指": [4.15, 2.76, 8.63, 10.15, 9.58], "科创50": [4.45, -1.03, 3.04, 7.97, 8.42]}, "sector_names": ["次新股", "陶瓷行业", "电子器件", "煤炭行业", "有色金属", "飞机制造", "玻璃行业", "化纤行业", "化工行业", "家具行业", "石油行业", "水泥行业", "电子信息", "综合行业", "服装鞋类", "农林牧渔", "纺织行业", "机械行业", "印刷包装", "开发区", "金融行业", "医疗器械", "生物制药", "酿酒行业", "传媒娱乐", "发电设备", "电器行业", "汽车制造", "船舶制造", "摩托车"], "sector_dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06"], "sector_data": [[0, null, null, null, -0.062758620689655], [0, null, null, null, 1.272], [0, null, null, null, 0.34943661971831], [null, null, null, null, 0.46307692307692], [null, null, null, null, 0.39323076923077], [null, null, null, null, 0.29071428571429], [null, null, null, null, 0.22684210526316], [null, null, null, null, 0.21478260869565], [null, null, null, null, 0.21021428571429], [null, null, null, null, 0.20714285714286], [null, null, null, null, 0.18571428571429], [null, null, null, null, 0.11916666666667], [null, null, null, null, 0.098858447488584], [null, null, null, null, 0.094], [null, null, null, null, 0.091333333333333], [null, null, null, null, 0.076101694915254], [null, null, null, null, 0.072058823529412], [null, null, null, null, 0.066340206185567], [null, null, null, null, -0.057777777777778], [null, null, null, null, -0.07], [null, null, null, null, -0.072978723404255], [null, null, null, null, -0.077692307692308], [null, null, null, null, -0.086206896551724], [null, null, null, null, -0.0875], [null, null, null, null, -0.10472222222222], [null, null, null, null, -0.10620689655172], [null, null, null, null, -0.11018518518519], [null, null, null, null, -0.12479166666667], [null, null, null, null, -0.14857142857143], [null, null, null, null, -0.18]]};
 </script>
 <script>
 (function() {
@@ -151,20 +155,82 @@ var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-0
     window.addEventListener('resize', function() { chart.resize(); });
   })();
 
-  // ── 外资流向监测 ──
+  // ── 北向活跃度（双轴：柱=成交总额，线=外资占比）──
   (function() {
     var dom = document.getElementById('chart-north');
     var chart = echarts.init(dom);
-    var vals = _chartData.north_flow;
+    var turnover = _chartData.north_turnover;
+    var participation = _chartData.north_participation;
+    var colors = turnover.map(function(v) {
+      return v > 300 ? '#ef5350' : v > 150 ? '#ff9800' : '#666';
+    });
+    chart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+          var d = params[0].axisValue;
+          var t = params[0].value, p = params[1].value;
+          return d + '<br/>北向成交: ' + t.toFixed(0) + ' 亿<br/>外资占比: ' + p.toFixed(1) + '%';
+        }
+      },
+      legend: { data: ['成交总额', '外资占比'], textStyle: { color: '#8892a4' }, bottom: 0 },
+      grid: { left: 55, right: 55, top: 20, bottom: 40 },
+      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
+      yAxis: [
+        { type: 'value', name: '亿', axisLabel: { color: '#8892a4' },
+          splitLine: { lineStyle: { color: '#2a2e3a' } } },
+        { type: 'value', name: '%', axisLabel: { color: '#8892a4' },
+          splitLine: { show: false }, min: 0 }
+      ],
+      series: [
+        { name: '成交总额', type: 'bar',
+          data: turnover.map(function(v, i) { return { value: v, itemStyle: { color: colors[i] } }; }),
+          markLine: { silent: true, symbol: 'none',
+            data: [
+              { yAxis: 300, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '高', color: '#ef5350' } },
+              { yAxis: 150, lineStyle: { color: '#ff9800', type: 'dashed' }, label: { formatter: '中', color: '#ff9800' } }
+            ]
+          }
+        },
+        { name: '外资占比', type: 'line', yAxisIndex: 1, data: participation,
+          smooth: true, symbol: 'circle', symbolSize: 5,
+          lineStyle: { color: '#4fc3f7', width: 2 },
+          itemStyle: { color: '#4fc3f7' },
+          markLine: { silent: true, symbol: 'none',
+            data: [
+              { yAxis: 10, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '10%', color: '#ef5350' } },
+              { yAxis: 5, lineStyle: { color: '#ff9800', type: 'dashed' }, label: { formatter: '5%', color: '#ff9800' } }
+            ]
+          }
+        }
+      ]
+    });
+    window.addEventListener('resize', function() { chart.resize(); });
+  })();
+
+  // ── 南向资金（正=内资南下/负=回流A股）──
+  (function() {
+    var dom = document.getElementById('chart-south');
+    var chart = echarts.init(dom);
+    var vals = _chartData.south_flow;
+    // 正=南下（偏空A股）红色；负=回流（偏多A股）绿色
     var colors = vals.map(function(v) { return v >= 0 ? '#ef5350' : '#4caf50'; });
     chart.setOption({
-      tooltip: { trigger: 'axis', valueFormatter: function(v) { return v.toFixed(1) + ' 亿'; } },
+      tooltip: { trigger: 'axis', valueFormatter: function(v) { return (v >= 0 ? '+' : '') + v.toFixed(1) + ' 亿'; } },
       grid: { left: 55, right: 20, top: 20, bottom: 35 },
       xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
       yAxis: { type: 'value', name: '亿', axisLabel: { color: '#8892a4' },
         splitLine: { lineStyle: { color: '#2a2e3a' } } },
       series: [{
-        type: 'bar', data: vals.map(function(v, i) { return { value: v, itemStyle: { color: colors[i] } }; }),
+        type: 'bar',
+        data: vals.map(function(v, i) { return { value: v, itemStyle: { color: colors[i] } }; }),
+        markLine: { silent: true, symbol: 'none',
+          data: [
+            { yAxis: 0, lineStyle: { color: '#666', type: 'solid' }, label: { show: false } },
+            { yAxis: 30, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '+30', color: '#ef5350' } },
+            { yAxis: -30, lineStyle: { color: '#4caf50', type: 'dashed' }, label: { formatter: '-30', color: '#4caf50' } }
+          ]
+        }
       }]
     });
     window.addEventListener('resize', function() { chart.resize(); });
