@@ -10,28 +10,28 @@
   .stats-container { max-width: 1300px; margin: 0 auto; padding: 20px; }
   .kpi-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
   .kpi-card {
-    flex: 1; min-width: 180px; background: var(--card-bg, #1e2230);
-    border: 1px solid var(--border, #2a2e3a); border-radius: 10px; padding: 20px;
+    flex: 1; min-width: 180px; background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border, #e0e3e8); border-radius: 10px; padding: 20px;
     text-align: center;
   }
-  .kpi-value { font-size: 28px; font-weight: 700; color: var(--accent, #4fc3f7); margin: 8px 0; }
-  .kpi-label { font-size: 13px; color: var(--text-muted, #8892a4); text-transform: uppercase; }
-  .kpi-sub { font-size: 12px; color: var(--text-muted, #8892a4); margin-top: 4px; }
+  .kpi-value { font-size: 28px; font-weight: 700; color: var(--accent, #2980b9); margin: 8px 0; }
+  .kpi-label { font-size: 13px; color: var(--text-muted, #5a6c7d); text-transform: uppercase; }
+  .kpi-sub { font-size: 12px; color: var(--text-muted, #5a6c7d); margin-top: 4px; }
   .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   .chart-row.full { grid-template-columns: 1fr; }
   .chart-box {
-    background: var(--card-bg, #1e2230); border: 1px solid var(--border, #2a2e3a);
+    background: var(--card-bg, #ffffff); border: 1px solid var(--border, #e0e3e8);
     border-radius: 10px; padding: 16px;
   }
-  .chart-box h3 { margin: 0 0 12px 0; font-size: 15px; color: var(--text, #d0d5e0); }
+  .chart-box h3 { margin: 0 0 12px 0; font-size: 15px; color: var(--text, #2c3e50); }
   .chart-inner { width: 100%; height: 340px; }
   .heatmap-inner { width: 100%; height: 520px; }
   .low-data {
-    text-align: center; padding: 80px 20px; color: var(--text-muted, #8892a4);
+    text-align: center; padding: 80px 20px; color: var(--text-muted, #5a6c7d);
   }
   .low-data-icon { font-size: 64px; margin-bottom: 16px; }
   .low-data p { font-size: 15px; line-height: 1.8; }
-  .date-range { font-size: 13px; color: var(--text-muted, #8892a4); margin-bottom: 20px; }
+  .date-range { font-size: 13px; color: var(--text-muted, #5a6c7d); margin-bottom: 20px; }
   @media (max-width: 900px) {
     .chart-row { grid-template-columns: 1fr; }
     .kpi-card { min-width: 140px; }
@@ -75,7 +75,7 @@
   </div>
   <div class="kpi-card">
     <div class="kpi-label">平均涨跌比</div>
-    <div class="kpi-value" style="color:{{ 'var(--up, #4caf50)' if avg_up_ratio >= 50 else 'var(--down, #ef5350)' }}">{{ avg_up_ratio }}%</div>
+    <div class="kpi-value" style="color:{{ 'var(--up, #27ae60)' if avg_up_ratio >= 50 else 'var(--down, #e74c3c)' }}">{{ avg_up_ratio }}%</div>
     <div class="kpi-sub">上涨占比</div>
   </div>
   <div class="kpi-card">
@@ -135,9 +135,9 @@ var _chartData = {{ chart_json | safe }};
 <script>
 (function() {
   var darkTheme = {
-    textStyle: { color: '#8892a4' },
-    title: { textStyle: { color: '#d0d5e0' } },
-    legend: { textStyle: { color: '#8892a4' } }
+    textStyle: { color: '#5a6c7d' },
+    title: { textStyle: { color: '#2c3e50' } },
+    legend: { textStyle: { color: '#5a6c7d' } }
   };
 
   // ── 市场宽度 ──
@@ -147,19 +147,19 @@ var _chartData = {{ chart_json | safe }};
     chart.setOption({
       tooltip: { trigger: 'axis', valueFormatter: function(v) { return v + '%'; } },
       grid: { left: 50, right: 20, top: 20, bottom: 35 },
-      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
-      yAxis: { type: 'value', name: '涨跌比 %', axisLabel: { color: '#8892a4' }, min: 0, max: 100,
-        splitLine: { lineStyle: { color: '#2a2e3a' } } },
+      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#5a6c7d', rotate: 30 } },
+      yAxis: { type: 'value', name: '涨跌比 %', axisLabel: { color: '#5a6c7d' }, min: 0, max: 100,
+        splitLine: { lineStyle: { color: '#e0e3e8' } } },
       series: [{
         type: 'line', data: _chartData.up_ratio, smooth: true, symbol: 'circle', symbolSize: 6,
-        lineStyle: { color: '#4fc3f7', width: 2 },
-        itemStyle: { color: '#4fc3f7' },
+        lineStyle: { color: '#2980b9', width: 2 },
+        itemStyle: { color: '#2980b9' },
         areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: 'rgba(79,195,247,0.3)' },
-          { offset: 1, color: 'rgba(79,195,247,0.02)' }
+          { offset: 0, color: 'rgba(41,128,185,0.15)' },
+          { offset: 1, color: 'rgba(41,128,185,0.05)' }
         ])},
-        markLine: { silent: true, data: [{ yAxis: 50, lineStyle: { color: '#666', type: 'dashed' } }],
-          label: { formatter: '50%', color: '#666' } }
+        markLine: { silent: true, data: [{ yAxis: 50, lineStyle: { color: '#bdc3c7', type: 'dashed' } }],
+          label: { formatter: '50%', color: '#bdc3c7' } }
       }]
     });
     window.addEventListener('resize', function() { chart.resize(); });
@@ -172,7 +172,7 @@ var _chartData = {{ chart_json | safe }};
     var turnover = _chartData.north_turnover;
     var participation = _chartData.north_participation;
     var colors = turnover.map(function(v) {
-      return v > 300 ? '#ef5350' : v > 150 ? '#ff9800' : '#666';
+      return v > 300 ? '#e74c3c' : v > 150 ? '#e67e22' : '#95a5a6';
     });
     chart.setOption({
       tooltip: {
@@ -183,13 +183,13 @@ var _chartData = {{ chart_json | safe }};
           return d + '<br/>北向成交: ' + t.toFixed(0) + ' 亿<br/>外资占比: ' + p.toFixed(1) + '%';
         }
       },
-      legend: { data: ['成交总额', '外资占比'], textStyle: { color: '#8892a4' }, bottom: 0 },
+      legend: { data: ['成交总额', '外资占比'], textStyle: { color: '#5a6c7d' }, bottom: 0 },
       grid: { left: 55, right: 55, top: 20, bottom: 40 },
-      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
+      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#5a6c7d', rotate: 30 } },
       yAxis: [
-        { type: 'value', name: '亿', axisLabel: { color: '#8892a4' },
-          splitLine: { lineStyle: { color: '#2a2e3a' } } },
-        { type: 'value', name: '%', axisLabel: { color: '#8892a4' },
+        { type: 'value', name: '亿', axisLabel: { color: '#5a6c7d' },
+          splitLine: { lineStyle: { color: '#e0e3e8' } } },
+        { type: 'value', name: '%', axisLabel: { color: '#5a6c7d' },
           splitLine: { show: false }, min: 0 }
       ],
       series: [
@@ -197,19 +197,19 @@ var _chartData = {{ chart_json | safe }};
           data: turnover.map(function(v, i) { return { value: v, itemStyle: { color: colors[i] } }; }),
           markLine: { silent: true, symbol: 'none',
             data: [
-              { yAxis: 300, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '高', color: '#ef5350' } },
-              { yAxis: 150, lineStyle: { color: '#ff9800', type: 'dashed' }, label: { formatter: '中', color: '#ff9800' } }
+              { yAxis: 300, lineStyle: { color: '#e74c3c', type: 'dashed' }, label: { formatter: '高', color: '#e74c3c' } },
+              { yAxis: 150, lineStyle: { color: '#e67e22', type: 'dashed' }, label: { formatter: '中', color: '#e67e22' } }
             ]
           }
         },
         { name: '外资占比', type: 'line', yAxisIndex: 1, data: participation,
           smooth: true, symbol: 'circle', symbolSize: 5,
-          lineStyle: { color: '#4fc3f7', width: 2 },
-          itemStyle: { color: '#4fc3f7' },
+          lineStyle: { color: '#2980b9', width: 2 },
+          itemStyle: { color: '#2980b9' },
           markLine: { silent: true, symbol: 'none',
             data: [
-              { yAxis: 10, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '10%', color: '#ef5350' } },
-              { yAxis: 5, lineStyle: { color: '#ff9800', type: 'dashed' }, label: { formatter: '5%', color: '#ff9800' } }
+              { yAxis: 10, lineStyle: { color: '#e74c3c', type: 'dashed' }, label: { formatter: '10%', color: '#e74c3c' } },
+              { yAxis: 5, lineStyle: { color: '#e67e22', type: 'dashed' }, label: { formatter: '5%', color: '#e67e22' } }
             ]
           }
         }
@@ -224,21 +224,21 @@ var _chartData = {{ chart_json | safe }};
     var chart = echarts.init(dom);
     var vals = _chartData.south_flow;
     // 正=南下（偏空A股）红色；负=回流（偏多A股）绿色
-    var colors = vals.map(function(v) { return v >= 0 ? '#ef5350' : '#4caf50'; });
+    var colors = vals.map(function(v) { return v >= 0 ? '#e74c3c' : '#27ae60'; });
     chart.setOption({
       tooltip: { trigger: 'axis', valueFormatter: function(v) { return (v >= 0 ? '+' : '') + v.toFixed(1) + ' 亿'; } },
       grid: { left: 55, right: 20, top: 20, bottom: 35 },
-      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
-      yAxis: { type: 'value', name: '亿', axisLabel: { color: '#8892a4' },
-        splitLine: { lineStyle: { color: '#2a2e3a' } } },
+      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#5a6c7d', rotate: 30 } },
+      yAxis: { type: 'value', name: '亿', axisLabel: { color: '#5a6c7d' },
+        splitLine: { lineStyle: { color: '#e0e3e8' } } },
       series: [{
         type: 'bar',
         data: vals.map(function(v, i) { return { value: v, itemStyle: { color: colors[i] } }; }),
         markLine: { silent: true, symbol: 'none',
           data: [
-            { yAxis: 0, lineStyle: { color: '#666', type: 'solid' }, label: { show: false } },
-            { yAxis: 30, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '+30', color: '#ef5350' } },
-            { yAxis: -30, lineStyle: { color: '#4caf50', type: 'dashed' }, label: { formatter: '-30', color: '#4caf50' } }
+            { yAxis: 0, lineStyle: { color: '#bdc3c7', type: 'solid' }, label: { show: false } },
+            { yAxis: 30, lineStyle: { color: '#e74c3c', type: 'dashed' }, label: { formatter: '+30', color: '#e74c3c' } },
+            { yAxis: -30, lineStyle: { color: '#27ae60', type: 'dashed' }, label: { formatter: '-30', color: '#27ae60' } }
           ]
         }
       }]
@@ -250,7 +250,7 @@ var _chartData = {{ chart_json | safe }};
   (function() {
     var dom = document.getElementById('chart-index');
     var chart = echarts.init(dom);
-    var colors = { '上证指数': '#ef5350', '深证成指': '#4caf50', '创业板指': '#ff9800', '科创50': '#4fc3f7' };
+    var colors = { '上证指数': '#e74c3c', '深证成指': '#27ae60', '创业板指': '#e67e22', '科创50': '#2980b9' };
     var series = [];
     var returns = _chartData.index_returns;
     for (var name in returns) {
@@ -262,11 +262,11 @@ var _chartData = {{ chart_json | safe }};
     }
     chart.setOption({
       tooltip: { trigger: 'axis', valueFormatter: function(v) { return v.toFixed(2) + '%'; } },
-      legend: { data: Object.keys(returns), textStyle: { color: '#8892a4' }, bottom: 0 },
+      legend: { data: Object.keys(returns), textStyle: { color: '#5a6c7d' }, bottom: 0 },
       grid: { left: 55, right: 20, top: 20, bottom: 40 },
-      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
-      yAxis: { type: 'value', name: '累计 %', axisLabel: { color: '#8892a4' },
-        splitLine: { lineStyle: { color: '#2a2e3a' } } },
+      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#5a6c7d', rotate: 30 } },
+      yAxis: { type: 'value', name: '累计 %', axisLabel: { color: '#5a6c7d' },
+        splitLine: { lineStyle: { color: '#e0e3e8' } } },
       series: series
     });
     window.addEventListener('resize', function() { chart.resize(); });
@@ -296,13 +296,13 @@ var _chartData = {{ chart_json | safe }};
         }
       },
       grid: { left: 90, right: 40, top: 10, bottom: 60 },
-      xAxis: { type: 'category', data: sDates, axisLabel: { color: '#8892a4', rotate: 45, fontSize: 10 }, position: 'bottom' },
-      yAxis: { type: 'category', data: sNames, axisLabel: { color: '#8892a4', fontSize: 11 } },
+      xAxis: { type: 'category', data: sDates, axisLabel: { color: '#5a6c7d', rotate: 45, fontSize: 10 }, position: 'bottom' },
+      yAxis: { type: 'category', data: sNames, axisLabel: { color: '#5a6c7d', fontSize: 11 } },
       visualMap: {
         min: -5, max: 5, calculable: true, orient: 'horizontal',
         left: 'center', bottom: 5,
-        inRange: { color: ['#4caf50', '#3a3e4a', '#ef5350'] },
-        text: ['涨', '跌'], textStyle: { color: '#8892a4' }
+        inRange: { color: ['#27ae60', '#ecf0f1', '#e74c3c'] },
+        text: ['涨', '跌'], textStyle: { color: '#5a6c7d' }
       },
       series: [{
         type: 'heatmap', data: matrix,

@@ -221,8 +221,8 @@
 <script>
 (function() {
   var chartData = {{ chart_data | safe }};
-  var colorGreen = '#3fb950';
-  var colorRed = '#f85149';
+  var colorGreen = '#27ae60';
+  var colorRed = '#e74c3c';
 
   function renderBar(chartId, items, hideIfEmpty) {
     var el = document.getElementById(chartId);
@@ -254,12 +254,12 @@
       chart.setOption({
         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + '<br/>涨跌幅：<b>' + p[0].value.toFixed(2) + '%</b>'; } },
         grid: { left: '15%', right: '10%', top: 10, bottom: 10 },
-        xAxis: { type: 'value', name: '%', axisLabel: { formatter: '{value}%' }, splitLine: { lineStyle: { color: '#30363d' } } },
-        yAxis: { type: 'category', data: names.reverse(), axisLabel: { color: '#8b949e', fontSize: 11, width: 100, overflow: 'truncate' }, inverse: true },
+        xAxis: { type: 'value', name: '%', axisLabel: { formatter: '{value}%' }, splitLine: { lineStyle: { color: '#e0e3e8' } } },
+        yAxis: { type: 'category', data: names.reverse(), axisLabel: { color: '#5a6c7d', fontSize: 11, width: 100, overflow: 'truncate' }, inverse: true },
         series: [{
           type: 'bar',
           data: values.reverse().map(function(v) { return { value: v, itemStyle: { color: v >= 0 ? colorGreen : colorRed } }; }),
-          label: { show: true, position: 'right', color: '#e6edf3', fontSize: 11, formatter: function(p) { return p.value.toFixed(1) + '%'; } }
+          label: { show: true, position: 'right', color: '#2c3e50', fontSize: 11, formatter: function(p) { return p.value.toFixed(1) + '%'; } }
         }]
       });
       window.addEventListener('resize', function() { chart.resize(); });
