@@ -239,47 +239,60 @@ def _make_comparison(prev: dict[str, Any], current: dict[str, Any], label: str, 
 
         lines.append(f"  {name}：{curr_pct:+.2f}%（较{label} {delta:+.2f}pp，{trend}）")
 
-    # ── 外资流向监测（二维：方向+活跃度+强度） ──
+    # ── 外资监测（活跃度+南向+外部联动） ──
     prev_north = prev.get("north_flow", {})
     curr_north = current.get("north_flow", {})
-    prev_net = prev_north.get("net_flow", 0) or 0
-    curr_net = curr_north.get("net_flow", 0) or 0
-    # 北向成交总额（活跃度信号）
-    prev_turnover = (prev_north.get("mx_turnover", {}) or {}).get("total_amount", 0) or 0
-    curr_turnover = (curr_north.get("mx_turnover", {}) or {}).get("total_amount", 0) or 0
-    # 流量强度
-    prev_intensity = prev_north.get("intensity_pct", 0) or 0
-    curr_intensity = curr_north.get("intensity_pct", 0) or 0
+    # 北向活跃度
+    prev_turnover = prev_north.get("turnover_total", 0) or 0
+    curr_turnover = curr_north.get("turnover_total", 0) or 0
+    # 外资占比
+    prev_participation = prev_north.get("participation_pct", 0) or 0
+    curr_participation = curr_north.get("participation_pct", 0) or 0
+    # 沪市偏好
+    prev_sh_ratio = prev_north.get("sh_ratio", 0) or 0
+    curr_sh_ratio = curr_north.get("sh_ratio", 0) or 0
+    # 南向资金
+    prev_south = prev_north.get("south_flow", {}) or {}
+    curr_south = curr_north.get("south_flow", {}) or {}
+    prev_south_net = prev_south.get("south_net", 0) or 0
+    curr_south_net = curr_south.get("south_net", 0) or 0
 
-    if curr_net:
-        # 方向信号：沪股通净买入
-        if prev_net:
-            north_delta = round(curr_net - prev_net, 2)
-            north_sign = prev_net * curr_net
-            lines.append(f"  沪股通净买入（方向）：{curr_net:+.2f} 亿（较{label} {north_delta:+.2f} 亿）")
-            if north_sign < 0:
-                flags.append("⚠️ 沪股通净买入反转（流入⇄流出切换），必须关注")
+    if curr_turnover > 0:
+        # 活跃度信号
+        if prev_turnover > 0:
+            turnover_delta = round((curr_turnover - prev_turnover) / prev_turnover * 100, 1)
+            lines.append(f"  北向活跃度：{curr_turnover:.0f} 亿（较{label} {turnover_delta:+.1f}%）")
         else:
-            lines.append(f"  沪股通净买入（方向）：{curr_net:+.2f} 亿（{label}数据暂缺）")
+            lines.append(f"  北向活跃度：{curr_turnover:.0f} 亿")
 
-        # 活跃度信号：北向成交总额
-        if curr_turnover > 0:
-            if prev_turnover > 0:
-                turnover_delta = round((curr_turnover - prev_turnover) / prev_turnover * 100, 1)
-                lines.append(f"  北向成交总额（活跃度）：{curr_turnover:.0f} 亿（较{label} {turnover_delta:+.1f}%）")
+        # 外资占比
+        if curr_participation > 0:
+            if prev_participation > 0:
+                part_delta = round(curr_participation - prev_participation, 1)
+                lines.append(f"  外资占比：{curr_participation:.1f}%（较{label} {part_delta:+.1f}pp）")
             else:
-                lines.append(f"  北向成交总额（活跃度）：{curr_turnover:.0f} 亿")
+                lines.append(f"  外资占比：{curr_participation:.1f}%")
 
-        # 强度信号：流量强度
-        if curr_intensity:
-            if prev_intensity:
-                intensity_delta = round(curr_intensity - prev_intensity, 1)
-                lines.append(f"  流量强度：{curr_intensity:+.1f}%（较{label} {intensity_delta:+.1f}pp）")
-                # 强度反转检测
-                if prev_intensity * curr_intensity < 0:
-                    flags.append("⚠️ 流量强度正负切换，外资态度可能反转")
+        # 沪/深偏好
+        if curr_sh_ratio > 0:
+            preference = "偏价值防御" if curr_sh_ratio > 55 else "偏成长进攻" if curr_sh_ratio < 45 else "均衡"
+            lines.append(f"  沪/深偏好：沪市{curr_sh_ratio:.0f}%（{preference}）")
+            if prev_sh_ratio > 0:
+                sh_delta = round(curr_sh_ratio - prev_sh_ratio, 1)
+                if abs(sh_delta) > 5:
+                    flags.append(f"⚠️ 外资偏好切换：沪市占比变化 {sh_delta:+.0f}pp")
+
+        # 南向资金（反向参考）
+        if curr_south_net:
+            south_dir_text = "净买入" if curr_south_net > 0 else "净卖出"
+            if prev_south_net:
+                south_delta = round(curr_south_net - prev_south_net, 2)
+                lines.append(f"  南向资金（港股通）：{curr_south_net:+.1f} 亿（{south_dir_text}，较{label} {south_delta:+.1f} 亿）")
+                # 南向大幅变化
+                if abs(south_delta) > 20:
+                    flags.append(f"⚠️ 南向资金大幅变化（{south_delta:+.0f}亿），内资情绪显著波动")
             else:
-                lines.append(f"  流量强度：{curr_intensity:+.1f}%")
+                lines.append(f"  南向资金（港股通）：{curr_south_net:+.1f} 亿（{south_dir_text}）")
 
     # ── 成交额对比 ──
     prev_amt = prev.get("overview", {}).get("total_amount", 0)

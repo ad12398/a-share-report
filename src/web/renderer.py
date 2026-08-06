@@ -166,9 +166,9 @@ def build_stats_data() -> dict[str, Any]:
 
     # ── KPI 计算 ──
     up_ratios = []
-    north_flows = []
-    north_turnovers = []  # 活跃度信号
-    north_intensities = []  # 强度信号
+    north_turnovers = []   # 北向活跃度（成交总额）
+    north_participations = []  # 外资占比
+    south_flows = []       # 南向净买入
     amounts = []
     for d in sorted_dates:
         entry = daily[d]
@@ -176,26 +176,26 @@ def build_stats_data() -> dict[str, Any]:
         nf = entry.get("north_flow", {})
         if ov.get("up_ratio"):
             up_ratios.append(ov["up_ratio"])
-        if nf.get("net_flow"):
-            north_flows.append(nf["net_flow"])
-        mx = nf.get("mx_turnover", {}) or {}
-        if mx.get("total_amount"):
-            north_turnovers.append(mx["total_amount"])
-        if nf.get("intensity_pct"):
-            north_intensities.append(nf["intensity_pct"])
+        if nf.get("turnover_total"):
+            north_turnovers.append(nf["turnover_total"])
+        if nf.get("participation_pct"):
+            north_participations.append(nf["participation_pct"])
+        south = nf.get("south_flow", {}) or {}
+        if south.get("south_net"):
+            south_flows.append(south["south_net"])
         if ov.get("total_amount"):
             amounts.append(ov["total_amount"])
 
     avg_up_ratio = round(sum(up_ratios) / len(up_ratios), 1) if up_ratios else 0
-    north_cumulative = round(sum(north_flows), 2) if north_flows else 0
+    avg_turnover = round(sum(north_turnovers) / len(north_turnovers), 0) if north_turnovers else 0
     avg_amount = round(sum(amounts) / len(amounts), 0) if amounts else 0
-    avg_intensity = round(sum(north_intensities) / len(north_intensities), 1) if north_intensities else 0
+    avg_participation = round(sum(north_participations) / len(north_participations), 1) if north_participations else 0
 
     # ── 图表数据 ──
     chart_dates: list[str] = []
     chart_up_ratio: list[float] = []
-    chart_north_flow: list[float] = []
     chart_north_turnover: list[float] = []
+    chart_north_participation: list[float] = []
     chart_amount: list[float] = []
 
     # 指数累计收益计算
@@ -207,8 +207,8 @@ def build_stats_data() -> dict[str, Any]:
         entry = daily[d]
         chart_dates.append(d)
         chart_up_ratio.append(entry.get("overview", {}).get("up_ratio", 0) or 0)
-        chart_north_flow.append(entry.get("north_flow", {}).get("net_flow", 0) or 0)
-        chart_north_turnover.append((entry.get("north_flow", {}).get("mx_turnover", {}) or {}).get("total_amount", 0) or 0)
+        chart_north_turnover.append(entry.get("north_flow", {}).get("turnover_total", 0) or 0)
+        chart_north_participation.append(entry.get("north_flow", {}).get("participation_pct", 0) or 0)
         chart_amount.append(entry.get("overview", {}).get("total_amount", 0) or 0)
 
         idx_data = entry.get("index", {})
@@ -255,8 +255,8 @@ def build_stats_data() -> dict[str, Any]:
     chart_json = {
         "dates": chart_dates,
         "up_ratio": chart_up_ratio,
-        "north_flow": chart_north_flow,
         "north_turnover": chart_north_turnover,
+        "north_participation": chart_north_participation,
         "amount": chart_amount,
         "index_returns": index_cum,
         "sector_names": sector_names,
@@ -269,11 +269,12 @@ def build_stats_data() -> dict[str, Any]:
         "total_days": total_days,
         "total_reports": total_reports,
         "avg_up_ratio": avg_up_ratio,
-        "north_cumulative": north_cumulative,
-        "north_cumulative_str": f"{north_cumulative:+.1f}",
+        "avg_turnover": avg_turnover,
+        "avg_turnover_str": f"{avg_turnover:.0f}",
+        "avg_participation": avg_participation,
+        "avg_participation_str": f"{avg_participation:.1f}",
         "avg_amount": avg_amount,
         "avg_amount_str": f"{avg_amount:.0f}",
-        "avg_intensity": avg_intensity,
         "first_date": sorted_dates[0],
         "last_date": sorted_dates[-1],
         "chart_json": _safe_script_json(chart_json),

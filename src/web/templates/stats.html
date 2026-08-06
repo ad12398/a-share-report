@@ -79,9 +79,9 @@
     <div class="kpi-sub">上涨占比</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label">外资流向监测</div>
-    <div class="kpi-value" style="color:{{ 'var(--up, #4caf50)' if north_cumulative >= 0 else 'var(--down, #ef5350)' }}">{{ north_cumulative_str }}</div>
-    <div class="kpi-sub">沪股通累计净买入（亿元）</div>
+    <div class="kpi-label">北向日均活跃度</div>
+    <div class="kpi-value">{{ avg_turnover_str }}</div>
+    <div class="kpi-sub">北向日均成交（亿元）</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">日均成交额</div>
@@ -101,7 +101,7 @@
     <div class="chart-inner" id="chart-breadth"></div>
   </div>
   <div class="chart-box">
-    <h3>💰 外资流向监测 — 沪股通净买入（每日）</h3>
+    <h3>💰 北向活跃度 — 成交总额（每日）</h3>
     <div class="chart-inner" id="chart-north"></div>
   </div>
 </div>
@@ -161,20 +161,29 @@ var _chartData = {{ chart_json | safe }};
     window.addEventListener('resize', function() { chart.resize(); });
   })();
 
-  // ── 外资流向监测 ──
+  // ── 北向活跃度 ──
   (function() {
     var dom = document.getElementById('chart-north');
     var chart = echarts.init(dom);
-    var vals = _chartData.north_flow;
-    var colors = vals.map(function(v) { return v >= 0 ? '#ef5350' : '#4caf50'; });
+    var vals = _chartData.north_turnover;
+    // 活跃度颜色：>300 高=红色系，150-300 中=橙色系，<150 低=灰色
+    var colors = vals.map(function(v) {
+      return v > 300 ? '#ef5350' : v > 150 ? '#ff9800' : '#666';
+    });
     chart.setOption({
-      tooltip: { trigger: 'axis', valueFormatter: function(v) { return v.toFixed(1) + ' 亿'; } },
+      tooltip: { trigger: 'axis', valueFormatter: function(v) { return v.toFixed(0) + ' 亿'; } },
       grid: { left: 55, right: 20, top: 20, bottom: 35 },
       xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
       yAxis: { type: 'value', name: '亿', axisLabel: { color: '#8892a4' },
         splitLine: { lineStyle: { color: '#2a2e3a' } } },
       series: [{
         type: 'bar', data: vals.map(function(v, i) { return { value: v, itemStyle: { color: colors[i] } }; }),
+        markLine: { silent: true, symbol: 'none',
+          data: [
+            { yAxis: 300, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '高活跃', color: '#ef5350' } },
+            { yAxis: 150, lineStyle: { color: '#ff9800', type: 'dashed' }, label: { formatter: '中活跃', color: '#ff9800' } }
+          ]
+        }
       }]
     });
     window.addEventListener('resize', function() { chart.resize(); });

@@ -1,6 +1,11 @@
-"""东方财富 & 同花顺数据源 —— 北向资金 & 融资融券（纯 HTTP API）
+"""东方财富 & 同花顺数据源 —— 外资监测 & 融资融券（纯 HTTP API）
 
-龙虎榜已迁移至 sina_lhb_source.py（新浪源，东财 push2 阿里云 IP 被封）。"""
+龙虎榜已迁移至 sina_lhb_source.py（新浪源，东财 push2 阿里云 IP 被封）。
+
+⚠️ 2024 年证监会新规后，北向净买入实时数据不再公开发布。
+本模块中的 fetch_north_flow() 已废弃（同花顺 hexin 返回静态缓存数据），
+北向活跃度改用 mx_source.fetch_north_turnover()，南向改用东财 datacenter API。
+"""
 
 import logging
 import time
@@ -52,47 +57,115 @@ def _try_endpoints(url_path: str, timeout: int = 8, max_retries: int = 1) -> req
 
 
 def fetch_north_flow() -> dict[str, Any]:
-    """获取北向资金当日净流向（同花顺 data.hexin.cn，零认证）
+    """[已废弃] 同花顺 hexin dayChart API 返回静态缓存数据，不可用于实时分析。
 
-    2024 年起证监会新规隐藏了北向净买入实时数据。
-    目前仅能获取沪股通净买入，深股通数据不可用（返回余额非净买入）。
+    北向净买入自 2024 年证监会新规后不再公开发布。
+    北向活跃度数据请使用 mx_source.fetch_north_turnover()。
+    南向资金请使用 fetch_south_bound()。
+    """
+    logger.warning("fetch_north_flow() 已废弃：hexin API 返回静态缓存数据。使用 mx_source + 南向替代。")
+    return {}
+
+
+# ═══ 南向资金（港股通） ═══
+
+EM_DATACENTER = "https://datacenter-web.eastmoney.com/api/data/v1/get"
+
+
+def fetch_south_bound() -> dict[str, Any]:
+    """获取南向资金当日净流向（东财 datacenter RPT_MUTUAL_QUOTA，纯 HTTP）。
+
+    港股通净买入数据仍公开发布，可作为 A 股外资情绪的反向参考：
+    南向大幅净买入 → 内资南下抄底港股 → A 股情绪偏弱；
+    南向净卖出 → 内资回流 A 股 → A 股情绪偏强。
 
     返回: {
-        "net_flow": float,       # 沪股通净买入（亿，非北向合计）
-        "net_flow_sh": float,    # 沪股通净买入（亿）
-        "net_flow_sz": float,    # 深股通（暂缺，监管限制）
-        "source": "hexin_hgt_only",
-        "_note": str,            # ⚠️ 重要：数据仅沪股通，需在报告中说明
+        "south_net": float,        # 南向合计净买入（亿）
+        "south_sh_net": float,     # 港股通(沪)净买入（亿）
+        "south_sz_net": float,     # 港股通(深)净买入（亿）
+        "south_direction": str,    # "大幅净流入" / "净流入" / "净流出" / "大幅净流出"
+        "date": str,               # 数据日期
     }
     """
     try:
-        url = "https://data.hexin.cn/market/hsgtApi/method/dayChart/"
-        resp = requests.get(url, headers=HEXIN_HEADERS, timeout=10)
+        params = {
+            "reportName": "RPT_MUTUAL_QUOTA",
+            "columns": "TRADE_DATE,MUTUAL_TYPE_NAME,BOARD_TYPE,FUNDS_DIRECTION,BOARD_CODE",
+            "quoteColumns": "netBuyAmt~07~BOARD_CODE",
+            "quoteType": "0",
+            "pageNumber": "1",
+            "pageSize": "10",
+            "sortTypes": "1",
+            "sortColumns": "MUTUAL_TYPE",
+            "source": "WEB",
+            "client": "WEB",
+        }
+        resp = requests.get(
+            EM_DATACENTER,
+            params=params,
+            headers={**HEADERS, "Referer": "https://data.eastmoney.com/hsgt/index.html"},
+            timeout=15,
+        )
         if resp.status_code != 200:
-            logger.warning(f"同花顺北向资金 HTTP {resp.status_code}")
+            logger.warning(f"南向资金 HTTP {resp.status_code}")
             return {}
+
         data = resp.json()
-
-        hgt_values = data.get("hgt", [])
-
-        if not hgt_values:
+        if not data.get("success"):
+            logger.warning(f"南向资金 API: success=False, code={data.get('code')}")
             return {}
 
-        # hgt: 沪股通当日累计净买入（亿），取最新值 = 当日净流向
-        # sgt: 深股通数据不可靠（返回余额绝对值>100，差值≠净买入），废弃不用
-        sh_flow = float(hgt_values[-1]) if hgt_values else 0.0
+        items = data.get("result", {}).get("data", [])
+        if not items:
+            return {}
+
+        south_sh_net = 0.0  # 港股通(沪)
+        south_sz_net = 0.0  # 港股通(深)
+        trade_date = ""
+
+        for item in items:
+            mt_name = item.get("MUTUAL_TYPE_NAME", "")
+            funds_dir = item.get("FUNDS_DIRECTION", "")
+            if "南向" not in str(funds_dir):
+                continue  # 跳过北向条目（数据全零）
+            raw_net = item.get("netBuyAmt")
+            if raw_net is None:
+                continue
+            # netBuyAmt 单位: 万元 → 亿（/10000）
+            net_yi = round(float(raw_net) / 10000, 2)
+            if "沪" in str(mt_name):
+                south_sh_net = net_yi
+            elif "深" in str(mt_name):
+                south_sz_net = net_yi
+            if not trade_date:
+                trade_date = str(item.get("TRADE_DATE", "")[:10])
+
+        south_net = round(south_sh_net + south_sz_net, 2)
+
+        # 方向判定
+        if south_net > 30:
+            direction = "大幅净流入"
+        elif south_net > 0:
+            direction = "净流入"
+        elif south_net > -30:
+            direction = "净流出"
+        else:
+            direction = "大幅净流出"
 
         result = {
-            "net_flow": round(sh_flow, 2),
-            "net_flow_sh": round(sh_flow, 2),
-            "net_flow_sz": 0.0,
-            "source": "hexin_hgt_only",
-            "_note": "仅沪股通，深股通数据暂缺（同花顺 sgt 返回余额非净买入）",
+            "south_net": south_net,
+            "south_sh_net": south_sh_net,
+            "south_sz_net": south_sz_net,
+            "south_direction": direction,
+            "date": trade_date,
         }
-        logger.info(f"北向资金(同花顺 沪股通): 净={sh_flow}亿（深股通暂缺）")
+        logger.info(
+            f"南向资金: 合计={south_net:+.1f}亿 "
+            f"沪={south_sh_net:+.1f}亿 深={south_sz_net:+.1f}亿 ({direction})"
+        )
         return result
     except Exception as e:
-        logger.error(f"北向资金获取失败: {e}")
+        logger.error(f"南向资金获取失败: {e}")
         return {}
 
 

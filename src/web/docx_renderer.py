@@ -152,34 +152,41 @@ def render_docx(
             row[3].text = ""
         doc.add_paragraph()  # 间距
 
-    # 外资流向监测（二维框架：方向+活跃度+强度）
-    if north_flow and north_flow.get("net_flow") is not None:
+    # 外资监测（活跃度+南向+外资占比）
+    if north_flow and north_flow.get("turnover_total"):
         # 标题行
         p = doc.add_paragraph()
-        p.add_run("外资流向监测").bold = True
+        p.add_run("外资监测").bold = True
 
-        # ① 方向信号
-        net = north_flow["net_flow"]
-        direction = "流入" if net >= 0 else "流出"
+        # ① 北向活跃度
+        turnover = north_flow.get("turnover_total", 0)
         p = doc.add_paragraph()
-        p.add_run(f"  方向信号：沪股通净{direction} {abs(net):.2f} 亿（同花顺hgt，仅沪市）")
+        level = "高" if turnover > 300 else "中" if turnover > 150 else "低"
+        p.add_run(f"  北向活跃度：成交 {turnover:.0f} 亿（{level}活跃度）")
 
-        # ② 活跃度信号
-        mx = north_flow.get("mx_turnover", {}) or {}
-        turnover = mx.get("total_amount", 0) or 0
-        if turnover > 0:
+        # ② 外资占比
+        participation = north_flow.get("participation_pct", 0)
+        if participation > 0:
             p = doc.add_paragraph()
-            p.add_run(f"  活跃度：北向成交总额 {turnover:.0f} 亿（沪+深合计）")
+            p.add_run(f"  外资占比：{participation:.1f}%（北向成交 / 两市成交）")
 
-        # ③ 流量强度
-        intensity = north_flow.get("intensity_pct", 0) or 0
-        if intensity:
-            intensity_judge = "坚定" if abs(intensity) > 5 else "温和" if abs(intensity) > 2 else "轻仓试探"
+        # ③ 沪/深偏好
+        sh_ratio = north_flow.get("sh_ratio", 0)
+        if sh_ratio > 0:
+            preference = "偏价值防御" if sh_ratio > 55 else "偏成长进攻" if sh_ratio < 45 else "均衡"
             p = doc.add_paragraph()
-            p.add_run(f"  流量强度：{intensity:+.1f}%（净买入/成交总额，{intensity_judge}）")
+            p.add_run(f"  沪/深偏好：沪市 {sh_ratio:.0f}%（{preference}）")
 
-        # 数据限制标注
-        run = p.add_run(f"\n  注：深股通净买入自2024年证监会新规后不再公开发布，方向信号仅来自沪股通")
+        # ④ 南向资金
+        south = north_flow.get("south_flow", {}) or {}
+        south_net = south.get("south_net", 0) or 0
+        if south_net:
+            south_dir = "净买入" if south_net > 0 else "净卖出"
+            p = doc.add_paragraph()
+            p.add_run(f"  南向资金：{south_dir} {abs(south_net):.1f} 亿（港股通，A股情绪反向指标）")
+
+        # 数据限制
+        run = p.add_run(f"\n  注：北向净买入自2024年证监会新规后不再公开发布，方向由活跃度+南向+外部联动综合推断")
         run.font.size = Pt(9)
         run.font.color.rgb = COLOR_MUTED
 
