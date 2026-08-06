@@ -133,9 +133,21 @@ def build_afternoon_prompt(data: dict[str, Any], comparison_text: str = "") -> s
     persistence_text = _compute_persistence(data)
     warning_text = _compute_warning_lights(data, comparison_text, persistence_text)
 
-    # 提取外部共识诊断文本
+    # 外部共识摘要（仅一行，AI 有权质疑）
     consensus = data.get("external_consensus", {}) or {}
-    consensus_diagnosis = consensus.get("diagnosis_text", "外部共识数据暂缺")
+    c_score = consensus.get("consensus_score", 0) or 0
+    c_conf = consensus.get("consensus_confidence", "")
+    c_signals = consensus.get("signals", []) or []
+    c_alerts = consensus.get("divergence_alerts", []) or []
+    c_bull = sum(1 for s in c_signals if s.get("direction") == "看多")
+    c_bear = sum(1 for s in c_signals if s.get("direction") == "看空")
+    c_total = len(c_signals)
+    c_weak = sum(1 for s in c_signals if s.get("magnitude") in ("弱", "微弱"))
+    consensus_summary = (
+        f"Python预判：{c_bull}/{c_total}看多，{c_bear}看空，"
+        f"一致性分数 {c_score:+.1f}，置信度 {c_conf}，"
+        f"背离信号 {len(c_alerts)} 条，微弱信号 {c_weak} 个"
+    ) if c_total else "外部共识数据暂缺"
 
     # 外资偏好
     north = data.get("north_flow", {}) or {}
@@ -168,13 +180,16 @@ def build_afternoon_prompt(data: dict[str, Any], comparison_text: str = "") -> s
 **外资偏好（沪/深风格）：**
 - 沪市占比 {sh_ratio}%（>55%=偏价值防御，<45%=偏成长进攻，40-60%=均衡）
 
-**外部联动共识（Python 预计算，优先级高于独立解读裸指标）：**
-{consensus_diagnosis}
+**外部联动共识（Python 预计算，仅供参考，你有权质疑）：**
+{consensus_summary}
 
-请基于上述诊断文本进行解读：
-- 若置信度"强"且无背离：外部信号可信，据此给出尾盘方向判断
-- 若置信度"分歧"或有背离：外部信号不可靠，以内盘量价为主做判断
-- 若检测到背离：这是最有价值的信号，重点解读"为什么内盘不跟外盘"
+原始明细见上方 JSON（data.linked_markets 和 data.external_consensus.signals）。
+请先验证预计算是否合理，再做判断：
+
+1. 若多数指标涨跌幅度 <0.3%（微弱信号 {c_weak} 个）→ 忽略外部联动，以内盘量价为主
+2. 若你发现 Python 的"看多/看空"判定与原始涨跌幅矛盾 → 以你的判断为准
+3. 若背离检测触发 → 重点解读"为什么内盘不跟外盘"
+4. 只有幅度够大且方向一致时才作为有效外部信号
 
 ### 模块五：持续性评估
 
