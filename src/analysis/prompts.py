@@ -133,6 +133,14 @@ def build_afternoon_prompt(data: dict[str, Any], comparison_text: str = "") -> s
     persistence_text = _compute_persistence(data)
     warning_text = _compute_warning_lights(data, comparison_text, persistence_text)
 
+    # 提取外部共识诊断文本
+    consensus = data.get("external_consensus", {}) or {}
+    consensus_diagnosis = consensus.get("diagnosis_text", "外部共识数据暂缺")
+
+    # 外资偏好
+    north = data.get("north_flow", {}) or {}
+    sh_ratio = north.get("sh_ratio", 0) or 0
+
     return f"""请生成一份 A 股午后实战快评（14:00 时段）。
 
 {comparison_text + chr(10) + chr(10) if comparison_text else ""}
@@ -155,19 +163,18 @@ def build_afternoon_prompt(data: dict[str, Any], comparison_text: str = "") -> s
 - 结合板块轮动数据，判断资金是在权重防御还是题材进攻
 
 ### 模块四：内外联动
-先分析外资偏好，再分析外部联动：
+先分析外资偏好，再分析外部联动共识：
 
 **外资偏好（沪/深风格）：**
-- 沪市占北向成交 {sh_ratio}%（data.north_flow.sh_ratio）
-  - >55%：外资偏价值防御（银行/能源/红利为主），成长股缺少外资支撑
-  - <45%：外资偏成长进攻（科技/新能源为主），价值股被冷落
-  - 40-60%：均衡配置
-- 对比上一时段偏好是否切换 >5pp，如有则重点解读风格轮动
+- 沪市占比 {sh_ratio}%（>55%=偏价值防御，<45%=偏成长进攻，40-60%=均衡）
 
-**外部联动：**
-- A50/恒生/离岸人民币较上一时段的变化方向
-- 外部指标与 A 股是同向还是背离？
-- 如有背离（如 A50 跌但上证涨），重点解读
+**外部联动共识（Python 预计算，优先级高于独立解读裸指标）：**
+{consensus_diagnosis}
+
+请基于上述诊断文本进行解读：
+- 若置信度"强"且无背离：外部信号可信，据此给出尾盘方向判断
+- 若置信度"分歧"或有背离：外部信号不可靠，以内盘量价为主做判断
+- 若检测到背离：这是最有价值的信号，重点解读"为什么内盘不跟外盘"
 
 ### 模块五：持续性评估
 
@@ -433,6 +440,12 @@ def _compute_warning_lights(data: dict[str, Any], comparison_text: str, persiste
     hstech = (linked.get("hstech", {}) or {}).get("change_pct", 0) or 0
     cnh = (linked.get("cnh", {}) or {}).get("change_pct", 0) or 0
 
+    # 外部共识引擎数据
+    consensus = data.get("external_consensus", {}) or {}
+    consensus_score = consensus.get("consensus_score", 0) or 0
+    consensus_confidence = consensus.get("consensus_confidence", "")
+    divergence_alerts = consensus.get("divergence_alerts", []) or []
+
     # 上证涨跌幅
     上证 = index_data.get("000001", {})
     if isinstance(上证, dict):
@@ -466,9 +479,21 @@ def _compute_warning_lights(data: dict[str, Any], comparison_text: str, persiste
     # 南向大幅流入 = 内资外流
     if south_net > 30:
         yellow.append(f"南向净买入 {south_net:.0f} 亿（内资南下），A 股短线资金被分流")
+    # 外部共识强看空
+    if consensus_score < -2 and consensus_confidence == "强" and sh_pct < -0.3:
+        red.append(f"外部一致看空（score={consensus_score:+.1f}，conf={consensus_confidence}）+ 上证同步下跌，外盘+内盘共振偏空")
+    # 外部有背离信号 → 红灯
+    if divergence_alerts and sh_pct < -0.5:
+        red.append(f"外部背离+上证承压：{divergence_alerts[0]}")
+
     # 外部联动背离
     if a50 < -0.3 and sh_pct > 0.3:
         yellow.append(f"⚠️ A50跌{a50:+.2f}%但上证涨{sh_pct:+.2f}%，外盘不认可内盘涨势，偏空信号")
+    # 外部共识与置信度
+    if consensus_confidence == "分歧":
+        yellow.append(f"外部方向分歧（score={consensus_score:+.1f}），外部信号不可靠，以内盘量价为准")
+    if divergence_alerts and sh_pct >= -0.5:
+        yellow.append(f"外部背离但上证跌幅尚可控：{divergence_alerts[0]}")
     if "板块快速轮动" in comparison_text or "板块部分轮动" in comparison_text:
         yellow.append("板块轮动加速，主线不清晰，追涨易被套")
 
@@ -481,6 +506,9 @@ def _compute_warning_lights(data: dict[str, Any], comparison_text: str, persiste
     # 外资占比高+外部联动同向
     if participation > 8 and a50 > 0 and hstech > 0:
         green.append(f"外资占比 {participation:.1f}% + A50和恒生科技同向上涨，外资主导+外盘配合")
+    # 外部共识强看多+内盘跟随
+    if consensus_score > 2 and consensus_confidence == "强" and sh_pct > 0.3 and not divergence_alerts:
+        green.append(f"外部一致看多（score={consensus_score:+.1f}，conf={consensus_confidence}）+ 上证同步上涨，外盘共振偏多")
     # 沪/深均衡 = 外资全面参与
     if 40 <= sh_ratio <= 60 and turnover_total > 250:
         green.append(f"沪/深成交均衡（沪{sh_ratio:.0f}%），外资全面参与，价值成长都有支撑")

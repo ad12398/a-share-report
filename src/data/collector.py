@@ -9,6 +9,7 @@ import requests
 from src.data.sources import akshare_source, sina_source, eastmoney_source, commodities_source, linked_markets_source, sina_lhb_source, mx_source
 from src.data.validator import validate_index_quotes
 from src.data.macro_loader import load_macro_data
+from src.analysis.external_consensus import build_consensus_diagnosis
 
 logger = logging.getLogger("a-share-report")
 
@@ -100,6 +101,14 @@ def collect_all_data(slot: str) -> dict[str, Any]:
     # 宏观数据（从本地 JSON 加载）
     macro_data = load_macro_data()
 
+    # 外部联动一致性诊断（三层信号引擎）
+    # 提取上证涨跌幅用于背离检测
+    sh_pct = 0.0
+    sh_info = index_data.get("000001", {})
+    if isinstance(sh_info, dict):
+        sh_pct = sh_info.get("change_pct", 0) or 0
+    consensus_diagnosis = build_consensus_diagnosis(linked_data, sh_pct)
+
     result = {
         "slot": slot,
         "index": index_data,
@@ -111,6 +120,7 @@ def collect_all_data(slot: str) -> dict[str, Any]:
         "fund_flow": fund_flow_data,
         "commodities": commodities_data,
         "linked_markets": linked_data,
+        "external_consensus": consensus_diagnosis,
         "global": global_data,
         "macro": macro_data,
     }

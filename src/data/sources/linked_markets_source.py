@@ -1,4 +1,4 @@
-"""外围市场联动数据源 —— A50期货 / 恒生科技 / 离岸人民币（新浪 hq.sinajs.cn）"""
+"""外围市场联动数据源 —— A50期货 / 恒生科技 / 恒生指数 / 离岸人民币（新浪 hq.sinajs.cn）"""
 
 import logging
 import re
@@ -19,6 +19,7 @@ SINA_HEADERS = {
 SYMBOLS = {
     "a50": "nf_A50",              # 富时A50期货（新加坡交易所，非交易时段为空）
     "hstech": "rt_hkHSTECH",      # 恒生科技指数
+    "hsi": "int_hangseng",        # 恒生指数（港股大盘情绪）
     "cnh": "fx_susdcnh",          # 离岸人民币 USD/CNH
 }
 
@@ -112,17 +113,39 @@ def _parse_a50(data_str: str) -> dict[str, Any] | None:
         return None
 
 
+def _parse_hsi(data_str: str) -> dict[str, Any] | None:
+    """解析恒生指数
+    字段: [0]代码 [1]名称 [2]当前价 [3]昨收 [4]开盘 [5]最低 [6]最高 [7]涨跌额 [8]涨跌幅% ...
+    """
+    fields = data_str.split(",")
+    if len(fields) < 9:
+        return None
+    try:
+        price = float(fields[2] or 0)
+        prev_close = float(fields[3] or 0)
+        change_pct = round((price - prev_close) / prev_close * 100, 2) if prev_close else 0
+        return {
+            "name": "恒生指数",
+            "price": price,
+            "change_pct": change_pct,
+            "note": "" if price else "尚未开盘",
+        }
+    except (ValueError, ZeroDivisionError):
+        return None
+
+
 def fetch_linked_markets() -> dict[str, Any]:
-    """并发获取外围市场联动数据（A50 + 恒生科技 + 离岸人民币），返回 KPI 友好格式"""
+    """并发获取外围市场联动数据（A50 + 恒生科技 + 恒生指数 + 离岸人民币），返回 KPI 友好格式"""
     result: dict[str, Any] = {}
     parsers = {
         "a50": _parse_a50,
         "hstech": _parse_hstech,
+        "hsi": _parse_hsi,
         "cnh": _parse_cnh,
     }
 
-    # 并发请求 3 个接口
-    with ThreadPoolExecutor(max_workers=3) as executor:
+    # 并发请求 4 个接口
+    with ThreadPoolExecutor(max_workers=4) as executor:
         futures = {executor.submit(_fetch_sina, sym): key for key, sym in SYMBOLS.items()}
         for future in as_completed(futures, timeout=10):
             key = futures[future]

@@ -57,6 +57,10 @@ def save_summary(slot: str, date_str: str, data: dict[str, Any]):
         },
         "sectors": sectors_all,
         "linked_markets": data.get("linked_markets", {}),
+        "external_consensus": {
+            "score": (data.get("external_consensus", {}) or {}).get("consensus_score", 0),
+            "confidence": (data.get("external_consensus", {}) or {}).get("consensus_confidence", ""),
+        },
         "limit_up_codes": limit_up_codes,
     }
 
