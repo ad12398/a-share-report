@@ -250,16 +250,16 @@
         el.style.width = '100%';
       }
 
-      var chart = echarts.init(el, 'dark');
+      var chart = echarts.init(el);
       chart.setOption({
         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + '<br/>涨跌幅：<b>' + p[0].value.toFixed(2) + '%</b>'; } },
         grid: { left: '15%', right: '10%', top: 10, bottom: 10 },
         xAxis: { type: 'value', name: '%', axisLabel: { formatter: '{value}%' }, splitLine: { lineStyle: { color: '#e0e3e8' } } },
-        yAxis: { type: 'category', data: names.reverse(), axisLabel: { color: '#5a6c7d', fontSize: 11, width: 100, overflow: 'truncate' }, inverse: true },
+        yAxis: { type: 'category', data: names.reverse(), axisLabel: { color: '#5a6c7d', fontSize: 12, width: 100, overflow: 'truncate' }, inverse: true },
         series: [{
           type: 'bar',
           data: values.reverse().map(function(v) { return { value: v, itemStyle: { color: v >= 0 ? colorGreen : colorRed } }; }),
-          label: { show: true, position: 'right', color: '#2c3e50', fontSize: 11, formatter: function(p) { return p.value.toFixed(1) + '%'; } }
+          label: { show: true, position: 'right', color: '#2c3e50', fontSize: 13, fontWeight: 'bold', formatter: function(p) { return p.value.toFixed(1) + '%'; } }
         }]
       });
       window.addEventListener('resize', function() { chart.resize(); });

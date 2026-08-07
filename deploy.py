@@ -138,6 +138,7 @@ def deploy():
         (docx_path, f"docx: {today} {slot}"),
         (f"reports/index.html", f"index: {today} {slot}"),
         (f"reports/archives.html", f"archives: {today} {slot}"),
+        (f"assets/css/dashboard.css", f"css: {today} {slot}"),
     ]
 
     # 生成并推送统计面板
