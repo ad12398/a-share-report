@@ -227,9 +227,8 @@ def build_stats_data() -> dict[str, Any]:
             result.append(round((cum - 1) * 100, 2))
         index_cum[name] = result
 
-    # ── 板块热力图数据 ──
-    sector_names: list[str] = []
-    sector_data: dict[str, dict[str, float]] = {}  # {sector_name: {date: change_pct}}
+    # ── 板块轮动表数据 ──
+    sector_data: dict[str, dict[str, float]] = {}
     for d in sorted_dates:
         entry = daily[d]
         sectors = entry.get("sectors", entry.get("sectors_top", []))
@@ -245,14 +244,20 @@ def build_stats_data() -> dict[str, Any]:
                     sector_data[name] = {}
                 sector_data[name][d] = pct
 
-    # 取出现频次最高的 30 个板块
+    # 取出现频次最高的板块，按5日累计降序排列
     sector_freq = sorted(sector_data.items(), key=lambda x: len(x[1]), reverse=True)
-    sector_names = [s[0] for s in sector_freq[:30]]
-
-    sector_matrix: list[list[float | None]] = []
-    for name in sector_names:
-        row = [sector_data[name].get(d, None) for d in sorted_dates]
-        sector_matrix.append(row)
+    sector_table: list[dict] = []
+    for name, date_map in sector_freq[:18]:  # top 18 板块
+        values = [round(date_map.get(d, 0), 2) for d in sorted_dates]
+        cumulative = round(sum(values), 2)
+        sector_table.append({
+            "name": name,
+            "values": values,
+            "cumulative": cumulative,
+        })
+    # 按累计降序
+    sector_table.sort(key=lambda x: x["cumulative"], reverse=True)
+    sector_table_dates = sorted_dates
 
     chart_json = {
         "dates": chart_dates,
@@ -262,9 +267,8 @@ def build_stats_data() -> dict[str, Any]:
         "south_flow": chart_south_flow,
         "amount": chart_amount,
         "index_returns": index_cum,
-        "sector_names": sector_names,
-        "sector_dates": sorted_dates,
-        "sector_data": sector_matrix,
+        "sector_table": sector_table,
+        "sector_table_dates": sector_table_dates,
     }
 
     return {

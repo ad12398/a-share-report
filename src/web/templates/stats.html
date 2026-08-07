@@ -25,7 +25,6 @@
   }
   .chart-box h3 { margin: 0 0 12px 0; font-size: 15px; color: var(--text, #2c3e50); }
   .chart-inner { width: 100%; height: 340px; }
-  .heatmap-inner { width: 100%; height: 600px; }
   .low-data {
     text-align: center; padding: 80px 20px; color: var(--text-muted, #5a6c7d);
   }
@@ -119,8 +118,8 @@
 
 <div class="chart-row full">
   <div class="chart-box">
-    <h3>🗺️ 板块轮动热力图</h3>
-    <div class="heatmap-inner" id="chart-sector"></div>
+    <h3>🗺️ 板块轮动追踪（按5日累计排序）</h3>
+    <div style="overflow-x:auto;" id="sector-table-container"></div>
   </div>
 </div>
 
@@ -272,56 +271,61 @@ var _chartData = {{ chart_json | safe }};
     window.addEventListener('resize', function() { chart.resize(); });
   })();
 
-  // ── 板块热力图 ──
+  // ── 板块轮动表格（条形图+累计排序+行底色）──
   (function() {
-    var dom = document.getElementById('chart-sector');
-    var chart = echarts.init(dom);
-    var sNames = _chartData.sector_names;
-    var sDates = _chartData.sector_dates;
-    var sData = _chartData.sector_data;
-    var matrix = [];
-    for (var i = 0; i < sNames.length; i++) {
-      for (var j = 0; j < sDates.length; j++) {
-        var val = sData[i][j];
-        if (val !== null) {
-          matrix.push([j, i, val]);
-        }
-      }
-    }
-    chart.setOption({
-      tooltip: {
-        position: 'top',
-        formatter: function(p) {
-          return sDates[p.value[0]] + '<br/>' + sNames[p.value[1]] + ': ' + p.value[2].toFixed(2) + '%';
-        }
-      },
-      grid: { left: 100, right: 40, top: 15, bottom: 65, containLabel: true },
-      xAxis: { type: 'category', data: sDates, axisLabel: { color: '#5a6c7d', rotate: 45, fontSize: 10, margin: 8 }, position: 'bottom' },
-      yAxis: { type: 'category', data: sNames, axisLabel: { color: '#5a6c7d', fontSize: 12, width: 95, overflow: 'truncate' } },
-      visualMap: {
-        min: -5, max: 5, type: 'piecewise', orient: 'horizontal',
-        left: 'center', bottom: 8,
-        pieces: [
-          { min: -5, max: -3, color: '#1e8449' },
-          { min: -3, max: -2, color: '#27ae60' },
-          { min: -2, max: -1, color: '#82e0aa' },
-          { min: -1, max: -0.3, color: '#d5f5e3' },
-          { min: -0.3, max: 0.3, color: '#bdc3c7' },
-          { min: 0.3, max: 1, color: '#fadbd8' },
-          { min: 1, max: 2, color: '#f1948a' },
-          { min: 2, max: 3, color: '#e74c3c' },
-          { min: 3, max: 5, color: '#c0392b' }
-        ],
-        text: ['涨>5%', '跌<-5%'], textStyle: { color: '#5a6c7d' }
-      },
-      series: [{
-        type: 'heatmap', data: matrix,
-        label: { show: false },
-        itemStyle: { borderWidth: 1, borderColor: '#fff' },
-        emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.2)' } }
-      }]
+    var table = _chartData.sector_table;
+    var dates = _chartData.sector_table_dates;
+    if (!table || !table.length) return;
+
+    var maxAbs = 0;
+    table.forEach(function(r) {
+      r.values.forEach(function(v) { if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v); });
     });
-    window.addEventListener('resize', function() { chart.resize(); });
+    if (maxAbs === 0) maxAbs = 5;
+
+    // 日期标签（MM-DD缩写）
+    var dateLabels = dates.map(function(d) { return d.length >= 5 ? d.substring(5) : d; });
+
+    var html = '<table class="data-table" style="font-size:13px;">';
+    // 表头
+    html += '<thead><tr><th style="min-width:90px;">板块</th>';
+    dateLabels.forEach(function(d) { html += '<th style="text-align:center;min-width:70px;">' + d + '</th>'; });
+    html += '<th style="text-align:center;min-width:70px;">5日累计</th></tr></thead><tbody>';
+
+    table.forEach(function(row) {
+      var cum = row.cumulative;
+      // 行底色（5档）
+      var bg = '';
+      if (cum > 5) bg = 'rgba(231,76,60,0.06)';
+      else if (cum > 2) bg = 'rgba(231,76,60,0.03)';
+      else if (cum < -5) bg = 'rgba(39,174,96,0.06)';
+      else if (cum < -2) bg = 'rgba(39,174,96,0.03)';
+
+      html += '<tr style="background:' + bg + ';">';
+      html += '<td style="font-weight:600;">' + row.name + '</td>';
+
+      row.values.forEach(function(v) {
+        var pctW = Math.abs(v) / maxAbs * 100;
+        var barColor = v >= 0 ? '#e74c3c' : '#27ae60';
+        var textColor = v >= 0 ? '#c0392b' : '#1e8449';
+        var sign = v >= 0 ? '+' : '';
+        html += '<td style="text-align:center;position:relative;padding:6px 4px;">'
+          + '<div style="height:18px;position:relative;">'
+          + '<div style="position:absolute;right:50%;top:0;height:100%;width:' + (pctW/2).toFixed(1) + '%;background:' + barColor + ';border-radius:2px;opacity:0.7;"></div>'
+          + '<div style="position:absolute;left:50%;top:0;height:100%;width:' + (pctW/2).toFixed(1) + '%;background:' + barColor + ';border-radius:2px;opacity:0.7;display:' + (pctW > 0 ? 'block' : 'none') + ';"></div>'
+          + '<span style="position:relative;z-index:1;font-size:12px;font-weight:600;color:' + textColor + ';">' + sign + v.toFixed(1) + '%</span>'
+          + '</div></td>';
+      });
+
+      // 累计列
+      var cumColor = cum >= 0 ? '#c0392b' : '#1e8449';
+      var cumSign = cum >= 0 ? '+' : '';
+      html += '<td style="text-align:center;font-weight:700;font-size:14px;color:' + cumColor + ';">' + cumSign + cum.toFixed(1) + '%</td>';
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('sector-table-container').innerHTML = html;
   })();
 })();
 </script>
