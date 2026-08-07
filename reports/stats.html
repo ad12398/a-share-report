@@ -25,7 +25,6 @@
   }
   .chart-box h3 { margin: 0 0 12px 0; font-size: 15px; color: var(--text, #2c3e50); }
   .chart-inner { width: 100%; height: 340px; }
-  .heatmap-inner { width: 100%; height: 600px; }
   .low-data {
     text-align: center; padding: 80px 20px; color: var(--text-muted, #5a6c7d);
   }
@@ -109,8 +108,8 @@
 
 <div class="chart-row full">
   <div class="chart-box">
-    <h3>🗺️ 板块轮动热力图</h3>
-    <div class="heatmap-inner" id="chart-sector"></div>
+    <h3>🗺️ 板块轮动追踪（按5日累计排序）</h3>
+    <div style="overflow-x:auto;" id="sector-table-container"></div>
   </div>
 </div>
 
@@ -120,7 +119,7 @@
 
 
 <script>
-var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07"], "up_ratio": [93.8, 70.0, 85.3, 77.4, 56.8, 50.7], "north_turnover": [0, 0, 0, 0, 23580.0, 25600.0], "north_participation": [0, 0, 0, 0, 0, 0], "south_flow": [0, 0, 0, 0, -2.13, -5.88], "amount": [22902.0, 19774.0, 21903.0, 26331.0, 25044.0, 21379.0], "index_returns": {"上证指数": [0.94, 0.25, 0.62, 2.11, 2.71, 3.45], "深证成指": [2.89, 1.85, 5.18, 7.17, 6.94, 8.48], "创业板指": [4.15, 2.76, 8.63, 10.15, 9.58, 11.4], "科创50": [4.45, -1.03, 3.04, 7.97, 8.42, 10.42]}, "sector_names": ["次新股", "陶瓷行业", "电子器件", "有色金属", "玻璃行业", "化纤行业", "化工行业", "家具行业", "电子信息", "综合行业", "服装鞋类", "农林牧渔", "纺织行业", "机械行业", "开发区", "金融行业", "医疗器械", "生物制药", "酿酒行业", "电器行业", "汽车制造", "船舶制造", "煤炭行业", "飞机制造", "石油行业", "水泥行业", "印刷包装", "传媒娱乐", "发电设备", "摩托车"], "sector_dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07"], "sector_data": [[0, null, null, null, -0.062758620689655, 2.6568275862069], [0, null, null, null, 1.272, 0.828], [0, null, null, null, 0.34943661971831, 0.76767605633803], [null, null, null, null, 0.39323076923077, 0.84492307692308], [null, null, null, null, 0.22684210526316, 0.75842105263158], [null, null, null, null, 0.21478260869565, 0.27], [null, null, null, null, 0.21021428571429, 0.2235], [null, null, null, null, 0.20714285714286, 0.17071428571429], [null, null, null, null, 0.098858447488584, 0.16401826484018], [null, null, null, null, 0.094, -0.0592], [null, null, null, null, 0.091333333333333, -0.055777777777778], [null, null, null, null, 0.076101694915254, -0.058813559322034], [null, null, null, null, 0.072058823529412, -0.092352941176471], [null, null, null, null, 0.066340206185567, 0.13541237113402], [null, null, null, null, -0.07, -0.125], [null, null, null, null, -0.072978723404255, -0.058085106382979], [null, null, null, null, -0.077692307692308, 0.325], [null, null, null, null, -0.086206896551724, 0.37737931034483], [null, null, null, null, -0.0875, -0.0384375], [null, null, null, null, -0.11018518518519, 0.18722222222222], [null, null, null, null, -0.12479166666667, 0.053645833333333], [null, null, null, null, -0.14857142857143, -0.052857142857143], [null, null, null, null, 0.46307692307692, null], [null, null, null, null, 0.29071428571429, null], [null, null, null, null, 0.18571428571429, null], [null, null, null, null, 0.11916666666667, null], [null, null, null, null, -0.057777777777778, null], [null, null, null, null, -0.10472222222222, null], [null, null, null, null, -0.10620689655172, null], [null, null, null, null, -0.18, null]]};
+var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07"], "up_ratio": [93.8, 70.0, 85.3, 77.4, 56.8, 50.7], "north_turnover": [0, 0, 0, 0, 23580.0, 25600.0], "north_participation": [0, 0, 0, 0, 0, 0], "south_flow": [0, 0, 0, 0, -2.13, -5.88], "amount": [22902.0, 19774.0, 21903.0, 26331.0, 25044.0, 21379.0], "index_returns": {"上证指数": [0.94, 0.25, 0.62, 2.11, 2.71, 3.45], "深证成指": [2.89, 1.85, 5.18, 7.17, 6.94, 8.48], "创业板指": [4.15, 2.76, 8.63, 10.15, 9.58, 11.4], "科创50": [4.45, -1.03, 3.04, 7.97, 8.42, 10.42]}, "sector_table": [{"name": "次新股", "values": [0, 0, 0, 0, -0.06, 2.66], "cumulative": 2.6}, {"name": "陶瓷行业", "values": [0, 0, 0, 0, 1.27, 0.83], "cumulative": 2.1}, {"name": "有色金属", "values": [0, 0, 0, 0, 0.39, 0.84], "cumulative": 1.23}, {"name": "电子器件", "values": [0, 0, 0, 0, 0.35, 0.77], "cumulative": 1.12}, {"name": "玻璃行业", "values": [0, 0, 0, 0, 0.23, 0.76], "cumulative": 0.99}, {"name": "化纤行业", "values": [0, 0, 0, 0, 0.21, 0.27], "cumulative": 0.48}, {"name": "化工行业", "values": [0, 0, 0, 0, 0.21, 0.22], "cumulative": 0.43}, {"name": "家具行业", "values": [0, 0, 0, 0, 0.21, 0.17], "cumulative": 0.38}, {"name": "生物制药", "values": [0, 0, 0, 0, -0.09, 0.38], "cumulative": 0.29}, {"name": "电子信息", "values": [0, 0, 0, 0, 0.1, 0.16], "cumulative": 0.26}, {"name": "医疗器械", "values": [0, 0, 0, 0, -0.08, 0.33], "cumulative": 0.25}, {"name": "机械行业", "values": [0, 0, 0, 0, 0.07, 0.14], "cumulative": 0.21}, {"name": "综合行业", "values": [0, 0, 0, 0, 0.09, -0.06], "cumulative": 0.03}, {"name": "服装鞋类", "values": [0, 0, 0, 0, 0.09, -0.06], "cumulative": 0.03}, {"name": "农林牧渔", "values": [0, 0, 0, 0, 0.08, -0.06], "cumulative": 0.02}, {"name": "纺织行业", "values": [0, 0, 0, 0, 0.07, -0.09], "cumulative": -0.02}, {"name": "金融行业", "values": [0, 0, 0, 0, -0.07, -0.06], "cumulative": -0.13}, {"name": "开发区", "values": [0, 0, 0, 0, -0.07, -0.12], "cumulative": -0.19}], "sector_table_dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07"]};
 </script>
 <script>
 (function() {
@@ -262,56 +261,61 @@ var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-0
     window.addEventListener('resize', function() { chart.resize(); });
   })();
 
-  // ── 板块热力图 ──
+  // ── 板块轮动表格（条形图+累计排序+行底色）──
   (function() {
-    var dom = document.getElementById('chart-sector');
-    var chart = echarts.init(dom);
-    var sNames = _chartData.sector_names;
-    var sDates = _chartData.sector_dates;
-    var sData = _chartData.sector_data;
-    var matrix = [];
-    for (var i = 0; i < sNames.length; i++) {
-      for (var j = 0; j < sDates.length; j++) {
-        var val = sData[i][j];
-        if (val !== null) {
-          matrix.push([j, i, val]);
-        }
-      }
-    }
-    chart.setOption({
-      tooltip: {
-        position: 'top',
-        formatter: function(p) {
-          return sDates[p.value[0]] + '<br/>' + sNames[p.value[1]] + ': ' + p.value[2].toFixed(2) + '%';
-        }
-      },
-      grid: { left: 100, right: 40, top: 15, bottom: 65, containLabel: true },
-      xAxis: { type: 'category', data: sDates, axisLabel: { color: '#5a6c7d', rotate: 45, fontSize: 10, margin: 8 }, position: 'bottom' },
-      yAxis: { type: 'category', data: sNames, axisLabel: { color: '#5a6c7d', fontSize: 12, width: 95, overflow: 'truncate' } },
-      visualMap: {
-        min: -5, max: 5, type: 'piecewise', orient: 'horizontal',
-        left: 'center', bottom: 8,
-        pieces: [
-          { min: -5, max: -3, color: '#1e8449' },
-          { min: -3, max: -2, color: '#27ae60' },
-          { min: -2, max: -1, color: '#82e0aa' },
-          { min: -1, max: -0.3, color: '#d5f5e3' },
-          { min: -0.3, max: 0.3, color: '#bdc3c7' },
-          { min: 0.3, max: 1, color: '#fadbd8' },
-          { min: 1, max: 2, color: '#f1948a' },
-          { min: 2, max: 3, color: '#e74c3c' },
-          { min: 3, max: 5, color: '#c0392b' }
-        ],
-        text: ['涨>5%', '跌<-5%'], textStyle: { color: '#5a6c7d' }
-      },
-      series: [{
-        type: 'heatmap', data: matrix,
-        label: { show: false },
-        itemStyle: { borderWidth: 1, borderColor: '#fff' },
-        emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.2)' } }
-      }]
+    var table = _chartData.sector_table;
+    var dates = _chartData.sector_table_dates;
+    if (!table || !table.length) return;
+
+    var maxAbs = 0;
+    table.forEach(function(r) {
+      r.values.forEach(function(v) { if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v); });
     });
-    window.addEventListener('resize', function() { chart.resize(); });
+    if (maxAbs === 0) maxAbs = 5;
+
+    // 日期标签（MM-DD缩写）
+    var dateLabels = dates.map(function(d) { return d.length >= 5 ? d.substring(5) : d; });
+
+    var html = '<table class="data-table" style="font-size:13px;">';
+    // 表头
+    html += '<thead><tr><th style="min-width:90px;">板块</th>';
+    dateLabels.forEach(function(d) { html += '<th style="text-align:center;min-width:70px;">' + d + '</th>'; });
+    html += '<th style="text-align:center;min-width:70px;">5日累计</th></tr></thead><tbody>';
+
+    table.forEach(function(row) {
+      var cum = row.cumulative;
+      // 行底色（5档）
+      var bg = '';
+      if (cum > 5) bg = 'rgba(231,76,60,0.06)';
+      else if (cum > 2) bg = 'rgba(231,76,60,0.03)';
+      else if (cum < -5) bg = 'rgba(39,174,96,0.06)';
+      else if (cum < -2) bg = 'rgba(39,174,96,0.03)';
+
+      html += '<tr style="background:' + bg + ';">';
+      html += '<td style="font-weight:600;">' + row.name + '</td>';
+
+      row.values.forEach(function(v) {
+        var pctW = Math.abs(v) / maxAbs * 100;
+        var barColor = v >= 0 ? '#e74c3c' : '#27ae60';
+        var textColor = v >= 0 ? '#c0392b' : '#1e8449';
+        var sign = v >= 0 ? '+' : '';
+        html += '<td style="text-align:center;position:relative;padding:6px 4px;">'
+          + '<div style="height:18px;position:relative;">'
+          + '<div style="position:absolute;right:50%;top:0;height:100%;width:' + (pctW/2).toFixed(1) + '%;background:' + barColor + ';border-radius:2px;opacity:0.7;"></div>'
+          + '<div style="position:absolute;left:50%;top:0;height:100%;width:' + (pctW/2).toFixed(1) + '%;background:' + barColor + ';border-radius:2px;opacity:0.7;display:' + (pctW > 0 ? 'block' : 'none') + ';"></div>'
+          + '<span style="position:relative;z-index:1;font-size:12px;font-weight:600;color:' + textColor + ';">' + sign + v.toFixed(1) + '%</span>'
+          + '</div></td>';
+      });
+
+      // 累计列
+      var cumColor = cum >= 0 ? '#c0392b' : '#1e8449';
+      var cumSign = cum >= 0 ? '+' : '';
+      html += '<td style="text-align:center;font-weight:700;font-size:14px;color:' + cumColor + ';">' + cumSign + cum.toFixed(1) + '%</td>';
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('sector-table-container').innerHTML = html;
   })();
 })();
 </script>
