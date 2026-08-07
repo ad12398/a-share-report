@@ -245,9 +245,9 @@ def build_stats_data() -> dict[str, Any]:
                     sector_data[name] = {}
                 sector_data[name][d] = pct
 
-    # 取出现频次最高的 30 个板块
+    # 取出现频次最高的 20 个板块（多于 20 个在热力图中糊成一团）
     sector_freq = sorted(sector_data.items(), key=lambda x: len(x[1]), reverse=True)
-    sector_names = [s[0] for s in sector_freq[:30]]
+    sector_names = [s[0] for s in sector_freq[:20]]
 
     sector_matrix: list[list[float | None]] = []
     for name in sector_names:
