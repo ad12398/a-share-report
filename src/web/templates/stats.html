@@ -299,18 +299,18 @@ var _chartData = {{ chart_json | safe }};
       xAxis: { type: 'category', data: sDates, axisLabel: { color: '#5a6c7d', rotate: 45, fontSize: 10, margin: 8 }, position: 'bottom' },
       yAxis: { type: 'category', data: sNames, axisLabel: { color: '#5a6c7d', fontSize: 12, width: 95, overflow: 'truncate' } },
       visualMap: {
-        min: -5, max: 5, calculable: true, orient: 'horizontal',
+        min: -5, max: 5, type: 'piecewise', orient: 'horizontal',
         left: 'center', bottom: 8,
         pieces: [
-          { min: -5, max: -3, color: '#c0392b' },
-          { min: -3, max: -2, color: '#e74c3c' },
-          { min: -2, max: -1, color: '#f1948a' },
-          { min: -1, max: -0.3, color: '#fadbd8' },
+          { min: -5, max: -3, color: '#1e8449' },
+          { min: -3, max: -2, color: '#27ae60' },
+          { min: -2, max: -1, color: '#82e0aa' },
+          { min: -1, max: -0.3, color: '#d5f5e3' },
           { min: -0.3, max: 0.3, color: '#bdc3c7' },
-          { min: 0.3, max: 1, color: '#d5f5e3' },
-          { min: 1, max: 2, color: '#82e0aa' },
-          { min: 2, max: 3, color: '#27ae60' },
-          { min: 3, max: 5, color: '#1e8449' }
+          { min: 0.3, max: 1, color: '#fadbd8' },
+          { min: 1, max: 2, color: '#f1948a' },
+          { min: 2, max: 3, color: '#e74c3c' },
+          { min: 3, max: 5, color: '#c0392b' }
         ],
         text: ['涨>5%', '跌<-5%'], textStyle: { color: '#5a6c7d' }
       },
