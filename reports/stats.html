@@ -10,28 +10,28 @@
   .stats-container { max-width: 1300px; margin: 0 auto; padding: 20px; }
   .kpi-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
   .kpi-card {
-    flex: 1; min-width: 180px; background: var(--card-bg, #1e2230);
-    border: 1px solid var(--border, #2a2e3a); border-radius: 10px; padding: 20px;
+    flex: 1; min-width: 180px; background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border, #e0e3e8); border-radius: 10px; padding: 20px;
     text-align: center;
   }
-  .kpi-value { font-size: 28px; font-weight: 700; color: var(--accent, #4fc3f7); margin: 8px 0; }
-  .kpi-label { font-size: 13px; color: var(--text-muted, #8892a4); text-transform: uppercase; }
-  .kpi-sub { font-size: 12px; color: var(--text-muted, #8892a4); margin-top: 4px; }
+  .kpi-value { font-size: 28px; font-weight: 700; color: var(--accent, #2980b9); margin: 8px 0; }
+  .kpi-label { font-size: 13px; color: var(--text-muted, #5a6c7d); text-transform: uppercase; }
+  .kpi-sub { font-size: 12px; color: var(--text-muted, #5a6c7d); margin-top: 4px; }
   .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   .chart-row.full { grid-template-columns: 1fr; }
   .chart-box {
-    background: var(--card-bg, #1e2230); border: 1px solid var(--border, #2a2e3a);
+    background: var(--card-bg, #ffffff); border: 1px solid var(--border, #e0e3e8);
     border-radius: 10px; padding: 16px;
   }
-  .chart-box h3 { margin: 0 0 12px 0; font-size: 15px; color: var(--text, #d0d5e0); }
+  .chart-box h3 { margin: 0 0 12px 0; font-size: 15px; color: var(--text, #2c3e50); }
   .chart-inner { width: 100%; height: 340px; }
   .heatmap-inner { width: 100%; height: 520px; }
   .low-data {
-    text-align: center; padding: 80px 20px; color: var(--text-muted, #8892a4);
+    text-align: center; padding: 80px 20px; color: var(--text-muted, #5a6c7d);
   }
   .low-data-icon { font-size: 64px; margin-bottom: 16px; }
   .low-data p { font-size: 15px; line-height: 1.8; }
-  .date-range { font-size: 13px; color: var(--text-muted, #8892a4); margin-bottom: 20px; }
+  .date-range { font-size: 13px; color: var(--text-muted, #5a6c7d); margin-bottom: 20px; }
   @media (max-width: 900px) {
     .chart-row { grid-template-columns: 1fr; }
     .kpi-card { min-width: 140px; }
@@ -54,18 +54,18 @@
 
 
 <div class="date-range">
-  📅 2026-07-31 — 2026-08-06 ｜ 5 个交易日 ｜ 21 份报告
+  📅 2026-07-31 — 2026-08-07 ｜ 6 个交易日 ｜ 22 份报告
 </div>
 
 <div class="kpi-row">
   <div class="kpi-card">
     <div class="kpi-label">交易日数</div>
-    <div class="kpi-value">5</div>
+    <div class="kpi-value">6</div>
     <div class="kpi-sub">天</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">平均涨跌比</div>
-    <div class="kpi-value" style="color:var(--up, #4caf50)">76.7%</div>
+    <div class="kpi-value" style="color:var(--up, #27ae60)">68.5%</div>
     <div class="kpi-sub">上涨占比</div>
   </div>
   <div class="kpi-card">
@@ -80,7 +80,7 @@
   </div>
   <div class="kpi-card">
     <div class="kpi-label">总报告数</div>
-    <div class="kpi-value">21</div>
+    <div class="kpi-value">22</div>
     <div class="kpi-sub">份</div>
   </div>
 </div>
@@ -120,14 +120,14 @@
 
 
 <script>
-var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06"], "up_ratio": [93.8, 70.0, 85.3, 77.4, 56.8], "north_turnover": [0, 0, 0, 0, 23580.0], "north_participation": [0, 0, 0, 0, 0], "south_flow": [0, 0, 0, 0, -2.13], "amount": [22902.0, 19774.0, 21903.0, 26331.0, 25044.0], "index_returns": {"上证指数": [0.94, 0.25, 0.62, 2.11, 2.71], "深证成指": [2.89, 1.85, 5.18, 7.17, 6.94], "创业板指": [4.15, 2.76, 8.63, 10.15, 9.58], "科创50": [4.45, -1.03, 3.04, 7.97, 8.42]}, "sector_names": ["次新股", "陶瓷行业", "电子器件", "煤炭行业", "有色金属", "飞机制造", "玻璃行业", "化纤行业", "化工行业", "家具行业", "石油行业", "水泥行业", "电子信息", "综合行业", "服装鞋类", "农林牧渔", "纺织行业", "机械行业", "印刷包装", "开发区", "金融行业", "医疗器械", "生物制药", "酿酒行业", "传媒娱乐", "发电设备", "电器行业", "汽车制造", "船舶制造", "摩托车"], "sector_dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06"], "sector_data": [[0, null, null, null, -0.062758620689655], [0, null, null, null, 1.272], [0, null, null, null, 0.34943661971831], [null, null, null, null, 0.46307692307692], [null, null, null, null, 0.39323076923077], [null, null, null, null, 0.29071428571429], [null, null, null, null, 0.22684210526316], [null, null, null, null, 0.21478260869565], [null, null, null, null, 0.21021428571429], [null, null, null, null, 0.20714285714286], [null, null, null, null, 0.18571428571429], [null, null, null, null, 0.11916666666667], [null, null, null, null, 0.098858447488584], [null, null, null, null, 0.094], [null, null, null, null, 0.091333333333333], [null, null, null, null, 0.076101694915254], [null, null, null, null, 0.072058823529412], [null, null, null, null, 0.066340206185567], [null, null, null, null, -0.057777777777778], [null, null, null, null, -0.07], [null, null, null, null, -0.072978723404255], [null, null, null, null, -0.077692307692308], [null, null, null, null, -0.086206896551724], [null, null, null, null, -0.0875], [null, null, null, null, -0.10472222222222], [null, null, null, null, -0.10620689655172], [null, null, null, null, -0.11018518518519], [null, null, null, null, -0.12479166666667], [null, null, null, null, -0.14857142857143], [null, null, null, null, -0.18]]};
+var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07"], "up_ratio": [93.8, 70.0, 85.3, 77.4, 56.8, 28.0], "north_turnover": [0, 0, 0, 0, 23580.0, 0], "north_participation": [0, 0, 0, 0, 0, 0], "south_flow": [0, 0, 0, 0, -2.13, 0], "amount": [22902.0, 19774.0, 21903.0, 26331.0, 25044.0, 0], "index_returns": {"上证指数": [0.94, 0.25, 0.62, 2.11, 2.71, 2.68], "深证成指": [2.89, 1.85, 5.18, 7.17, 6.94, 6.94], "创业板指": [4.15, 2.76, 8.63, 10.15, 9.58, 9.58], "科创50": [4.45, -1.03, 3.04, 7.97, 8.42, 8.39]}, "sector_names": ["电子器件", "次新股", "陶瓷行业", "煤炭行业", "飞机制造", "玻璃行业", "化纤行业", "化工行业", "家具行业", "电子信息", "服装鞋类", "纺织行业", "机械行业", "开发区", "金融行业", "酿酒行业", "传媒娱乐", "发电设备", "电器行业", "船舶制造", "摩托车", "有色金属", "石油行业", "水泥行业", "综合行业", "农林牧渔", "印刷包装", "医疗器械", "生物制药", "汽车制造"], "sector_dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07"], "sector_data": [[0, null, null, null, 0.34943661971831, 0.0], [0, null, null, null, -0.062758620689655, null], [0, null, null, null, 1.272, null], [null, null, null, null, 0.46307692307692, 0.0], [null, null, null, null, 0.29071428571429, 0.0], [null, null, null, null, 0.22684210526316, 0.0], [null, null, null, null, 0.21478260869565, 0.0], [null, null, null, null, 0.21021428571429, 0.0], [null, null, null, null, 0.20714285714286, 0.0], [null, null, null, null, 0.098858447488584, 0.0], [null, null, null, null, 0.091333333333333, 0.0], [null, null, null, null, 0.072058823529412, 0.0], [null, null, null, null, 0.066340206185567, 0.0], [null, null, null, null, -0.07, 0.0], [null, null, null, null, -0.072978723404255, 0.0], [null, null, null, null, -0.0875, 0.0], [null, null, null, null, -0.10472222222222, 0.0], [null, null, null, null, -0.10620689655172, 0.0], [null, null, null, null, -0.11018518518519, 0.0], [null, null, null, null, -0.14857142857143, 0.0], [null, null, null, null, -0.18, 0.0], [null, null, null, null, 0.39323076923077, null], [null, null, null, null, 0.18571428571429, null], [null, null, null, null, 0.11916666666667, null], [null, null, null, null, 0.094, null], [null, null, null, null, 0.076101694915254, null], [null, null, null, null, -0.057777777777778, null], [null, null, null, null, -0.077692307692308, null], [null, null, null, null, -0.086206896551724, null], [null, null, null, null, -0.12479166666667, null]]};
 </script>
 <script>
 (function() {
   var darkTheme = {
-    textStyle: { color: '#8892a4' },
-    title: { textStyle: { color: '#d0d5e0' } },
-    legend: { textStyle: { color: '#8892a4' } }
+    textStyle: { color: '#5a6c7d' },
+    title: { textStyle: { color: '#2c3e50' } },
+    legend: { textStyle: { color: '#5a6c7d' } }
   };
 
   // ── 市场宽度 ──
@@ -137,19 +137,19 @@ var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-0
     chart.setOption({
       tooltip: { trigger: 'axis', valueFormatter: function(v) { return v + '%'; } },
       grid: { left: 50, right: 20, top: 20, bottom: 35 },
-      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
-      yAxis: { type: 'value', name: '涨跌比 %', axisLabel: { color: '#8892a4' }, min: 0, max: 100,
-        splitLine: { lineStyle: { color: '#2a2e3a' } } },
+      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#5a6c7d', rotate: 30 } },
+      yAxis: { type: 'value', name: '涨跌比 %', axisLabel: { color: '#5a6c7d' }, min: 0, max: 100,
+        splitLine: { lineStyle: { color: '#e0e3e8' } } },
       series: [{
         type: 'line', data: _chartData.up_ratio, smooth: true, symbol: 'circle', symbolSize: 6,
-        lineStyle: { color: '#4fc3f7', width: 2 },
-        itemStyle: { color: '#4fc3f7' },
+        lineStyle: { color: '#2980b9', width: 2 },
+        itemStyle: { color: '#2980b9' },
         areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: 'rgba(79,195,247,0.3)' },
-          { offset: 1, color: 'rgba(79,195,247,0.02)' }
+          { offset: 0, color: 'rgba(41,128,185,0.15)' },
+          { offset: 1, color: 'rgba(41,128,185,0.05)' }
         ])},
-        markLine: { silent: true, data: [{ yAxis: 50, lineStyle: { color: '#666', type: 'dashed' } }],
-          label: { formatter: '50%', color: '#666' } }
+        markLine: { silent: true, data: [{ yAxis: 50, lineStyle: { color: '#bdc3c7', type: 'dashed' } }],
+          label: { formatter: '50%', color: '#bdc3c7' } }
       }]
     });
     window.addEventListener('resize', function() { chart.resize(); });
@@ -162,7 +162,7 @@ var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-0
     var turnover = _chartData.north_turnover;
     var participation = _chartData.north_participation;
     var colors = turnover.map(function(v) {
-      return v > 300 ? '#ef5350' : v > 150 ? '#ff9800' : '#666';
+      return v > 300 ? '#e74c3c' : v > 150 ? '#e67e22' : '#95a5a6';
     });
     chart.setOption({
       tooltip: {
@@ -173,13 +173,13 @@ var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-0
           return d + '<br/>北向成交: ' + t.toFixed(0) + ' 亿<br/>外资占比: ' + p.toFixed(1) + '%';
         }
       },
-      legend: { data: ['成交总额', '外资占比'], textStyle: { color: '#8892a4' }, bottom: 0 },
+      legend: { data: ['成交总额', '外资占比'], textStyle: { color: '#5a6c7d' }, bottom: 0 },
       grid: { left: 55, right: 55, top: 20, bottom: 40 },
-      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
+      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#5a6c7d', rotate: 30 } },
       yAxis: [
-        { type: 'value', name: '亿', axisLabel: { color: '#8892a4' },
-          splitLine: { lineStyle: { color: '#2a2e3a' } } },
-        { type: 'value', name: '%', axisLabel: { color: '#8892a4' },
+        { type: 'value', name: '亿', axisLabel: { color: '#5a6c7d' },
+          splitLine: { lineStyle: { color: '#e0e3e8' } } },
+        { type: 'value', name: '%', axisLabel: { color: '#5a6c7d' },
           splitLine: { show: false }, min: 0 }
       ],
       series: [
@@ -187,19 +187,19 @@ var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-0
           data: turnover.map(function(v, i) { return { value: v, itemStyle: { color: colors[i] } }; }),
           markLine: { silent: true, symbol: 'none',
             data: [
-              { yAxis: 300, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '高', color: '#ef5350' } },
-              { yAxis: 150, lineStyle: { color: '#ff9800', type: 'dashed' }, label: { formatter: '中', color: '#ff9800' } }
+              { yAxis: 300, lineStyle: { color: '#e74c3c', type: 'dashed' }, label: { formatter: '高', color: '#e74c3c' } },
+              { yAxis: 150, lineStyle: { color: '#e67e22', type: 'dashed' }, label: { formatter: '中', color: '#e67e22' } }
             ]
           }
         },
         { name: '外资占比', type: 'line', yAxisIndex: 1, data: participation,
           smooth: true, symbol: 'circle', symbolSize: 5,
-          lineStyle: { color: '#4fc3f7', width: 2 },
-          itemStyle: { color: '#4fc3f7' },
+          lineStyle: { color: '#2980b9', width: 2 },
+          itemStyle: { color: '#2980b9' },
           markLine: { silent: true, symbol: 'none',
             data: [
-              { yAxis: 10, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '10%', color: '#ef5350' } },
-              { yAxis: 5, lineStyle: { color: '#ff9800', type: 'dashed' }, label: { formatter: '5%', color: '#ff9800' } }
+              { yAxis: 10, lineStyle: { color: '#e74c3c', type: 'dashed' }, label: { formatter: '10%', color: '#e74c3c' } },
+              { yAxis: 5, lineStyle: { color: '#e67e22', type: 'dashed' }, label: { formatter: '5%', color: '#e67e22' } }
             ]
           }
         }
@@ -214,21 +214,21 @@ var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-0
     var chart = echarts.init(dom);
     var vals = _chartData.south_flow;
     // 正=南下（偏空A股）红色；负=回流（偏多A股）绿色
-    var colors = vals.map(function(v) { return v >= 0 ? '#ef5350' : '#4caf50'; });
+    var colors = vals.map(function(v) { return v >= 0 ? '#e74c3c' : '#27ae60'; });
     chart.setOption({
       tooltip: { trigger: 'axis', valueFormatter: function(v) { return (v >= 0 ? '+' : '') + v.toFixed(1) + ' 亿'; } },
       grid: { left: 55, right: 20, top: 20, bottom: 35 },
-      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
-      yAxis: { type: 'value', name: '亿', axisLabel: { color: '#8892a4' },
-        splitLine: { lineStyle: { color: '#2a2e3a' } } },
+      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#5a6c7d', rotate: 30 } },
+      yAxis: { type: 'value', name: '亿', axisLabel: { color: '#5a6c7d' },
+        splitLine: { lineStyle: { color: '#e0e3e8' } } },
       series: [{
         type: 'bar',
         data: vals.map(function(v, i) { return { value: v, itemStyle: { color: colors[i] } }; }),
         markLine: { silent: true, symbol: 'none',
           data: [
-            { yAxis: 0, lineStyle: { color: '#666', type: 'solid' }, label: { show: false } },
-            { yAxis: 30, lineStyle: { color: '#ef5350', type: 'dashed' }, label: { formatter: '+30', color: '#ef5350' } },
-            { yAxis: -30, lineStyle: { color: '#4caf50', type: 'dashed' }, label: { formatter: '-30', color: '#4caf50' } }
+            { yAxis: 0, lineStyle: { color: '#bdc3c7', type: 'solid' }, label: { show: false } },
+            { yAxis: 30, lineStyle: { color: '#e74c3c', type: 'dashed' }, label: { formatter: '+30', color: '#e74c3c' } },
+            { yAxis: -30, lineStyle: { color: '#27ae60', type: 'dashed' }, label: { formatter: '-30', color: '#27ae60' } }
           ]
         }
       }]
@@ -240,7 +240,7 @@ var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-0
   (function() {
     var dom = document.getElementById('chart-index');
     var chart = echarts.init(dom);
-    var colors = { '上证指数': '#ef5350', '深证成指': '#4caf50', '创业板指': '#ff9800', '科创50': '#4fc3f7' };
+    var colors = { '上证指数': '#e74c3c', '深证成指': '#27ae60', '创业板指': '#e67e22', '科创50': '#2980b9' };
     var series = [];
     var returns = _chartData.index_returns;
     for (var name in returns) {
@@ -252,11 +252,11 @@ var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-0
     }
     chart.setOption({
       tooltip: { trigger: 'axis', valueFormatter: function(v) { return v.toFixed(2) + '%'; } },
-      legend: { data: Object.keys(returns), textStyle: { color: '#8892a4' }, bottom: 0 },
+      legend: { data: Object.keys(returns), textStyle: { color: '#5a6c7d' }, bottom: 0 },
       grid: { left: 55, right: 20, top: 20, bottom: 40 },
-      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#8892a4', rotate: 30 } },
-      yAxis: { type: 'value', name: '累计 %', axisLabel: { color: '#8892a4' },
-        splitLine: { lineStyle: { color: '#2a2e3a' } } },
+      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#5a6c7d', rotate: 30 } },
+      yAxis: { type: 'value', name: '累计 %', axisLabel: { color: '#5a6c7d' },
+        splitLine: { lineStyle: { color: '#e0e3e8' } } },
       series: series
     });
     window.addEventListener('resize', function() { chart.resize(); });
@@ -286,13 +286,13 @@ var _chartData = {"dates": ["2026-07-31", "2026-08-03", "2026-08-04", "2026-08-0
         }
       },
       grid: { left: 90, right: 40, top: 10, bottom: 60 },
-      xAxis: { type: 'category', data: sDates, axisLabel: { color: '#8892a4', rotate: 45, fontSize: 10 }, position: 'bottom' },
-      yAxis: { type: 'category', data: sNames, axisLabel: { color: '#8892a4', fontSize: 11 } },
+      xAxis: { type: 'category', data: sDates, axisLabel: { color: '#5a6c7d', rotate: 45, fontSize: 10 }, position: 'bottom' },
+      yAxis: { type: 'category', data: sNames, axisLabel: { color: '#5a6c7d', fontSize: 11 } },
       visualMap: {
         min: -5, max: 5, calculable: true, orient: 'horizontal',
         left: 'center', bottom: 5,
-        inRange: { color: ['#4caf50', '#3a3e4a', '#ef5350'] },
-        text: ['涨', '跌'], textStyle: { color: '#8892a4' }
+        inRange: { color: ['#27ae60', '#ecf0f1', '#e74c3c'] },
+        text: ['涨', '跌'], textStyle: { color: '#5a6c7d' }
       },
       series: [{
         type: 'heatmap', data: matrix,
