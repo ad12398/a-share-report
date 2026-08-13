@@ -60,17 +60,35 @@ def generate_report(
         "max_tokens": max_tokens,
     }
 
+    last_reasoning = ""  # 最后一次响应中的思考内容（兜底用）
+
     for attempt in range(MAX_RETRIES):
         try:
             resp = requests.post(DEEPSEEK_API_URL, json=payload, headers=headers, timeout=TIMEOUT)
             resp.raise_for_status()
             data = resp.json()
-            content = data["choices"][0]["message"]["content"]
+            message = data["choices"][0]["message"]
+            content = message.get("content", "") or ""
+            reasoning = message.get("reasoning_content", "") or ""
             usage = data.get("usage", {})
+
+            # 模型可能把分析放在 reasoning_content（思考模式），content 为空
+            if not content.strip() and reasoning.strip():
+                last_reasoning = reasoning
+                logger.warning(
+                    f"DeepSeek 返回空 content，reasoning_content={len(reasoning)} 字。"
+                    f"模型进入思考模式未输出正文 (attempt {attempt + 1}/{MAX_RETRIES})。"
+                )
+                if attempt == MAX_RETRIES - 1:
+                    logger.warning("所有重试均为空 content，使用 reasoning_content 兜底。")
+                    return reasoning  # 兜底：思考内容也比空报告强
+                continue  # 重试
+
             logger.info(
                 f"DeepSeek API 调用成功 "
                 f"(input={usage.get('prompt_tokens', 0)}, "
-                f"output={usage.get('completion_tokens', 0)})"
+                f"output={usage.get('completion_tokens', 0)}, "
+                f"content={len(content)} 字, reasoning={len(reasoning)} 字)"
             )
             return content
         except requests.exceptions.Timeout:
@@ -86,6 +104,10 @@ def generate_report(
             if attempt == MAX_RETRIES - 1:
                 return f"⚠️ API 调用异常: {e}"
 
+    # 所有重试都因空 content 而失败
+    if last_reasoning.strip():
+        logger.warning("所有重试均为空 content，使用 reasoning_content 兜底。")
+        return last_reasoning
     return "⚠️ 无法获取分析结果。"
 
 
