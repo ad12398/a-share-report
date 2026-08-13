@@ -421,7 +421,16 @@ def _calc_limit_up_premium(codes: list[dict[str, str]]) -> float | None:
 
 
 def _sina_symbol(code: str) -> str:
-    """将纯数字代码转为新浪行情前缀格式（sh600xxx / sz000xxx / sz300xxx 等）。"""
+    """将代码转为新浪行情前缀格式。
+
+    兼容两种输入：
+    - 已带前缀: sh600xxx / sz000xxx / bj920xxx → 原样返回
+    - 纯数字: 92/4/8 开头→bj（北交所），6/9 开头→sh（9 为沪B），其余→sz
+    """
+    if code.startswith(("sh", "sz", "bj")):
+        return code
+    if code.startswith("92") or code.startswith(("4", "8")):
+        return f"bj{code}"  # 北交所：920/43/83/87 开头
     if code.startswith(("6", "9")):
         return f"sh{code}"
     return f"sz{code}"

@@ -2,7 +2,9 @@
 
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+BEIJING_TZ = timezone(timedelta(hours=8))
 
 
 def setup_logger(name: str = "a-share-report") -> logging.Logger:
@@ -17,6 +19,8 @@ def setup_logger(name: str = "a-share-report") -> logging.Logger:
             "[%(asctime)s] %(levelname)s: %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
+        # logging 的 asctime 默认用本地时间，改为北京时间
+        formatter.converter = lambda *args: datetime.now(BEIJING_TZ).timetuple()
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
@@ -25,4 +29,4 @@ def setup_logger(name: str = "a-share-report") -> logging.Logger:
 
 def report_time() -> str:
     """返回当前北京时间字符串"""
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.now(BEIJING_TZ).strftime("%Y-%m-%d %H:%M:%S")

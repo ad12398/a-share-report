@@ -87,7 +87,8 @@ def fetch_index_quotes() -> dict[str, Any]:
                                 amt_val = float(parts[2]) / 1e4  # 元 → 万元
                                 break
                         if amt_val == 0.0 and len(fields) > 6:
-                            amt_val = float(fields[6] or 0) * 100  # volume 手数估算，不精确
+                            # 动态字段缺失时：成交量(手)×100(股/手)×现价 = 元 → 万元
+                            amt_val = float(fields[6] or 0) * 100 * price / 1e4
                         result[code_map[sid]] = {
                             "name": name_map[code_map[sid]],
                             "price": price,
@@ -395,4 +396,4 @@ def fetch_market_overview() -> dict[str, Any]:
 
 
 def _empty_overview() -> dict[str, Any]:
-    return {"total": 0, "up": 0, "down": 0, "flat": 0, "total_amount": 0, "up_ratio": 0, "limit_up": 0, "limit_down": 0, "avg_turnover": 0}
+    return {"total": 0, "up": 0, "down": 0, "flat": 0, "total_amount": 0, "up_ratio": 0, "limit_up": 0, "limit_down": 0, "avg_turnover": 0, "median_amount": 0}

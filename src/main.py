@@ -15,7 +15,7 @@ BEIJING_TZ = timezone(timedelta(hours=8))
 from src.data.calendar import is_trading_day
 from src.data.collector import collect_all_data
 from src.data.cleaner import clean_data_for_ai
-from src.analysis.deepseek_client import generate_report, format_data_for_prompt, ReportGenerationError
+from src.analysis.deepseek_client import generate_report, ReportGenerationError
 from src.analysis.prompts import (
     SLOT_PROMPT_MAP, SLOT_LABEL, SYSTEM_PROMPT,
 )
@@ -25,7 +25,7 @@ from src.web.renderer import (
     save_report_html, save_index_html, save_archives_html,
 )
 from src.web.docx_renderer import render_docx, save_docx
-from src.web.indexer import add_report_to_index, load_index
+from src.web.indexer import add_report_to_index
 from src.utils.logger import setup_logger, report_time
 from src.utils.sanitizer import sanitize_html
 
@@ -141,24 +141,24 @@ def run(slot: str):
             {"name": s.get("name", ""), "change_pct": s.get("change_pct", 0)}
             for s in sector_list[:20]
         ]
-        logger.info(f"DEBUG: chart_data sectors={len(chart_data['sectors'])}")
+        logger.debug(f"chart_data sectors={len(chart_data['sectors'])}")
     if gainers_list and isinstance(gainers_list, list) and len(gainers_list) > 0:
         chart_data["gainers"] = [
             {"name": g.get("name", ""), "change_pct": g.get("change_pct", 0),
              "is_ipo": g.get("name", "").startswith("N") or g.get("name", "").startswith("C")}
             for g in gainers_list[:10]
         ]
-        logger.info(f"DEBUG: chart_data gainers={len(chart_data['gainers'])}")
+        logger.debug(f"chart_data gainers={len(chart_data['gainers'])}")
     if losers_list and isinstance(losers_list, list) and len(losers_list) > 0:
         chart_data["losers"] = [
             {"name": l.get("name", ""), "change_pct": l.get("change_pct", 0),
              "is_ipo": l.get("name", "").startswith("N") or l.get("name", "").startswith("C")}
             for l in losers_list[:10]
         ]
-        logger.info(f"DEBUG: chart_data losers={len(chart_data['losers'])}")
+        logger.debug(f"chart_data losers={len(chart_data['losers'])}")
     if not chart_data:
         chart_data = None
-        logger.warning("DEBUG: chart_data is None (no chart data)")
+        logger.debug("chart_data is None (no chart data)")
 
     report_html = render_report(slot, safe_report, data, chart_data, movers_note)
     report_path = save_report_html(report_html, slot)

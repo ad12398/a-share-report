@@ -1,10 +1,8 @@
-"""东方财富 & 同花顺数据源 —— 外资监测 & 融资融券（纯 HTTP API）
+"""东方财富数据源 —— 南向资金 & 资金流聚合（纯 HTTP API）
 
-龙虎榜已迁移至 sina_lhb_source.py（新浪源，东财 push2 阿里云 IP 被封）。
-
-⚠️ 2024 年证监会新规后，北向净买入实时数据不再公开发布。
-本模块中的 fetch_north_flow() 已废弃（同花顺 hexin 返回静态缓存数据），
-北向活跃度改用 mx_source.fetch_north_turnover()，南向改用东财 datacenter API。
+龙虎榜已迁移至 sina_lhb_source.py（新浪源）。
+融资融券已由新浪资金流聚合替代（fetch_market_fund_flow）。
+北向活跃度用 mx_source.fetch_north_turnover()。
 """
 
 import logging
@@ -21,50 +19,10 @@ HEADERS = {
     "Referer": "https://data.eastmoney.com/",
 }
 
-# 同花顺北向资金 API（零认证，替代东财 push2）
-HEXIN_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
-    "Host": "data.hexin.cn",
-    "Referer": "https://data.hexin.cn/",
-}
-
-# 东财 API 端点（仅尝试 push2，失败快速降级）
+# 东财 API 端点（仅 run_diagnostics 手动诊断用，push2 阿里云 IP 已被封）
 EM_BASE_URLS = [
     "https://push2.eastmoney.com",
 ]
-
-
-def _try_endpoints(url_path: str, timeout: int = 8, max_retries: int = 1) -> requests.Response | None:
-    """尝试从东财端点获取数据（单次尝试，失败快速返回）"""
-    for base in EM_BASE_URLS:
-        url = base + url_path
-        for attempt in range(max_retries):
-            try:
-                logger.info(f"东财请求: {url[:80]}...")
-                resp = requests.get(url, headers=HEADERS, timeout=timeout)
-                if resp.status_code == 200 and resp.text and resp.text.strip():
-                    return resp
-                logger.warning(f"东财返回异常: status={resp.status_code}, len={len(resp.text) if resp.text else 0}")
-            except requests.exceptions.Timeout:
-                logger.warning(f"东财超时: {url[:60]}...")
-            except requests.exceptions.ConnectionError as e:
-                logger.warning(f"东财连接失败: {e}")
-            except Exception as e:
-                logger.warning(f"东财请求异常: {e}")
-    logger.warning(f"东财端点不可达: {url_path}")
-    return None
-
-
-def fetch_north_flow() -> dict[str, Any]:
-    """[已废弃] 同花顺 hexin dayChart API 返回静态缓存数据，不可用于实时分析。
-
-    北向净买入自 2024 年证监会新规后不再公开发布。
-    北向活跃度数据请使用 mx_source.fetch_north_turnover()。
-    南向资金请使用 fetch_south_bound()。
-    """
-    logger.warning("fetch_north_flow() 已废弃：hexin API 返回静态缓存数据。使用 mx_source + 南向替代。")
-    return {}
 
 
 # ═══ 南向资金（港股通） ═══
@@ -173,105 +131,6 @@ def fetch_south_bound() -> dict[str, Any]:
     except Exception as e:
         logger.error(f"南向资金获取失败: {e}")
         return {}
-
-
-def fetch_margin_trading() -> dict[str, Any]:
-    """获取融资融券数据（东方财富）
-
-    返回: {
-        "margin_balance": float,      # 融资余额（亿）
-        "short_balance": float,       # 融券余额（亿）
-        "total_balance": float,       # 两融余额（亿）
-        "margin_buy": float,          # 融资买入额（亿）
-        "date": str,                  # 数据日期
-    }
-    """
-    try:
-        # 东财融资融券数据接口
-        url_path = (
-            "/api/qt/clist/get?"
-            "pn=1&pz=1&po=1&np=1&fs=m:0+t:6&fid=f3"
-            "&fields=f2,f3,f12,f14,f152,f124,f125,f126,f127"
-        )
-        resp = _try_endpoints(url_path, timeout=20)
-        if resp is None:
-            # 尝试备用接口：datacenter API
-            return _fetch_margin_fallback()
-
-        # push2 API 返回的可能只是标的列表，融资融券汇总需要用另一个接口
-        return _fetch_margin_fallback()
-    except Exception as e:
-        logger.error(f"融资融券获取失败: {e}")
-        return {}
-
-
-def _fetch_margin_fallback() -> dict[str, Any]:
-    """融资融券数据备用接口（datacenter）"""
-    try:
-        # 东方财富数据中心 — 融资融券交易汇总
-        url = (
-            "https://datacenter-web.eastmoney.com/api/data/v1/get?"
-            "reportName=RPTA_WEB_MARGIN_TRADE"
-            "&columns=ALL"
-            "&sortColumns=TRADE_DATE&sortTypes=-1"
-            "&pageSize=1&pageNumber=1"
-        )
-        resp = requests.get(
-            url,
-            headers={**HEADERS, "Referer": "https://data.eastmoney.com/rzrq/total.html"},
-            timeout=20,
-        )
-        if resp.status_code != 200:
-            logger.warning(f"融资融券 datacenter 返回: status={resp.status_code}")
-            return {}
-        data = resp.json()
-        if data.get("success") and data.get("result") and data["result"].get("data"):
-            items = data["result"]["data"]
-            if items:
-                item = items[0]
-                result = {
-                    "margin_balance": float(item.get("FIN_BALANCE", 0) or 0) / 1e8,   # 转亿
-                    "short_balance": float(item.get("SALE_BALANCE", 0) or 0) / 1e8,
-                    "total_balance": float(item.get("TOTAL_BALANCE", 0) or 0) / 1e8,
-                    "margin_buy": float(item.get("FIN_BUY_AMT", 0) or 0) / 1e8,
-                    "date": str(item.get("TRADE_DATE", "")[:10]),
-                }
-                logger.info(f"融资融券: 两融余额 {result['total_balance']:.0f} 亿 (date={result['date']})")
-                return result
-        logger.warning(f"融资融券 datacenter 返回空数据")
-        return {}
-    except Exception as e:
-        logger.error(f"融资融券备用接口失败: {e}")
-        return {}
-
-
-def fetch_margin_stocks() -> list[dict[str, Any]]:
-    """获取融资净买入前10个股"""
-    try:
-        url_path = (
-            "/api/qt/clist/get?"
-            "pn=1&pz=10&po=1&np=1&fs=m:0+t:6&fid=f124"
-            "&fields=f2,f3,f12,f14,f124,f125"
-        )
-        resp = _try_endpoints(url_path)
-        if resp is None:
-            return []
-        data = resp.json()
-        result = []
-        if data.get("data") and data["data"].get("diff"):
-            for item in data["data"]["diff"]:
-                result.append({
-                    "code": str(item.get("f12", "")),
-                    "name": str(item.get("f14", "")),
-                    "change_pct": float(item.get("f3", 0) or 0),
-                    "margin_net_buy": float(item.get("f124", 0) or 0) / 1e4,  # 转万
-                    "margin_balance": float(item.get("f125", 0) or 0) / 1e8,   # 转亿
-                })
-        logger.info(f"融资买入前10: {len(result)} 条")
-        return result
-    except Exception as e:
-        logger.error(f"融资个股获取失败: {e}")
-        return []
 
 
 # ═══ 新浪资金流聚合（替代融资融券） ═══

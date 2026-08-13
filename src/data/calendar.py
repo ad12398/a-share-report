@@ -1,9 +1,11 @@
 """A 股交易日历 —— 判断今天是否为交易日"""
 
-from datetime import datetime, date
+from datetime import datetime, date, timezone, timedelta
 import logging
 
 logger = logging.getLogger("a-share-report")
+
+BEIJING_TZ = timezone(timedelta(hours=8))
 
 # A 股 2026 年节假日休市安排（需每年更新）
 # 来源：上交所/深交所公告
@@ -36,7 +38,8 @@ def is_trading_day(check_date: date | None = None) -> bool:
     2. 非法定节假日休市日
     """
     if check_date is None:
-        check_date = date.today()
+        # 用北京时间判断今天（服务器可能不在中国时区）
+        check_date = datetime.now(BEIJING_TZ).date()
 
     # 周末不交易
     if check_date.weekday() >= 5:  # 5=周六, 6=周日

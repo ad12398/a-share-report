@@ -1,10 +1,8 @@
 """DeepSeek API 客户端"""
 
-import json
 import logging
 import os
 import time
-from typing import Any
 
 import requests
 
@@ -119,8 +117,3 @@ def generate_report(
         logger.warning("所有重试均为空 content，使用 reasoning_content 兜底。")
         return last_reasoning
     raise ReportGenerationError("无法获取分析结果（空响应）")
-
-
-def format_data_for_prompt(data: dict[str, Any]) -> str:
-    """将结构化行情数据格式化为可注入 prompt 的文本"""
-    return json.dumps(data, ensure_ascii=False, indent=2, default=str)

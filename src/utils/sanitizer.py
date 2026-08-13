@@ -20,9 +20,10 @@ def sanitize_html(text: str) -> str:
         safe = re.sub(rf"<{tag}\b[^>]*>.*?</{tag}>", "", safe, flags=re.DOTALL | re.IGNORECASE)
         safe = re.sub(rf"<{tag}\b[^>]*/?>", "", safe, flags=re.IGNORECASE)
 
-    # 2. 移除 on* 事件属性
+    # 2. 移除 on* 事件属性（双引号/单引号/反引号/无引号四种形式）
     safe = re.sub(r'\bon\w+\s*=\s*"[^"]*"', "", safe, flags=re.IGNORECASE)
     safe = re.sub(r"\bon\w+\s*=\s*'[^']*'", "", safe, flags=re.IGNORECASE)
+    safe = re.sub(r"\bon\w+\s*=\s*`[^`]*`", "", safe, flags=re.IGNORECASE)
     safe = re.sub(r"\bon\w+\s*=\s*\S+", "", safe, flags=re.IGNORECASE)
 
     # 3. 移除 javascript: 伪协议
@@ -35,16 +36,3 @@ def sanitize_html(text: str) -> str:
     return safe
 
 
-def sanitize_dict(data: dict) -> dict:
-    """递归清洗字典中的所有字符串值"""
-    result = {}
-    for k, v in data.items():
-        if isinstance(v, str):
-            result[k] = sanitize_html(v)
-        elif isinstance(v, dict):
-            result[k] = sanitize_dict(v)
-        elif isinstance(v, list):
-            result[k] = [sanitize_dict(item) if isinstance(item, dict) else sanitize_html(str(item)) if isinstance(item, str) else item for item in v]
-        else:
-            result[k] = v
-    return result
