@@ -82,8 +82,11 @@ def save_summary(slot: str, date_str: str, data: dict[str, Any]):
     if SUMMARY_PATH.exists():
         try:
             existing = json.loads(SUMMARY_PATH.read_text(encoding="utf-8"))
-            # 只保留最近 30 天的 history
             history = existing.get("history", {})
+            # 只保留最近 30 天的 history（防止 last_slot.json 无限增长）
+            if len(history) > 30:
+                recent_dates = sorted(history.keys(), reverse=True)[:30]
+                history = {d: history[d] for d in recent_dates}
         except Exception:
             pass
 

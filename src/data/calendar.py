@@ -77,7 +77,7 @@ def get_current_slot() -> str | None:
     if hour == 11 and 25 <= minute <= 35:
         return "1130"
     # 午后更新 13:55–14:05
-    if hour == 14 and minute <= 5:
+    if (hour == 13 and minute >= 55) or (hour == 14 and minute <= 5):
         return "1400"
     # 收盘报告 14:55–15:05
     if (hour == 14 and minute >= 55) or (hour == 15 and minute <= 5):

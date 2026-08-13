@@ -36,7 +36,11 @@ def get_sha(path, branch="gh-pages"):
     except urllib.error.HTTPError as e:
         if e.code == 404:
             return None
-        raise
+        print(f"  WARN: get_sha {path} HTTP {e.code}")
+        return None
+    except Exception as e:
+        print(f"  WARN: get_sha {path} 失败: {e}")
+        return None
 
 
 def put_file_binary(path, content_b64, msg, branch="gh-pages"):
@@ -59,7 +63,10 @@ def put_file_binary(path, content_b64, msg, branch="gh-pages"):
             print(f"  OK: {path}")
             return True
     except urllib.error.HTTPError as e:
-        print(f"  FAIL: {path} -> {e.read().decode()}")
+        print(f"  FAIL: {path} -> HTTP {e.code}")
+        return False
+    except Exception as e:
+        print(f"  FAIL: {path} -> {e}")
         return False
 
 
@@ -82,7 +89,10 @@ def put_file(path, content_str, msg, branch="gh-pages"):
             print(f"  OK: {path}")
             return True
     except urllib.error.HTTPError as e:
-        print(f"  FAIL: {path} -> {e.read().decode()}")
+        print(f"  FAIL: {path} -> HTTP {e.code}")
+        return False
+    except Exception as e:
+        print(f"  FAIL: {path} -> {e}")
         return False
 
 
@@ -93,24 +103,15 @@ def deploy():
         print("  setx GH_TOKEN \"你的GitHub Token\"")
         sys.exit(1)
 
-    # 获取 slot
+    # 获取 slot：手动参数优先，否则复用 calendar 的精确时段窗口
+    # （错时手动触发不再生成错误时段的报告）
     slot = sys.argv[1] if len(sys.argv) > 1 else None
     if not slot:
-        now = datetime.now(BEIJING_TZ)
-        hour = now.hour
-        minute = now.minute
-        if hour < 9 or (hour == 9 and minute < 25):
-            slot = "0925"
-        elif hour < 10 or (hour == 10 and minute < 30):
-            slot = "1030"
-        elif hour < 11 or (hour == 11 and minute < 30):
-            slot = "1130"
-        elif hour < 14:
-            slot = "1400"
-        elif hour < 15:
-            slot = "1500"
-        else:
-            print("当前不在交易时段")
+        sys.path.insert(0, str(PROJECT_ROOT))
+        from src.data.calendar import get_current_slot
+        slot = get_current_slot()
+        if not slot:
+            print("当前不在报告时段内")
             sys.exit(0)
 
     print(f"[{datetime.now(BEIJING_TZ).strftime('%Y-%m-%d %H:%M:%S')}] 开始生成报告 slot={slot}")
@@ -121,7 +122,7 @@ def deploy():
     result = run(slot)
     if not result:
         print("报告生成失败（可能是非交易日）")
-        sys.exit(0)
+        sys.exit(1)
 
     print(f"报告已生成: {result}")
 
@@ -159,21 +160,31 @@ def deploy():
     if index_json.exists():
         files_to_push.append(("data/index.json", f"search index: {today} {slot}"))
 
+    failed_count = 0
     for path, msg in files_to_push:
         full_path = PROJECT_ROOT / path
         if not full_path.exists():
             print(f"  跳过(文件不存在): {path}")
             continue
         # .docx 是二进制文件，用 base64 编码
-        if path.endswith(".docx"):
-            with open(full_path, "rb") as f:
-                content = base64.b64encode(f.read()).decode("ascii")
-            put_file_binary(path, content, msg)
-        else:
-            with open(full_path, "r", encoding="utf-8") as f:
-                content = f.read()
-            put_file(path, content, msg)
+        try:
+            if path.endswith(".docx"):
+                with open(full_path, "rb") as f:
+                    content = base64.b64encode(f.read()).decode("ascii")
+                ok = put_file_binary(path, content, msg)
+            else:
+                with open(full_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                ok = put_file(path, content, msg)
+        except Exception as e:
+            print(f"  FAIL: {path} -> 读取文件异常: {e}")
+            ok = False
+        if not ok:
+            failed_count += 1
 
+    if failed_count:
+        print(f"部署完成，但 {failed_count} 个文件推送失败（gh-pages 可能不完整）")
+        sys.exit(1)
     print("部署完成!")
 
 

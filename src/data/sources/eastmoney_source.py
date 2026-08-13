@@ -119,9 +119,17 @@ def fetch_south_bound() -> dict[str, Any]:
         if not items:
             return {}
 
+        # API 可能返回多日数据，先筛出最大 TRADE_DATE，避免跨交易日混算
+        all_dates = [str(i.get("TRADE_DATE", "")) for i in items]
+        all_dates = [d for d in all_dates if d]
+        if not all_dates:
+            return {}
+        max_date = max(all_dates)
+        items = [i for i in items if str(i.get("TRADE_DATE", "")) == max_date]
+        trade_date = max_date[:10]
+
         south_sh_net = 0.0  # 港股通(沪)
         south_sz_net = 0.0  # 港股通(深)
-        trade_date = ""
 
         for item in items:
             mt_name = item.get("MUTUAL_TYPE_NAME", "")
@@ -137,8 +145,6 @@ def fetch_south_bound() -> dict[str, Any]:
                 south_sh_net = net_yi
             elif "深" in str(mt_name):
                 south_sz_net = net_yi
-            if not trade_date:
-                trade_date = str(item.get("TRADE_DATE", "")[:10])
 
         south_net = round(south_sh_net + south_sz_net, 2)
 

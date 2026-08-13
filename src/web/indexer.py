@@ -2,11 +2,13 @@
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger("a-share-report")
+
+BEIJING_TZ = timezone(timedelta(hours=8))
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 INDEX_PATH = PROJECT_ROOT / "data" / "index.json"
@@ -52,7 +54,7 @@ def add_report_to_index(
     from src.analysis.prompts import SLOT_LABEL
 
     index = load_index()
-    now = datetime.now()
+    now = datetime.now(BEIJING_TZ)
     date_str = now.strftime("%Y-%m-%d")
     time_str = now.strftime("%H:%M")
 
