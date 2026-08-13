@@ -40,6 +40,7 @@ def render_report(
     report_text: str,
     data: dict[str, Any],
     chart_data: dict[str, Any] | None = None,
+    movers_note: str = "",
 ) -> str:
     """渲染单份报告页面"""
     from src.analysis.prompts import SLOT_LABEL
@@ -65,6 +66,7 @@ def render_report(
         overview=data.get("overview", {}),
         chart_data=_safe_script_json(chart_data or {}),
         movers=data.get("movers", {}),
+        movers_note=movers_note,
         dragon_tiger=data.get("dragon_tiger", []),
         commodities=data.get("commodities", {}),
         north_flow=data.get("north_flow", {}),

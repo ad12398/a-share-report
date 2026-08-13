@@ -116,11 +116,21 @@ def run(slot: str):
     losers_list = data.get("movers", {}).get("losers", [])
 
     # 0925 盘前：板块/涨跌榜数据全零（未开盘），用昨日收盘数据替代
+    movers_note = ""
     if slot == "0925":
         yesterday_sectors = _load_yesterday_sectors(date_str)
         if yesterday_sectors:
             sector_list = yesterday_sectors
             logger.info(f"0925 使用昨日板块数据: {len(sector_list)} 条")
+
+        # 涨跌榜回填：盘前新浪返回全零或空，用昨日收盘涨跌榜
+        if _movers_invalid(gainers_list) or _movers_invalid(losers_list):
+            yest_movers = _load_yesterday_movers(date_str)
+            if yest_movers:
+                gainers_list = yest_movers.get("gainers", [])
+                losers_list = yest_movers.get("losers", [])
+                movers_note = "昨日收盘数据"
+                logger.info(f"0925 使用昨日涨跌榜: 涨{len(gainers_list)}/跌{len(losers_list)}")
 
     chart_data = {}
     if sector_list and isinstance(sector_list, list) and len(sector_list) > 0:
@@ -147,7 +157,7 @@ def run(slot: str):
         chart_data = None
         logger.warning("DEBUG: chart_data is None (no chart data)")
 
-    report_html = render_report(slot, safe_report, data, chart_data)
+    report_html = render_report(slot, safe_report, data, chart_data, movers_note)
     report_path = save_report_html(report_html, slot)
 
     # 6.5 生成 Word 文档
@@ -234,6 +244,51 @@ def _load_yesterday_sectors(today_str: str) -> list[dict[str, Any]] | None:
         elif isinstance(s, str):
             result.append({"name": s, "change_pct": 0})
     return result if result else None
+
+
+def _movers_invalid(movers: list[dict[str, Any]] | None) -> bool:
+    """判断涨跌榜数据是否无效（盘前新浪返回空列表或全零）"""
+    if not movers:
+        return True
+    non_zero = [m for m in movers if m.get("change_pct", 0) != 0]
+    return len(non_zero) == 0
+
+
+def _load_yesterday_movers(today_str: str) -> dict[str, Any] | None:
+    """从 last_slot.json 加载昨日收盘的涨跌榜（供 0925 盘前展示）。
+
+    优先取 1500 收盘时段，缺失则取最后可用时段。
+    """
+    import json
+    from datetime import datetime as _dt
+
+    summary_path = Path(__file__).parent.parent / "data" / "last_slot.json"
+    if not summary_path.exists():
+        return None
+
+    try:
+        d = _dt.strptime(today_str, "%Y-%m-%d")
+        yesterday = (d - timedelta(days=1)).strftime("%Y-%m-%d")
+    except ValueError:
+        return None
+
+    try:
+        payload = json.loads(summary_path.read_text(encoding="utf-8"))
+        history = payload.get("history", {})
+        yest_data = history.get(yesterday, {})
+    except Exception:
+        return None
+
+    if not yest_data:
+        return None
+
+    # 优先 1500 → 最后可用时段
+    entry = yest_data.get("1500") or list(yest_data.values())[-1]
+    movers = entry.get("movers", {})
+    if not movers or not (movers.get("gainers") or movers.get("losers")):
+        return None
+
+    return movers
 
 
 def main():

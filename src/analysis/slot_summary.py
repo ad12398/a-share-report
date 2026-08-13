@@ -43,6 +43,18 @@ def save_summary(slot: str, date_str: str, data: dict[str, Any]):
         if g.get("change_pct", 0) >= 9.5 and g.get("change_pct", 0) <= 100
     ]
 
+    # 保存完整涨跌榜（供 0925 盘前回填昨日收盘数据）
+    movers_summary = {
+        "gainers": [
+            {"name": g.get("name", ""), "change_pct": g.get("change_pct", 0)}
+            for g in gainers[:10]
+        ],
+        "losers": [
+            {"name": l.get("name", ""), "change_pct": l.get("change_pct", 0)}
+            for l in data.get("movers", {}).get("losers", [])[:10]
+        ],
+    }
+
     entry = {
         "slot": slot,
         "date": date_str,
@@ -62,6 +74,7 @@ def save_summary(slot: str, date_str: str, data: dict[str, Any]):
             "confidence": (data.get("external_consensus", {}) or {}).get("consensus_confidence", ""),
         },
         "limit_up_codes": limit_up_codes,
+        "movers": movers_summary,
     }
 
     # 读取已有文件（保留 history）

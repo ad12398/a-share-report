@@ -52,13 +52,13 @@
 
   <!-- 涨幅榜图表（主力，数据稳定） -->
   <div class="chart-container">
-    <div class="chart-title">🔥 今日涨幅榜 TOP 10</div>
+    <div class="chart-title">🔥 今日涨幅榜 TOP 10{% if movers_note %} <span style="color:var(--accent-orange);font-size:12px;">（{{ movers_note }}）</span>{% endif %}</div>
     <div class="chart-box" id="gainers-chart" style="height:380px;"></div>
   </div>
 
   <!-- 跌幅榜图表 -->
   <div class="chart-container" id="losers-container">
-    <div class="chart-title">📉 今日跌幅榜 TOP 10</div>
+    <div class="chart-title">📉 今日跌幅榜 TOP 10{% if movers_note %} <span style="color:var(--accent-orange);font-size:12px;">（{{ movers_note }}）</span>{% endif %}</div>
     <div class="chart-box" id="losers-chart"></div>
   </div>
 
