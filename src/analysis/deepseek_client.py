@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import time
 from typing import Any
 
 import requests
@@ -12,6 +13,11 @@ logger = logging.getLogger("a-share-report")
 DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
 MAX_RETRIES = 3
 TIMEOUT = 60
+RETRY_BACKOFF_SECONDS = 5  # 重试退避间隔
+
+
+class ReportGenerationError(Exception):
+    """报告生成失败（重试后仍失败），调用方应写错误页而非发布错误文案当报告"""
 
 
 def get_api_key() -> str:
@@ -82,6 +88,7 @@ def generate_report(
                 if attempt == MAX_RETRIES - 1:
                     logger.warning("所有重试均为空 content，使用 reasoning_content 兜底。")
                     return reasoning  # 兜底：思考内容也比空报告强
+                time.sleep(RETRY_BACKOFF_SECONDS)
                 continue  # 重试
 
             logger.info(
@@ -94,21 +101,24 @@ def generate_report(
         except requests.exceptions.Timeout:
             logger.warning(f"DeepSeek API 超时 (attempt {attempt + 1}/{MAX_RETRIES})")
             if attempt == MAX_RETRIES - 1:
-                return "⚠️ API 调用超时，请稍后重试。"
+                raise ReportGenerationError(f"API 连续 {MAX_RETRIES} 次超时") from None
+            time.sleep(RETRY_BACKOFF_SECONDS * (attempt + 1))
         except requests.exceptions.HTTPError as e:
             logger.error(f"DeepSeek API HTTP 错误: {e}")
             if attempt == MAX_RETRIES - 1:
-                return f"⚠️ API 调用失败: {e}"
+                raise ReportGenerationError(f"API HTTP 错误: {e}") from None
+            time.sleep(RETRY_BACKOFF_SECONDS * (attempt + 1))
         except Exception as e:
             logger.error(f"DeepSeek API 未知错误: {e}")
             if attempt == MAX_RETRIES - 1:
-                return f"⚠️ API 调用异常: {e}"
+                raise ReportGenerationError(f"API 未知错误: {e}") from None
+            time.sleep(RETRY_BACKOFF_SECONDS * (attempt + 1))
 
     # 所有重试都因空 content 而失败
     if last_reasoning.strip():
         logger.warning("所有重试均为空 content，使用 reasoning_content 兜底。")
         return last_reasoning
-    return "⚠️ 无法获取分析结果。"
+    raise ReportGenerationError("无法获取分析结果（空响应）")
 
 
 def format_data_for_prompt(data: dict[str, Any]) -> str:

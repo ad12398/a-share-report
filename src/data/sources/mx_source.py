@@ -95,16 +95,18 @@ def _parse_north_turnover(raw: dict[str, Any]) -> dict[str, Any]:
             label = name_map.get(key, key)
             clean_label = label.split("(")[0] if "(" in label else label
 
-            if "全部A股" in clean_label or "北向" in clean_label or "成交" in clean_label:
-                if "total_amount" not in result or result["total_amount"] == 0:
-                    amt = _parse_amount(val)
-                    # 用最大值为 total（summary 表的总额最大）
-                    if amt > (result.get("total_amount", 0) or 0):
-                        result["total_amount"] = amt
-            elif "沪股通" in clean_label:
+            # 顺序很重要：先精确匹配沪/深股通（它们标签里也含"成交"），
+            # 再匹配"北向/全部A股"总额行。泛"成交"不再匹配，
+            # 避免"两市成交额"被误当北向成交。
+            if "沪股通" in clean_label:
                 result["sh_amount"] = _parse_amount(val)
             elif "深股通" in clean_label:
                 result["sz_amount"] = _parse_amount(val)
+            elif "北向" in clean_label or "全部A股" in clean_label:
+                amt = _parse_amount(val)
+                # 多个总额行时取最大值（summary 表的总额最大）
+                if amt > (result.get("total_amount", 0) or 0):
+                    result["total_amount"] = amt
 
         if "total_amount" not in result:
             sh = result.get("sh_amount", 0) or 0

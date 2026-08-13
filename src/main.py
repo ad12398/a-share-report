@@ -15,7 +15,7 @@ BEIJING_TZ = timezone(timedelta(hours=8))
 from src.data.calendar import is_trading_day
 from src.data.collector import collect_all_data
 from src.data.cleaner import clean_data_for_ai
-from src.analysis.deepseek_client import generate_report, format_data_for_prompt
+from src.analysis.deepseek_client import generate_report, format_data_for_prompt, ReportGenerationError
 from src.analysis.prompts import (
     SLOT_PROMPT_MAP, SLOT_LABEL, SYSTEM_PROMPT,
 )
@@ -96,9 +96,13 @@ def run(slot: str):
         return None
     user_prompt = prompt_builder(data, comparison_text=comparison)
 
-    # 4. 调用 DeepSeek API
+    # 4. 调用 DeepSeek API（失败时写错误页，不发布错误文案当报告）
     logger.info("Step 3/5: 调用 DeepSeek 生成报告...")
-    report_text = generate_report(SYSTEM_PROMPT, user_prompt)
+    try:
+        report_text = generate_report(SYSTEM_PROMPT, user_prompt)
+    except ReportGenerationError as e:
+        logger.error(f"DeepSeek 报告生成失败: {e}")
+        return _save_error_report(slot, str(e), data)
 
     # 5. HTML 安全转义
     safe_report = sanitize_html(report_text)
@@ -124,6 +128,11 @@ def run(slot: str):
                 gainers_list = yest_movers.get("gainers", [])
                 losers_list = yest_movers.get("losers", [])
                 movers_note = "昨日收盘数据"
+                # 同步更新 data["movers"]，让页面表格与图表一致
+                data["movers"] = {
+                    "gainers": gainers_list,
+                    "losers": losers_list,
+                }
                 logger.info(f"0925 使用昨日涨跌榜: 涨{len(gainers_list)}/跌{len(losers_list)}")
 
     chart_data = {}
@@ -283,6 +292,26 @@ def _load_yesterday_movers(today_str: str) -> dict[str, Any] | None:
         return None
 
     return movers
+
+
+def _save_error_report(slot: str, error_msg: str, data: dict[str, Any]) -> str:
+    """DeepSeek 生成失败时保存错误页。
+
+    与正常报告的区别（避免污染）：
+    - 不生成 docx
+    - 不入搜索索引
+    - 不保存时段摘要（防止污染统计面板和边际对比）
+    """
+    error_text = (
+        "<p>⚠️ 本时段 AI 分析生成失败。</p>"
+        f"<p>原因：{error_msg}</p>"
+        "<p>行情数据已正常采集，可在下方图表中查看。其它时段报告请访问归档页。</p>"
+    )
+    safe_report = sanitize_html(error_text)
+    report_html = render_report(slot, safe_report, data, None)
+    report_path = save_report_html(report_html, slot)
+    logger.info(f"错误页已保存: {report_path}")
+    return report_path
 
 
 def main():

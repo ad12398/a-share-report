@@ -38,19 +38,19 @@ def save_summary(slot: str, date_str: str, data: dict[str, Any]):
     # 提取涨停股代码（用于次日计算溢价率，排除新股/涨幅>100%的异常值）
     gainers = data.get("movers", {}).get("gainers", [])
     limit_up_codes = [
-        {"code": g["code"], "name": g["name"]}
+        {"code": g.get("code", ""), "name": g.get("name", "")}
         for g in gainers
-        if g.get("change_pct", 0) >= 9.5 and g.get("change_pct", 0) <= 100
+        if g.get("change_pct", 0) >= 9.5 and g.get("change_pct", 0) <= 100 and g.get("code")
     ]
 
     # 保存完整涨跌榜（供 0925 盘前回填昨日收盘数据）
     movers_summary = {
         "gainers": [
-            {"name": g.get("name", ""), "change_pct": g.get("change_pct", 0)}
+            {"code": g.get("code", ""), "name": g.get("name", ""), "change_pct": g.get("change_pct", 0)}
             for g in gainers[:10]
         ],
         "losers": [
-            {"name": l.get("name", ""), "change_pct": l.get("change_pct", 0)}
+            {"code": l.get("code", ""), "name": l.get("name", ""), "change_pct": l.get("change_pct", 0)}
             for l in data.get("movers", {}).get("losers", [])[:10]
         ],
     }
