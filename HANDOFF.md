@@ -1,13 +1,13 @@
 # HANDOFF — A 股量化报告系统
 
-## 🚨 新会话速览（2026-08-06 收盘后状态）
+## 🚨 新会话速览（2026-08-13 收盘后状态）
 
 ### 系统运行中
 - 5 时段报告正常生成，Windows Task Scheduler 自动触发
 - 服务器：阿里云 ECS `8.148.233.129`，代码在 `C:\a-share-report\`
-- 网站：`https://ad12398.github.io/a-share-report/reports/`
+- 网站：`https://ad12398.github.io/a-share-report/reports/`（浅色主题已上线）
 - 本地：`c:\Users\Krug2\langchain_demo\a-share-report\`，Python 用 `venv\Scripts\python.exe`（3.12.4）
-- **服务器更新方式**：
+- **服务器更新方式**（本地网络经常连不上 GitHub，优先从服务器操作 git）：
   ```cmd
   cd C:\a-share-report && git fetch origin main && git reset --hard origin/main
   python -B -c "import pathlib, shutil; [shutil.rmtree(d, ignore_errors=True) for d in pathlib.Path('src').rglob('__pycache__')]"
@@ -16,12 +16,13 @@
 ### 🚨 当前阻塞（用户需手动执行）
 1. **注册 Tushare 学生认证** → 获取融资融券 API（`margin` 接口，学生 2000 分免费）——最高优先级
 2. **注册同花顺 quantapi** → `quantapi.10jqka.com.cn`（备用，可能收费）
-3. **CPI/PPI/M2 更新** → `data/macro_data.json`，等 8/10-15 统计局发布 7 月数据
+3. **M2/社融 7 月数据更新** → `data/macro_data.json`（CPI/PPI 已于 8-9 发布并更新完毕，M2/社融等央行 8 月中旬发布，截至 8-13 尚未发布）
 
 ### 上次离开时在做
-- 刚完成网站浅色主题换肤（TradingView 风格），热力图可读性问题已修复
-- 冒烟测试全部通过（13 模块导入、4 数据源、共识引擎、5 时段 Prompt、4 模板）
-- 服务器代码已推送到 `cfa830c`，明天 9:25 盘前自动生效
+- 刚完成全项目代码审查 + 修复：严重 8 项 + 中等 10 项全部修复完毕
+- 服务器代码已推送到 `baec1ec`，明天 9:25 起生效
+- 待验证：0925 涨跌榜回填、外资占比真实值、恒生指数进入共识引擎
+- 剩余：轻微问题 14 项（死代码/残留/卫生，不影响正确性，稍后清理）
 - 下一步可选：龙虎榜营业部明细 或 钉钉/微信推送
 
 ---
@@ -155,6 +156,55 @@
 
 ---
 
+## 2026-08-13 今日完成：全面代码审查 + 修复
+
+### 背景
+上午发现 1130/1400/1500 三份报告 AI 内容空白。查日志发现 DeepSeek API 返回 `output=4096` 但 content 为空——模型进入"思考模式"，全部 token 进了 `reasoning_content` 字段。修复后 1500 补跑成功。之后启动全项目审查 agent，发现 8 项严重 + 10 项中等 + 15 项轻微问题，严重和中等全部修复。
+
+### 严重问题修复（1-8）
+1. **离岸人民币字段错位** — `linked_markets_source.py` 原来用买入价 vs 今开算涨跌幅。实测新浪 fx_ 格式：`[0]时间 [1]买入 [2]卖出 [3]昨收 [5]今开 [6]最高 [7]最低 [8]最新价 [9]名称`。改为 `[8]最新价/[3]昨收`
+2. **在岸人民币买卖价差当涨跌幅** — `commodities_source.py` 同族错误（[1]买入 vs [2]卖出=点差，恒为负→永远假"升值"）。同样改 [8]/[3]
+3. **恒生科技方向算反 + 恒生指数永远缺失** — rt_hk 格式 `[2]最新 [3]今开(非昨收) [7]涨跌额 [8]涨跌幅%`，原代码用 [2]/[3] 算反方向。改为直接取官方 [8]。int_hangseng 是 4 字段短格式 `[0]名称 [1]最新 [2]涨跌额 [3]涨跌幅%`，原 `len<9` 检查使其永远 None。改为短格式解析
+4. **外资占比恒为 0** — `collector.py` 用 overview 的 total_amount（源数据恒 0）算 participation，而 main.py 在清洗后才注入。修复：collector 采集阶段直接用 index_data 计算两市成交额（amount 单位万元÷1e4=亿），main.py 删除重复计算
+5. **富时A50 解析必然失败** — collector 的 `_fetch_overnight_global` 把 vals[1]（时间串/非价格）当价格。修复：复用 `linked_markets_source._parse_a50`，裸 except 补 debug 日志
+6. **commodities 无异常兜底** — 全链路唯一无 try/except 的采集模块。修复：`_parse_futures` + `fetch_all_commodities` 逐项兜底，单项失败不影响其它项和主流程
+7. **涨停溢价率用今开价** — A 股格式 `[0]名称 [1]今开 [2]昨收 [3]最新价`，原代码用 [1] 当价格。改为 [3]
+8. **"成交额暂缺"标注恒真** — 清洗层在 total_amount 注入前检查，必然加"暂缺"note，与注入后的真实数字自相矛盾。修复 4 连带解决（collector 提前注入）
+
+### 中等问题修复（9-18）
+9. **mx_source 标签匹配顺序** — 泛"成交"匹配吞掉"沪股通成交额/深股通成交额"，且"两市成交额"可能错配为北向成交。修复：先精确匹配沪/深股通，再匹配北向/全部A股总额，泛"成交"不再匹配
+10. **DeepSeek 失败时错误文案当正式报告** — 新增 `ReportGenerationError`，3 次重试+指数退避（5s×N），main 捕获后写错误页（不入索引/不存摘要/不生成 docx）
+11. **南向跨交易日混算** — API 可能返回多日数据。修复：先筛最大 TRADE_DATE 再聚合
+12. **deploy.py 推送异常未处理** — get_sha/put_file 全异常捕获返回 False，推送循环统计失败数+非零退出码（调度器可感知 gh-pages 半新半旧状态）
+13. **deploy 时段窗口粗糙** — 错时手动触发会生成错误时段报告。修复：复用 `calendar.get_current_slot()` 精确窗口
+14. **时段摘要 KeyError 静默断链** — limit_up_codes 用 `g["code"]` 直接下标。改 `.get()` 并过滤空 code；history 裁剪至最近 30 天（之前注释有代码无）
+15. **indexer 用本地时间** — 改 BEIJING_TZ
+16. **calendar 1400 窗口** — 补上 13:55-13:59（与注释一致）
+17. **0925 涨跌榜只回填图表不回填表格** — 回填时同步更新 `data["movers"]`，movers_summary 保存 code 字段
+18. **隔夜数据静默失败** — `_fetch_overnight_global` 裸 except 补 debug 日志
+
+### 其他今日改动
+- **0925 盘前简报结构强化** — prompt 强制 `<h3>一、隔夜传导</h3>` + `<h3>二、今日关注</h3>` 分节输出，AI 不再混为一段
+- **0925 涨跌榜回填** — 盘前新浪返回全零/空时，从 last_slot.json 回填昨日收盘涨跌榜，标题标注橙色"（昨日收盘数据）"
+- **板块轮动热力图 → 表格** — ECharts 热力图反复调不好（颜色糊/溢出），改为纯 HTML 表格：每格内嵌条形图（红涨绿跌）、5日累计列排序、行底色 5 档离散色、top 18 板块
+- **docx 下载链接修复** — deploy.py 原来 `docx_files[0]` 永远取 09:25 的文件，改为按"XX时XX分"匹配当前时段
+- **CSS 从未推送 gh-pages 修复** — deploy.py files_to_push 加入 `assets/css/dashboard.css`
+- **echarts dark 主题残留** — report.html `echarts.init(el, 'dark')` → `init(el)`，涨跌标签 13px bold
+- **宏观数据更新** — CPI/PPI 7 月数据（8-9 发布）：CPI 同比+0.5%/环比-0.1%/核心+0.9%，PPI 同比+3.5%/环比-0.7%
+
+### 踩坑记录（本次新增）
+- **DeepSeek 思考模式** — 模型可能把全部 token 输出到 `reasoning_content`，content 为空。特征：output=4096（撞 max_tokens）但页面空白。修复：检测空 content+非空 reasoning 时重试，最终兜底用 reasoning_content。**日志现在会打印 content/reasoning 字数**
+- **部署失败让调度器感知** — 之前 deploy 失败也 exit 0，日志里"部署完成"实际半新半旧。现在失败 exit 1，Windows Task Scheduler 能记录失败状态
+- **本地网络间歇性断 GitHub** — 本次会话多次 push 失败。工作流：本地改代码 → 本地 commit → 复制文件到服务器 → 服务器 commit+push → 本地 `git fetch + reset --hard origin/main`
+- **实测新浪字段格式**（都验证过，改代码前先 curl 实测）：
+  - fx_susdcnh/fx_susdcny: `[3]昨收 [8]最新价`
+  - rt_hkHSTECH: `[2]最新 [3]今开 [7]涨跌额 [8]涨跌幅%`（[3]不是昨收！）
+  - int_hangseng: 4 字段短格式 `[0]名称 [1]最新 [2]涨跌额 [3]涨跌幅%`
+  - nf_ 系列两种格式：带名称 `[0]名称 [1]时间 [2]最新价`；不带名称 `[0]最新价`
+  - A 股 hq_str: `[0]名称 [1]今开 [2]昨收 [3]最新价`
+
+---
+
 ## 当前数据源矩阵
 
 | 数据 | 来源 | 函数 | 可靠性 | 备注 |
@@ -178,7 +228,8 @@
 ### 短期
 - [ ] **注册 Tushare 学生认证**（获取 2000 积分 → 免费调 `margin` 融资融券接口）——最高优先级
 - [ ] **注册同花顺 quantapi**（`quantapi.10jqka.com.cn`，备用路径，可能收费）
-- [ ] `macro_data.json` CPI/PPI/M2 更新（预计 8 月 10-15 日统计局发布）
+- [ ] `macro_data.json` M2/社融 7 月数据更新（CPI/PPI 已完成 8-13，M2 等央行 8 月中旬发布）
+- [ ] **轻微问题清理（14 项）**：死模块 indicators.py + requirements 冗余依赖、hexin 废弃残留、DEBUG 日志、未使用导入、北交所 920xxx 前缀错误（溢价率漏北交所）、run_report.bat 硬编码路径等
 
 ### 中期
 - [ ] **龙虎榜营业部明细深度分析** — 新浪 JSONP API 已通，能看游资/机构具体动向，HANDOFF 标记"待单独开发"
