@@ -81,16 +81,16 @@ def fetch_all_commodities() -> dict[str, Any]:
             if item:
                 result[name] = item
 
-    # 汇率
+    # 汇率（实测格式: [0]时间 [1]买入 [2]卖出 [3]昨收 [5]今开 [6]最高 [7]最低 [8]最新价 [9]名称）
     resp = _safe_get("http://hq.sinajs.cn/list=fx_susdcny")
     if resp:
         resp.encoding = "gbk"
         m = re.search(r'"(.+)"', resp.text)
         if m:
             vals = m.group(1).split(",")
-            if len(vals) >= 3:
-                price = float(vals[1] or 0)
-                prev = float(vals[2] or 0)
+            if len(vals) >= 9:
+                price = float(vals[8] or 0)       # 最新价
+                prev = float(vals[3] or 0)        # 昨收
                 pct = round((price - prev) / prev * 100, 2) if prev else 0
                 direction = "贬值" if pct > 0 else ("升值" if pct < 0 else "持平")
                 result["在岸人民币"] = {

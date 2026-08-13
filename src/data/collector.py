@@ -46,6 +46,17 @@ def collect_all_data(slot: str) -> dict[str, Any]:
     if index_backup:
         index_data = validate_index_quotes(index_data, index_backup)
 
+    # 两市成交额（亿）：上证+深证指数成交额（amount 单位万元），
+    # 在采集阶段就计算好，供外资参与度和 overview 使用
+    total_market_amount = 0.0
+    for code in ("000001", "399001"):
+        info = index_data.get(code, {})
+        if isinstance(info, dict):
+            total_market_amount += float(info.get("amount", 0) or 0) / 1e4  # 万元 → 亿
+    total_market_amount = round(total_market_amount, 0)
+    if total_market_amount > 0:
+        overview_data["total_amount"] = total_market_amount
+
     # 盘中及收盘数据：外资监测 + 资金流（新浪，替代两融）+ 龙虎榜 + 南向
     north_data: dict = {}
     dragon_data: list = []
@@ -61,7 +72,6 @@ def collect_all_data(slot: str) -> dict[str, Any]:
             sh_ratio = round(sh_turnover / total_turnover * 100, 1) if total_turnover > 0 else 0
 
             # 外资参与度 = 北向成交总额 / 两市成交额
-            total_market_amount = overview_data.get("total_amount", 0) or 0
             participation = round(total_turnover / total_market_amount * 100, 1) if total_market_amount > 0 else 0
 
             north_data = {

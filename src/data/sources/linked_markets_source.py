@@ -46,16 +46,15 @@ def _fetch_sina(symbol: str, timeout: int = 6) -> dict[str, Any] | None:
 
 def _parse_hstech(data_str: str) -> dict[str, Any] | None:
     """解析恒生科技指数
-    字段: [0]代码 [1]名称 [2]当前价 [3]昨收 [4]开盘 [5]最低 [6]最高 [7]涨跌额 [8]涨跌幅% ...
-    返回包含 name, price, change_pct, note 等字段
+    实测格式: [0]代码 [1]名称 [2]最新价 [3]今开 [4]最高 [5]最低 [6]? [7]涨跌额 [8]涨跌幅% ...
+    注意: [3] 是今开不是昨收，涨跌幅必须直接用 [8] 官方值
     """
     fields = data_str.split(",")
     if len(fields) < 9:
         return None
     try:
         price = float(fields[2] or 0)
-        prev_close = float(fields[3] or 0)
-        change_pct = round((price - prev_close) / prev_close * 100, 2) if prev_close else 0
+        change_pct = float(fields[8] or 0)  # 官方涨跌幅，勿用今开计算
         return {
             "name": "恒生科技",
             "price": price,
@@ -68,14 +67,14 @@ def _parse_hstech(data_str: str) -> dict[str, Any] | None:
 
 def _parse_cnh(data_str: str) -> dict[str, Any] | None:
     """解析离岸人民币 USD/CNH
-    字段: [0]时间 [1]最新价 [2]买入 [3]卖出 [4]? [5]昨收 [6]开盘 [7]最高 [8]最低 [9]名称 ...
+    实测格式: [0]时间 [1]买入 [2]卖出 [3]昨收 [4]? [5]今开 [6]最高 [7]最低 [8]最新价 [9]名称 [10]? [11]涨跌额
     """
     fields = data_str.split(",")
     if len(fields) < 9:
         return None
     try:
-        price = float(fields[1] or 0)
-        prev_close = float(fields[5] or 0)
+        price = float(fields[8] or 0)        # 最新价
+        prev_close = float(fields[3] or 0)   # 昨收
         change_pct = round((price - prev_close) / prev_close * 100, 2) if prev_close else 0
         # 离岸人民币：涨 = 人民币贬值，跌 = 人民币升值
         direction = "贬值" if change_pct > 0 else "升值" if change_pct < 0 else ""
@@ -115,15 +114,14 @@ def _parse_a50(data_str: str) -> dict[str, Any] | None:
 
 def _parse_hsi(data_str: str) -> dict[str, Any] | None:
     """解析恒生指数
-    字段: [0]代码 [1]名称 [2]当前价 [3]昨收 [4]开盘 [5]最低 [6]最高 [7]涨跌额 [8]涨跌幅% ...
+    实测格式（4字段短格式）: [0]名称 [1]最新价 [2]涨跌额 [3]涨跌幅%
     """
     fields = data_str.split(",")
-    if len(fields) < 9:
+    if len(fields) < 4:
         return None
     try:
-        price = float(fields[2] or 0)
-        prev_close = float(fields[3] or 0)
-        change_pct = round((price - prev_close) / prev_close * 100, 2) if prev_close else 0
+        price = float(fields[1] or 0)
+        change_pct = float(fields[3] or 0)  # 官方涨跌幅
         return {
             "name": "恒生指数",
             "price": price,
