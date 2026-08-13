@@ -140,10 +140,10 @@ def collect_all_data(slot: str) -> dict[str, Any]:
 
 
 def _fetch_overnight_global() -> dict[str, Any]:
-    """获取隔夜全球市场数据（新浪 + 东方财富，无需 akshare）"""
+    """获取隔夜全球市场数据（新浪）"""
     result = {}
 
-    # 纳斯达克指数（新浪）
+    # 纳斯达克指数（新浪 gb_ 格式: [0]名称 [1]价格 [2]涨跌幅% ...）
     try:
         url = "http://hq.sinajs.cn/list=gb_ixic"
         resp = requests.get(url, headers={"Referer": "https://finance.sina.com.cn"}, timeout=15)
@@ -151,29 +151,28 @@ def _fetch_overnight_global() -> dict[str, Any]:
         m = re.search(r'="(.+)"', resp.text)
         if m:
             vals = m.group(1).split(",")
-            if len(vals) >= 2:
+            if len(vals) >= 3:
                 result["us"] = {
                     "index": "纳斯达克",
                     "price": float(vals[1] or 0),
-                    "change_pct": float(vals[2] or 0) if len(vals) > 2 else 0,
+                    "change_pct": float(vals[2] or 0),
                 }
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"隔夜美股获取失败: {e}")
 
-    # 富时A50期货
+    # 富时A50期货（复用 linked_markets 的解析，格式: [0]最新价 [2]涨跌幅% [3]昨收）
     try:
         url = "http://hq.sinajs.cn/list=nf_A50"
         resp = requests.get(url, headers={"Referer": "https://finance.sina.com.cn"}, timeout=15)
         resp.encoding = "gbk"
         m = re.search(r'="(.+)"', resp.text)
         if m:
-            vals = m.group(1).split(",")
-            if len(vals) >= 2:
-                result["a50"] = {
-                    "price": float(vals[1] or 0),
-                    "change_pct": float(vals[2] or 0) if len(vals) > 2 else 0,
-                }
-    except Exception:
-        pass
+            a50 = linked_markets_source._parse_a50(m.group(1))
+            if a50:
+                result["a50"] = a50
+            else:
+                logger.debug("nf_A50 数据为空（非新加坡交易时段）")
+    except Exception as e:
+        logger.debug(f"隔夜A50获取失败: {e}")
 
     return result

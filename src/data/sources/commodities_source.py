@@ -30,14 +30,18 @@ def _safe_get(url: str, timeout: int = 15, max_retries: int = 3) -> requests.Res
 
 
 def _parse_futures(text: str, price_idx: int, prev_idx: int, name: str, unit: str) -> dict[str, Any] | None:
-    m = re.search(r'"(.+)"', text)
-    if not m: return None
-    vals = m.group(1).split(",")
-    if len(vals) <= max(price_idx, prev_idx): return None
-    price = float(vals[price_idx] or 0)
-    prev = float(vals[prev_idx] or 0)
-    change_pct = round((price - prev) / prev * 100, 2) if prev else 0
-    return {"name": name, "price": price, "change_pct": change_pct, "unit": unit}
+    try:
+        m = re.search(r'"(.+)"', text)
+        if not m: return None
+        vals = m.group(1).split(",")
+        if len(vals) <= max(price_idx, prev_idx): return None
+        price = float(vals[price_idx] or 0)
+        prev = float(vals[prev_idx] or 0)
+        change_pct = round((price - prev) / prev * 100, 2) if prev else 0
+        return {"name": name, "price": price, "change_pct": change_pct, "unit": unit}
+    except (ValueError, ZeroDivisionError) as e:
+        logger.warning(f"期货 {name} 解析失败: {e}")
+        return None
 
 
 def _parse_global_index(text: str) -> dict[str, Any] | None:
@@ -65,7 +69,9 @@ def _parse_global_index(text: str) -> dict[str, Any] | None:
 # ─── 主入口 ──────────────────────────────────────────────
 
 def fetch_all_commodities() -> dict[str, Any]:
+    """采集商品/汇率/全球指数。任何单项失败都不影响其它项和主流程。"""
     result = {}
+
     # 期货商品: (code, price_idx, prev_idx, name, unit)
     futures = [
         ("hf_XAU", 0, 1, "伦敦金", "美元/盎司"),
@@ -74,37 +80,46 @@ def fetch_all_commodities() -> dict[str, Any]:
         ("hf_CAD", 0, 7, "LME铜", "美元/吨"),
     ]
     for code, pi, pv, name, unit in futures:
-        resp = _safe_get(f"http://hq.sinajs.cn/list={code}")
-        if resp:
-            resp.encoding = "gbk"
-            item = _parse_futures(resp.text, pi, pv, name, unit)
-            if item:
-                result[name] = item
+        try:
+            resp = _safe_get(f"http://hq.sinajs.cn/list={code}")
+            if resp:
+                resp.encoding = "gbk"
+                item = _parse_futures(resp.text, pi, pv, name, unit)
+                if item:
+                    result[name] = item
+        except Exception as e:
+            logger.warning(f"商品 {name} 采集失败: {e}")
 
     # 汇率（实测格式: [0]时间 [1]买入 [2]卖出 [3]昨收 [5]今开 [6]最高 [7]最低 [8]最新价 [9]名称）
-    resp = _safe_get("http://hq.sinajs.cn/list=fx_susdcny")
-    if resp:
-        resp.encoding = "gbk"
-        m = re.search(r'"(.+)"', resp.text)
-        if m:
-            vals = m.group(1).split(",")
-            if len(vals) >= 9:
-                price = float(vals[8] or 0)       # 最新价
-                prev = float(vals[3] or 0)        # 昨收
-                pct = round((price - prev) / prev * 100, 2) if prev else 0
-                direction = "贬值" if pct > 0 else ("升值" if pct < 0 else "持平")
-                result["在岸人民币"] = {
-                    "name": "在岸人民币", "price": price, "change_pct": pct,
-                    "unit": "USD/CNY", "direction": direction,
-                }
+    try:
+        resp = _safe_get("http://hq.sinajs.cn/list=fx_susdcny")
+        if resp:
+            resp.encoding = "gbk"
+            m = re.search(r'"(.+)"', resp.text)
+            if m:
+                vals = m.group(1).split(",")
+                if len(vals) >= 9:
+                    price = float(vals[8] or 0)       # 最新价
+                    prev = float(vals[3] or 0)        # 昨收
+                    pct = round((price - prev) / prev * 100, 2) if prev else 0
+                    direction = "贬值" if pct > 0 else ("升值" if pct < 0 else "持平")
+                    result["在岸人民币"] = {
+                        "name": "在岸人民币", "price": price, "change_pct": pct,
+                        "unit": "USD/CNY", "direction": direction,
+                    }
+    except Exception as e:
+        logger.warning(f"在岸人民币采集失败: {e}")
 
     # 美股三大指数
     for code in ("gb_dji", "gb_inx", "gb_ixic"):
-        resp = _safe_get(f"http://hq.sinajs.cn/list={code}")
-        if resp:
-            resp.encoding = "gbk"
-            item = _parse_global_index(resp.text)
-            if item:
-                result[item["name"]] = item
+        try:
+            resp = _safe_get(f"http://hq.sinajs.cn/list={code}")
+            if resp:
+                resp.encoding = "gbk"
+                item = _parse_global_index(resp.text)
+                if item:
+                    result[item["name"]] = item
+        except Exception as e:
+            logger.warning(f"全球指数 {code} 采集失败: {e}")
 
     return result

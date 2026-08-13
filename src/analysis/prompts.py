@@ -396,8 +396,9 @@ def _calc_limit_up_premium(codes: list[dict[str, str]]) -> float | None:
                 if len(vals) < 4:
                     continue
                 try:
-                    price = float(vals[1] or 0)
-                    prev_close = float(vals[2] or 0)
+                    # A股格式: [0]名称 [1]今开 [2]昨收 [3]最新价
+                    price = float(vals[3] or 0)        # 最新价（之前误用今开）
+                    prev_close = float(vals[2] or 0)   # 昨收
                     if prev_close > 0:
                         change = (price - prev_close) / prev_close * 100
                         if abs(change) < 20:  # 过滤异常值（新股/复牌暴涨等）
