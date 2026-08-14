@@ -142,7 +142,7 @@
 
   <!-- 行业板块图表 -->
   <div class="chart-container" id="sector-container">
-    <div class="chart-title">📈 行业板块涨跌幅 TOP 20</div>
+    <div class="chart-title">📈 行业板块涨跌幅 TOP 20{% if sector_note %} <span style="color:var(--accent-orange);font-size:12px;">（{{ sector_note }}）</span>{% endif %}</div>
     <div class="chart-box" id="sector-chart"></div>
     <div class="chart-empty" id="sector-empty" style="display:none;color:var(--text-muted);text-align:center;padding:40px;">
       板块数据暂不可用（API 请求受限），请稍后刷新<br>

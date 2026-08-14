@@ -115,10 +115,12 @@ def run(slot: str):
 
     # 0925 盘前：板块/涨跌榜数据全零（未开盘），用昨日收盘数据替代
     movers_note = ""
+    sector_note = ""
     if slot == "0925":
         yesterday_sectors = _load_yesterday_sectors(date_str)
         if yesterday_sectors:
             sector_list = yesterday_sectors
+            sector_note = "昨日收盘数据"
             logger.info(f"0925 使用昨日板块数据: {len(sector_list)} 条")
 
         # 涨跌榜回填：盘前新浪返回全零或空，用昨日收盘涨跌榜
@@ -160,7 +162,7 @@ def run(slot: str):
         chart_data = None
         logger.debug("chart_data is None (no chart data)")
 
-    report_html = render_report(slot, safe_report, data, chart_data, movers_note)
+    report_html = render_report(slot, safe_report, data, chart_data, movers_note, sector_note)
     report_path = save_report_html(report_html, slot)
 
     # 6.5 生成 Word 文档
