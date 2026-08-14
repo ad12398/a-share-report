@@ -16,7 +16,7 @@ SUMMARY_PATH = PROJECT_ROOT / "data" / "last_slot.json"
 
 NORTH_FLOW_NOTE = (
     "⚠️ 外资监测说明：北向净买入自2024年证监会新规后不再公开发布。"
-    "本报告以三维框架替代：① 北向成交总额（活跃度）+ ② 南向净买入（反向情绪）+ ③ 外部联动（方向推断）。"
+    "本报告以二维框架替代：① 南向资金（港股通净买入，A股情绪反向指标）+ ② 外部联动（A50/恒生/离岸人民币方向推断）。"
     "分析时禁止使用'北向资金净买入/净流出'等说法。"
 )
 
@@ -43,26 +43,21 @@ SYSTEM_PROMPT = """你是一位资深量化交易分析师，专注于 A 股市�
 7. **风险提示**：当前市场的主要风险和关注点
 
 ## 重要数据说明
-- **外资监测**（三维框架——活跃度+南向+外部联动）：
-  ① 活跃度：北向成交总额（turnover_total，沪+深合计，mx-source）→ 外资参与热度
-     高活跃度（>300亿）=外资积极参与；低活跃度（<100亿）=外资观望，内资主导
-  ② 外资占比：北向成交/两市成交（participation_pct）→ 外资定价权
-     占比>10%=外资主导盘面；占比<3%=外资影响微弱
-  ③ 沪/深偏好：沪市成交占比（sh_ratio）→ 偏价值防御（>55%）vs 偏成长进攻（<45%）
-  ④ 南向资金：港股通净买入（south_flow.south_net）→ A股情绪反向指标
+- **外资监测**（二维框架——南向+外部联动）：
+  ① 南向资金：港股通净买入（south_flow.south_net）→ A股情绪反向指标
      南向大幅净买入（>30亿）=内资南下抄底港股，A股情绪偏弱；
      南向净卖出=内资回流A股，A股情绪偏强
-  ⑤ 外部联动：A50/恒生科技/离岸人民币 → 外资方向推断
-     三者同向时信号强（如A50涨+恒生涨+CNH升值=外资risk-on）；
-     背离时信号弱，以外资活跃度为主要参考
-  ⑥ 分析口诀：
-     - 北向高活跃+南向净卖出=内外资都在A股，偏多
-     - 北向高活跃+南向大幅净买入=外资活跃但内资南下，分歧加大
-     - 北向低活跃+外部联动强势=外资缺席但外盘带动，内资跟涨
-     - 北向低活跃+南向净买入+外部联动弱=全面观望，谨慎
-- **数据限制**：北向净买入方向自2024年证监会新规后不再公开发布。
-  所有'北向净买入/净流出'类说法均为推测，不得以确定语气表述。
-  分析时一律使用'外资监测'或分项指标名称。
+  ② 外部联动：A50/恒生科技/恒生指数/离岸人民币 → 外资方向推断
+     四者同向时信号强（如A50涨+恒生涨+CNH升值=外资risk-on）；
+     背离时信号弱，以南向资金和量价为主要参考
+  ③ 分析口诀：
+     - 南向净卖出+外部联动看多=内外资都看多A股，偏多
+     - 南向大幅净买入+外部联动看空=内外资都撤离，偏空
+     - 南向与外部联动背离=分歧加大，以内盘量价为准
+- **数据限制**：北向净买入方向自2024年证监会新规后不再公开发布，
+  且无可靠的北向成交额公开接口（mx-source 的"北向成交总额"查询
+  实际返回 A 股板块成交额，不可使用）。
+  所有'北向净买入/净流出/北向活跃度'类说法均为推测，不得以确定语气表述。
 
 输出使用 HTML 段落格式（<p>、<h3>、<ul><li>），避免使用 ``` 代码块。"""
 
@@ -104,7 +99,7 @@ def build_morning_prompt(data: dict[str, Any], comparison_text: str = "") -> str
 2. 量能异动（成交量是否有超常规放大或萎缩）
 3. 板块轮动方向（资金在哪些板块聚集，哪些流出）
 4. 涨跌比和涨跌停家数的信号意义
-5. 外资监测：北向成交活跃度（高/中/低）+ 外资占比 + 南向资金反向信号
+5. 外资监测：南向资金流向（港股通净买入反向信号）+ 外部联动方向
 6. 技术面关键位置（主要指数靠近支撑还是阻力位）
 
 {DISCLAIMER}"""
@@ -122,7 +117,7 @@ def build_midday_prompt(data: dict[str, Any], comparison_text: str = "") -> str:
 1. 上午盘面整体特征（强势/弱势/震荡）
 2. 涨跌比和成交额解读（今日量能水平）
 3. 领涨/领跌板块的持续性判断
-4. 外资监测：半日北向活跃度变化 + 外资占比趋势 + 南向资金流向 + 沪/深偏好
+4. 外资监测：南向资金半日流向变化 + 外部联动方向
 5. 下午盘面展望（结合上午走势和历史模式）
 6. 需要注意的异常信号
 
@@ -150,10 +145,6 @@ def build_afternoon_prompt(data: dict[str, Any], comparison_text: str = "") -> s
         f"背离信号 {len(c_alerts)} 条，微弱信号 {c_weak} 个"
     ) if c_total else "外部共识数据暂缺"
 
-    # 外资偏好
-    north = data.get("north_flow", {}) or {}
-    sh_ratio = north.get("sh_ratio", 0) or 0
-
     return f"""请生成一份 A 股午后实战快评（14:00 时段）。
 
 {comparison_text + chr(10) + chr(10) if comparison_text else ""}
@@ -176,11 +167,6 @@ def build_afternoon_prompt(data: dict[str, Any], comparison_text: str = "") -> s
 - 结合板块轮动数据，判断资金是在权重防御还是题材进攻
 
 ### 模块四：内外联动
-先分析外资偏好，再分析外部联动共识：
-
-**外资偏好（沪/深风格）：**
-- 沪市占比 {sh_ratio}%（>55%=偏价值防御，<45%=偏成长进攻，40-60%=均衡）
-
 **外部联动共识（Python 预计算，仅供参考，你有权质疑）：**
 {consensus_summary}
 
@@ -222,7 +208,7 @@ def build_close_prompt(data: dict[str, Any], comparison_text: str = "") -> str:
 2. **指数分析**：上证/深证/创业板/科创50 分别分析，关注技术指标信号
 3. **量价分析**：今日量能与涨跌幅的匹配程度
 4. **板块轮动**：今日主线板块和杀跌板块的驱动逻辑
-5. **资金面**：外资监测（全日活跃度+外资占比+南向资金+沪/深偏好）、龙虎榜信号
+5. **资金面**：外资监测（南向全日净流向+外部联动）、龙虎榜信号
 6. **市场宽度**：涨跌比、新高新低比
 7. **技术信号**：主要指数的 MA/MACD/RSI/KDJ 指标状态
 8. **明日关注**：明日需要重点关注的板块、个股、技术位
@@ -454,10 +440,7 @@ def _compute_warning_lights(data: dict[str, Any], comparison_text: str, persiste
     up_ratio = overview.get("up_ratio", 0) or 0
     total_amount = overview.get("total_amount", 0) or 0
 
-    # 外资监测指标
-    turnover_total = north.get("turnover_total", 0) or 0    # 北向成交总额（亿）
-    participation = north.get("participation_pct", 0) or 0   # 外资占比（%）
-    sh_ratio = north.get("sh_ratio", 0) or 0                 # 沪市成交占比（%）
+    # 外资监测指标（北向数据不可用，只保留南向）
     south = north.get("south_flow", {}) or {}                 # 南向数据
     south_net = south.get("south_net", 0) or 0               # 南向净买入（亿）
 
@@ -480,28 +463,13 @@ def _compute_warning_lights(data: dict[str, Any], comparison_text: str, persiste
         sh_pct = 0
 
     # ── 红灯条件 ──
-    # 外资高活跃+南向大幅流出 = 外资在A股活跃但内资跑了
-    if turnover_total > 300 and south_net > 50 and sh_pct < -0.5:
-        red.append(f"北向高活跃（{turnover_total:.0f}亿）但南向大幅净买入 {south_net:.0f} 亿，内资加速南下+指数承压，内外资分歧加剧")
-    # 极低活跃度+指数大跌 = 外资撤退+内资踩踏
-    if turnover_total > 0 and turnover_total < 150 and sh_pct < -1.5:
-        red.append(f"北向成交仅 {turnover_total:.0f} 亿（低活跃）+ 上证 {sh_pct:+.2f}%，外资撤出+跌势加速")
-    # 外资占比骤降 = 外资出货
-    if participation > 0 and participation < 2 and up_ratio < 40:
-        red.append(f"外资占比仅 {participation:.1f}%（极低），外资基本退出定价，内资踩踏中")
+    # 南向大幅净买入+指数大跌 = 内资加速外流+情绪崩溃
+    if south_net > 50 and sh_pct < -0.5:
+        red.append(f"南向大幅净买入 {south_net:.0f} 亿（内资加速南下）+ 上证 {sh_pct:+.2f}%，内外资金同步撤离A股")
 
     # ── 黄灯条件 ──
     if 45 <= up_ratio <= 55:
         yellow.append(f"涨跌比 {up_ratio:.0f}% 处于多空平衡区，方向待选，减少仓位等待信号")
-    # 北向低活跃 = 外资观望
-    if 0 < turnover_total < 200:
-        yellow.append(f"北向成交 {turnover_total:.0f} 亿（低活跃度），外资整体观望，内资主导盘面")
-    # 沪/深偏好极端 = 外资偏防御
-    if sh_ratio > 70:
-        yellow.append(f"沪市占北向成交 {sh_ratio:.0f}%，外资极度偏向价值防御，成长股缺乏外资支撑")
-    # 外资偏好切换
-    if "外资偏好切换" in comparison_text:
-        yellow.append("外资沪/深偏好切换，资金风格可能轮动，注意持仓结构调整")
     # 南向大幅流入 = 内资外流
     if south_net > 30:
         yellow.append(f"南向净买入 {south_net:.0f} 亿（内资南下），A 股短线资金被分流")
@@ -526,18 +494,12 @@ def _compute_warning_lights(data: dict[str, Any], comparison_text: str, persiste
     # ── 绿灯条件 ──
     if up_ratio > 65:
         green.append(f"涨跌比 {up_ratio:.0f}% 偏暖，多头占主导")
-    # 外资高活跃+南向净卖出 = 内外资都在A股
-    if turnover_total > 300 and south_net < 0:
-        green.append(f"北向高活跃（{turnover_total:.0f}亿）+ 南向净卖出 {south_net:.0f} 亿，内外资都在A股，偏多")
-    # 外资占比高+外部联动同向
-    if participation > 8 and a50 > 0 and hstech > 0:
-        green.append(f"外资占比 {participation:.1f}% + A50和恒生科技同向上涨，外资主导+外盘配合")
+    # 南向净卖出+上证上涨 = 内资回流A股
+    if south_net < 0 and sh_pct > 0:
+        green.append(f"南向净卖出 {abs(south_net):.0f} 亿（内资回流A股）+ 上证上涨，内外资共振偏多")
     # 外部共识强看多+内盘跟随
     if consensus_score > 2 and consensus_confidence == "强" and sh_pct > 0.3 and not divergence_alerts:
         green.append(f"外部一致看多（score={consensus_score:+.1f}，conf={consensus_confidence}）+ 上证同步上涨，外盘共振偏多")
-    # 沪/深均衡 = 外资全面参与
-    if 40 <= sh_ratio <= 60 and turnover_total > 250:
-        green.append(f"沪/深成交均衡（沪{sh_ratio:.0f}%），外资全面参与，价值成长都有支撑")
     if not red and not yellow:
         green.append("无红灯或黄灯信号，当前盘面暂时无忧")
 

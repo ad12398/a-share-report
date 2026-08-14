@@ -2,7 +2,7 @@
 
 龙虎榜已迁移至 sina_lhb_source.py（新浪源）。
 融资融券已由新浪资金流聚合替代（fetch_market_fund_flow）。
-北向活跃度用 mx_source.fetch_north_turnover()。
+北向净买入自2024年证监会新规后不再公开发布，无可靠免费接口。
 """
 
 import logging

@@ -77,7 +77,7 @@ def run(slot: str):
     # 2.5 数据清洗
     data = clean_data_for_ai(raw_data)
 
-    # 两市成交额已在 collector.py 采集阶段计算并注入 overview（供外资占比和清洗层使用）
+    # 两市成交额已在 collector.py 采集阶段计算并注入 overview（供清洗层和统计使用）
     logger.info(f"两市总成交额: {data['overview'].get('total_amount', 0):.0f} 亿")
 
     # 2.7 加载上一时段 / 昨日同期摘要，构建边际对比

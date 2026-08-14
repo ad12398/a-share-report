@@ -78,9 +78,9 @@
     <div class="kpi-sub">上涨占比</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label">北向日均活跃度</div>
-    <div class="kpi-value">{{ avg_turnover_str }}</div>
-    <div class="kpi-sub">北向日均成交（亿元）</div>
+    <div class="kpi-label">南向累计净买入</div>
+    <div class="kpi-value" style="color:{{ 'var(--down, #e74c3c)' if south_cumulative >= 0 else 'var(--up, #27ae60)' }}">{{ south_cumulative_str }}</div>
+    <div class="kpi-sub">港股通（亿元，正=内资南下）</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">日均成交额</div>
@@ -100,19 +100,15 @@
     <div class="chart-inner" id="chart-breadth"></div>
   </div>
   <div class="chart-box">
-    <h3>💰 北向活跃度 & 外资占比（每日）</h3>
-    <div class="chart-inner" id="chart-north"></div>
+    <h3>🏠 南向资金 — 港股通净买入（每日）</h3>
+    <div class="chart-inner" id="chart-south"></div>
   </div>
 </div>
 
-<div class="chart-row">
+<div class="chart-row full">
   <div class="chart-box">
     <h3>📊 主要指数累计收益率</h3>
     <div class="chart-inner" id="chart-index"></div>
-  </div>
-  <div class="chart-box">
-    <h3>🏠 南向资金 — 港股通净买入（每日）</h3>
-    <div class="chart-inner" id="chart-south"></div>
   </div>
 </div>
 
@@ -160,59 +156,6 @@ var _chartData = {{ chart_json | safe }};
         markLine: { silent: true, data: [{ yAxis: 50, lineStyle: { color: '#bdc3c7', type: 'dashed' } }],
           label: { formatter: '50%', color: '#bdc3c7' } }
       }]
-    });
-    window.addEventListener('resize', function() { chart.resize(); });
-  })();
-
-  // ── 北向活跃度（双轴：柱=成交总额，线=外资占比）──
-  (function() {
-    var dom = document.getElementById('chart-north');
-    var chart = echarts.init(dom);
-    var turnover = _chartData.north_turnover;
-    var participation = _chartData.north_participation;
-    var colors = turnover.map(function(v) {
-      return v > 300 ? '#e74c3c' : v > 150 ? '#e67e22' : '#95a5a6';
-    });
-    chart.setOption({
-      tooltip: {
-        trigger: 'axis',
-        formatter: function(params) {
-          var d = params[0].axisValue;
-          var t = params[0].value, p = params[1].value;
-          return d + '<br/>北向成交: ' + t.toFixed(0) + ' 亿<br/>外资占比: ' + p.toFixed(1) + '%';
-        }
-      },
-      legend: { data: ['成交总额', '外资占比'], textStyle: { color: '#5a6c7d' }, bottom: 0 },
-      grid: { left: 55, right: 55, top: 20, bottom: 40 },
-      xAxis: { type: 'category', data: _chartData.dates, axisLabel: { color: '#5a6c7d', rotate: 30 } },
-      yAxis: [
-        { type: 'value', name: '亿', axisLabel: { color: '#5a6c7d' },
-          splitLine: { lineStyle: { color: '#e0e3e8' } } },
-        { type: 'value', name: '%', axisLabel: { color: '#5a6c7d' },
-          splitLine: { show: false }, min: 0 }
-      ],
-      series: [
-        { name: '成交总额', type: 'bar',
-          data: turnover.map(function(v, i) { return { value: v, itemStyle: { color: colors[i] } }; }),
-          markLine: { silent: true, symbol: 'none',
-            data: [
-              { yAxis: 300, lineStyle: { color: '#e74c3c', type: 'dashed' }, label: { formatter: '高', color: '#e74c3c' } },
-              { yAxis: 150, lineStyle: { color: '#e67e22', type: 'dashed' }, label: { formatter: '中', color: '#e67e22' } }
-            ]
-          }
-        },
-        { name: '外资占比', type: 'line', yAxisIndex: 1, data: participation,
-          smooth: true, symbol: 'circle', symbolSize: 5,
-          lineStyle: { color: '#2980b9', width: 2 },
-          itemStyle: { color: '#2980b9' },
-          markLine: { silent: true, symbol: 'none',
-            data: [
-              { yAxis: 10, lineStyle: { color: '#e74c3c', type: 'dashed' }, label: { formatter: '10%', color: '#e74c3c' } },
-              { yAxis: 5, lineStyle: { color: '#e67e22', type: 'dashed' }, label: { formatter: '5%', color: '#e67e22' } }
-            ]
-          }
-        }
-      ]
     });
     window.addEventListener('resize', function() { chart.resize(); });
   })();

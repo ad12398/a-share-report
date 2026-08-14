@@ -6,7 +6,7 @@ from typing import Any
 
 import requests
 
-from src.data.sources import akshare_source, sina_source, eastmoney_source, commodities_source, linked_markets_source, sina_lhb_source, mx_source
+from src.data.sources import akshare_source, sina_source, eastmoney_source, commodities_source, linked_markets_source, sina_lhb_source
 from src.data.validator import validate_index_quotes
 from src.data.macro_loader import load_macro_data
 from src.analysis.external_consensus import build_consensus_diagnosis
@@ -62,32 +62,19 @@ def collect_all_data(slot: str) -> dict[str, Any]:
     dragon_data: list = []
     fund_flow_data: dict = {}
     if slot in ("1030", "1130", "1400", "1500"):
-        # ── 北向活跃度（mx-source 成交总额，每日限额10次）──
-        mx_turnover = mx_source.fetch_north_turnover()
-        if mx_turnover:
-            total_turnover = mx_turnover.get("total_amount", 0) or 0
-            sh_turnover = mx_turnover.get("sh_amount", 0) or 0
-            sz_turnover = mx_turnover.get("sz_amount", 0) or 0
-            # 沪市成交占比 → 外资偏好（沪市大=偏价值防御，深市大=偏成长进攻）
-            sh_ratio = round(sh_turnover / total_turnover * 100, 1) if total_turnover > 0 else 0
-
-            # 外资参与度 = 北向成交总额 / 两市成交额
-            participation = round(total_turnover / total_market_amount * 100, 1) if total_market_amount > 0 else 0
-
-            north_data = {
-                "turnover_total": total_turnover,
-                "turnover_sh": sh_turnover,
-                "turnover_sz": sz_turnover,
-                "sh_ratio": sh_ratio,
-                "participation_pct": participation,
-                "source": "mx_turnover",
-                "_note": (
-                    f"北向成交总额 {total_turnover:.0f}亿（沪{sh_turnover:.0f}亿+深{sz_turnover:.0f}亿），"
-                    f"占两市成交 {participation:.1f}%。"
-                    f"北向净买入方向自2024年证监会新规后不再公开发布，"
-                    f"本报告以外资活跃度+南向资金+外部联动指标替代方向判断。"
-                ),
-            }
+        # ── 外资监测 ──
+        # ⚠️ 北向净买入自2024年证监会新规后不再公开发布。
+        # mx-source 的"北向成交总额"查询实际返回的是 A 股板块成交额
+        # （"全部A股(板块)"=全市场成交），曾被误当北向活跃度——已废弃。
+        # 外资监测 = 南向资金（真实）+ 外部联动共识（linked_markets）。
+        north_data = {
+            "source": "em_datacenter_south",
+            "_note": (
+                "北向净买入自2024年证监会新规后不再公开发布。"
+                "本报告外资监测由南向资金（港股通净买入，A股情绪反向指标）"
+                "和外部联动（A50/恒生科技/恒生指数/离岸人民币方向推断）构成。"
+            ),
+        }
 
         # ── 南向资金（港股通，反向参考）──
         south_data = eastmoney_source.fetch_south_bound()
