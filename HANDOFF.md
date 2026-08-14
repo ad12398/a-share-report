@@ -193,6 +193,7 @@
 - **宏观数据更新** — CPI/PPI 7 月数据（8-9 发布）：CPI 同比+0.5%/环比-0.1%/核心+0.9%，PPI 同比+3.5%/环比-0.7%
 
 ### 踩坑记录（本次新增）
+- **🚨 mx-source 北向数据是假的（2026-08-14 发现）** — 查询"北向资金成交总额 沪股通 深股通"实际返回**A股板块成交额**：表标签是 `"全部A股(板块)"`（全市场成交 ~2.5万亿）、`"沪股通(板块)"`（沪股通标的股成交）。8-6 至 8-14 期间被误当"北向活跃度/外资占比/沪深偏好"，产生 150-260% 占比的数学不可能值，最终由 AI 在报告中自己发现并标注。**教训：8-5 的 HANDOFF 已记录"mx 不能用于北向数据"，但 P0 重构时忘了读。踩过的坑必须翻记录！** 修复：删除 mx 调用，外资监测退回二维（南向+外部联动），等 Tushare 的 moneyflow_hsgt 恢复真实北向数据
 - **DeepSeek 思考模式** — 模型可能把全部 token 输出到 `reasoning_content`，content 为空。特征：output=4096（撞 max_tokens）但页面空白。修复：检测空 content+非空 reasoning 时重试，最终兜底用 reasoning_content。**日志现在会打印 content/reasoning 字数**
 - **部署失败让调度器感知** — 之前 deploy 失败也 exit 0，日志里"部署完成"实际半新半旧。现在失败 exit 1，Windows Task Scheduler 能记录失败状态
 - **本地网络间歇性断 GitHub** — 本次会话多次 push 失败。工作流：本地改代码 → 本地 commit → 复制文件到服务器 → 服务器 commit+push → 本地 `git fetch + reset --hard origin/main`
@@ -213,8 +214,8 @@
 | 板块表现 | 新浪/腾讯 | `akshare_source.fetch_sector_performance()` | ✅ | 三级降级 |
 | 涨跌榜 | 新浪 | `akshare_source.fetch_top_movers()` | ✅ | |
 | 市场概况 | 腾讯 | `akshare_source.fetch_market_overview()` | ✅ | 成交额字段动态搜索 |
-| **北向成交总额** | mx-source | `mx_source.fetch_north_turnover()` | ✅ | 每日限额10次 |
 | **南向净买入** | 东财 datacenter | `eastmoney_source.fetch_south_bound()` | ✅ | 港股通实时可用 |
+| ~~北向成交总额~~ | ~~mx-source~~ | ~~`fetch_north_turnover()`~~ | ❌ | 8-14 确认返回A股板块成交额（假数据），已移除 |
 | 外围联动 | 新浪 | `linked_markets_source.fetch_linked_markets()` | ✅ | A50+恒生科技+恒生指数+CNH，4线程 |
 | 龙虎榜 | 新浪 | `sina_lhb_source.fetch_daily_lhb()` | ✅ | HTML解析 |
 | 资金流（替代两融）| 新浪 | `eastmoney_source.fetch_market_fund_flow()` | ⚠️ | 30股聚合，非官方两融 |
@@ -229,7 +230,7 @@
 - [ ] **注册 Tushare 学生认证**（获取 2000 积分 → 免费调 `margin` 融资融券接口）——最高优先级
 - [ ] **注册同花顺 quantapi**（`quantapi.10jqka.com.cn`，备用路径，可能收费）
 - [ ] `macro_data.json` M2/社融 7 月数据更新（CPI/PPI 已完成 8-13，M2 等央行 8 月中旬发布）
-- [ ] **轻微问题清理（14 项）**：死模块 indicators.py + requirements 冗余依赖、hexin 废弃残留、DEBUG 日志、未使用导入、北交所 920xxx 前缀错误（溢价率漏北交所）、run_report.bat 硬编码路径等
+- [x] 轻微问题清理（14 项）— 2026-08-14 已完成（死模块/hexin残留/时区/北交所前缀等）
 
 ### 中期
 - [ ] **龙虎榜营业部明细深度分析** — 新浪 JSONP API 已通，能看游资/机构具体动向，HANDOFF 标记"待单独开发"
