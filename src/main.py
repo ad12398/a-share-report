@@ -136,6 +136,8 @@ def run(slot: str):
                     "losers": losers_list,
                 }
                 logger.info(f"0925 使用昨日涨跌榜: 涨{len(gainers_list)}/跌{len(losers_list)}")
+            else:
+                logger.warning("0925 涨跌榜数据无效，且昨日摘要无 movers 字段（可能摘要由旧版本代码保存），报告涨跌榜将为空")
 
     chart_data = {}
     if sector_list and isinstance(sector_list, list) and len(sector_list) > 0:
