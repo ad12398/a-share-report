@@ -154,21 +154,28 @@ def _sina_index_fallback() -> dict[str, Any]:
 # ═══ 板块涨跌榜（东财 → 新浪备用） ═══
 
 def fetch_sector_performance() -> list[dict[str, Any]]:
-    # 先试东方财富
+    # 先试东方财富行业板块
+    # 🚨 fs=m:90+t:3 是概念/风格板块（2026-08-19 血案：返回"红利股/价值股/昨日连板"
+    # 等风格板块，涨跌幅 84%/-32% 全是脏值，cleaner 过滤后只剩 1 条污染报告）。
+    # 行业板块正确参数是 m:90+t:2+f:!50（对齐 akshare stock_board_industry_em，17.push2 + ut）
     try:
         url = (
-            "https://push2.eastmoney.com/api/qt/clist/get?"
-            "pn=1&pz=30&po=1&np=1&fs=m:90+t:3&fid=f3"
+            "https://17.push2.eastmoney.com/api/qt/clist/get?"
+            "pn=1&pz=30&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281"
+            "&fltt=2&invt=2&fid=f3&fs=m:90+t:2+f:!50"
             "&fields=f2,f3,f14,f128"
         )
-        resp = _safe_get(url, max_retries=1)  # 只试 1 次，快速降级
+        resp = _safe_get(url, extra_headers={"Referer": "https://quote.eastmoney.com/"}, max_retries=1)  # 只试 1 次，快速降级
         if resp:
             data = resp.json()
             if data.get("data") and data["data"].get("diff"):
-                sectors = [{"name": str(item.get("f14", "")), "change_pct": float(item.get("f3", 0) or 0), "leader": str(item.get("f128", ""))} for item in data["data"]["diff"]]
-                if sectors:
+                raw = [{"name": str(item.get("f14", "")), "change_pct": float(item.get("f3", 0) or 0), "leader": str(item.get("f128", ""))} for item in data["data"]["diff"]]
+                # 行业指数单日涨跌幅不会超 ±12%，超了说明返回了风格/概念板块等脏数据
+                sectors = [s for s in raw if abs(s["change_pct"]) <= 12]
+                if len(sectors) >= 10:
                     logger.info(f"东财: 获取行业板块 {len(sectors)} 条")
                     return sectors
+                logger.warning(f"东财行业板块有效条目不足 ({len(sectors)}/{len(raw)})，疑似板块类型不对，降级新浪")
     except Exception:
         pass
 
