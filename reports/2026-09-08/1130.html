@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026-09-08 午盘总结 - A股量化报告</title>
+<link rel="stylesheet" href="/a-share-report/assets/css/dashboard.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="brand">📊 A-Share Quant<span>2026-09-08 午盘总结</span></div>
+  <div class="nav-links">
+    <a href="/a-share-report/reports/">首页</a>
+    <a href="/a-share-report/reports/archives.html">归档</a>
+    <a href="/a-share-report/reports/stats.html">统计</a>
+    <a href="#" class="active">午盘总结</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- 导航 -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <a href="/a-share-report/reports/" style="color:var(--accent-blue);text-decoration:none;margin-right:20px;">← 返回首页</a>
+    <a href="/a-share-report/reports/2026-09-08/2026-09-08 11时30分 A股量化报告.docx" download="2026-09-08 11时30分 A股量化报告.docx" style="color:var(--accent-green);text-decoration:none;border:1px solid var(--accent-green);padding:4px 12px;border-radius:4px;font-size:13px;">📥 下载 Word</a>
+    <span style="color:var(--text-muted);font-size:13px;">报告生成时间: 2026-09-08 11:31</span>
+  </div>
+
+  <!-- KPI 指标卡片 -->
+  <div class="kpi-row">
+    
+    
+    <div class="kpi-card">
+      <div class="label">上证指数</div>
+      <div class="value">3947.01</div>
+      <div class="change up">
+        +0.36%
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card">
+      <div class="label">深证成指</div>
+      <div class="value">13780.88</div>
+      <div class="change up">
+        +0.04%
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card">
+      <div class="label">创业板指</div>
+      <div class="value">3393.24</div>
+      <div class="change down">
+        -0.16%
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card">
+      <div class="label">科创50</div>
+      <div class="value">1608.66</div>
+      <div class="change down">
+        -0.43%
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card">
+      <div class="label">沪深300</div>
+      <div class="value">4577.63</div>
+      <div class="change up">
+        +0.06%
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card">
+      <div class="label">中证500</div>
+      <div class="value">7800.79</div>
+      <div class="change up">
+        +0.53%
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card" style="border-color:var(--accent-orange);">
+      <div class="label">两市成交额</div>
+      <div class="value">12548<span style="font-size:14px;color:var(--text-muted);"> 亿</span></div>
+      <div class="change" style="color:var(--text-muted);">沪深两市</div>
+    </div>
+    
+  </div>
+
+  <!-- 涨幅榜图表（主力，数据稳定） -->
+  <div class="chart-container">
+    <div class="chart-title">🔥 今日涨幅榜 TOP 10</div>
+    <div class="chart-box" id="gainers-chart" style="height:380px;"></div>
+  </div>
+
+  <!-- 跌幅榜图表 -->
+  <div class="chart-container" id="losers-container">
+    <div class="chart-title">📉 今日跌幅榜 TOP 10</div>
+    <div class="chart-box" id="losers-chart"></div>
+  </div>
+
+  <!-- 商品 & 汇率 KPI -->
+  
+  <div class="kpi-row">
+    
+    
+    <div class="kpi-card">
+      <div class="label">伦敦金 (美元/盎司)</div>
+      <div class="value">4432.05</div>
+      <div class="change up">
+        +0.59%
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card">
+      <div class="label">COMEX黄金 (美元/盎司)</div>
+      <div class="value">4479.16</div>
+      <div class="change up">
+        +0.06%
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card">
+      <div class="label">WTI原油 (美元/桶)</div>
+      <div class="value">92.96</div>
+      <div class="change up">
+        +0.04%
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card">
+      <div class="label">LME铜 (美元/吨)</div>
+      <div class="value">14597.86</div>
+      <div class="change up">
+        +0.61%
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card">
+      <div class="label">在岸人民币 (USD/CNY)</div>
+      <div class="value">6.71</div>
+      <div class="change down">
+        -0.05%
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card">
+      <div class="label">道琼斯 (点)</div>
+      <div class="value">53414.25</div>
+      <div class="change down">
+        -0.51%
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card">
+      <div class="label">标普500指数 (点)</div>
+      <div class="value">7718.60</div>
+      <div class="change down">
+        -0.38%
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card">
+      <div class="label">纳斯达克 (点)</div>
+      <div class="value">26506.99</div>
+      <div class="change down">
+        -0.29%
+      </div>
+    </div>
+    
+    
+  </div>
+  
+
+  <!-- 外围联动 KPI -->
+  
+  <div class="kpi-row">
+    
+    
+    <div class="kpi-card" style="border-left: 2px solid var(--accent-purple);">
+      <div class="label">恒生指数 <span style="color:var(--text-muted);font-size:10px;">实时联动</span></div>
+      <div class="value">25309.18</div>
+      <div class="change down">
+        -0.41%
+        
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card" style="border-left: 2px solid var(--accent-purple);">
+      <div class="label">恒生科技 <span style="color:var(--text-muted);font-size:10px;">实时联动</span></div>
+      <div class="value">4502.53</div>
+      <div class="change down">
+        -1.18%
+        
+      </div>
+    </div>
+    
+    
+    
+    <div class="kpi-card" style="border-left: 2px solid var(--accent-purple);">
+      <div class="label">离岸人民币 <span style="color:var(--text-muted);font-size:10px;">实时联动</span></div>
+      <div class="value">6.71</div>
+      <div class="change up">
+        +0.01%
+        <span style="font-size:10px;color:var(--text-muted);"> USD/CNH 0.0005 贬值</span>
+      </div>
+    </div>
+    
+    
+  </div>
+  
+
+  <!-- 宏观数据 KPI -->
+  
+  <div class="kpi-row">
+    
+    <div class="kpi-card">
+      <div class="label">CPI 2026年7月 %</div>
+      <div class="value">0.5%</div>
+      <div class="change" style="color:var(--text-muted);">核心CPI 0.9%</div>
+    </div>
+    
+    
+    <div class="kpi-card">
+      <div class="label">PPI 2026年7月 %</div>
+      <div class="value">3.5%</div>
+      <div class="change up">
+        -0.7% MoM
+      </div>
+    </div>
+    
+    
+    <div class="kpi-card">
+      <div class="label">PMI 2026年7月</div>
+      <div class="value">49.2</div>
+      <div class="change" style="color:var(--text-muted);">服务业 49.3</div>
+    </div>
+    
+    
+    <div class="kpi-card">
+      <div class="label">M2 2026年6月末</div>
+      <div class="value">8.0%</div>
+      <div class="change" style="color:var(--text-muted);">M1 4.0%</div>
+    </div>
+    
+    
+    <div class="kpi-card">
+      <div class="label">LPR 2026-07-20</div>
+      <div class="value">3.0% / 3.5%</div>
+      <div class="change" style="color:var(--text-muted);">1Y / 5Y 贷款</div>
+    </div>
+    
+  </div>
+  
+
+  <!-- 行业板块图表 -->
+  <div class="chart-container" id="sector-container">
+    <div class="chart-title">📈 行业板块涨跌幅 TOP 20</div>
+    <div class="chart-box" id="sector-chart"></div>
+    <div class="chart-empty" id="sector-empty" style="display:none;color:var(--text-muted);text-align:center;padding:40px;">
+      板块数据暂不可用（API 请求受限），请稍后刷新<br>
+      <small style="color:var(--text-muted);">涨幅榜和跌幅榜图表仍可正常查看</small>
+    </div>
+  </div>
+
+  <!-- 分析报告 -->
+  <div class="report-section">
+    <h1>午盘总结 — 量化分析报告</h1>
+    <div class="meta">生成时间: 2026-09-08 11:31 | 模型: DeepSeek</div>
+    <div class="content">
+      <h3>一句话点睛</h3>
+<p>本时段核心变化是 <strong>放量滞涨下的结构剧烈分化</strong>：上证指数较上一时段仅微幅抬升，而创业板、科创50加速下行，资金从高波动科技题材快速撤向农业、化肥、教育等防御性板块，量价背离信号明确。</p>
+
+<h3>市场概览</h3>
+<p>上午收盘 A 股呈现典型“沪强深弱、权重稳、题材杀”格局。上证指数收涨 0.36%，但深成指仅涨 0.04%，创业板指、科创50分别下跌 0.16%、0.43%。较上一时段，上证涨幅扩大 0.05pp，但深成指、创业板、科创50涨幅分别收窄 0.37pp、0.60pp、0.74pp，边际动能明显衰竭。较昨日同期，上证涨幅扩大 0.60pp 呈现韧性，但创业板指、科创50分别大幅收窄 2.78pp、2.00pp，成长板块趋势转弱。整体判断：<strong>动能衰竭，创业板/科创50进入下行加速段</strong>。</p>
+
+<h3>核心指标</h3>
+<ul>
+<li><strong>涨跌家数</strong>：上涨 484 家，下跌 496 家，平盘 20 家，上涨比例 48.4%，涨跌比约 0.98。市场宽度接近中性偏弱，赚钱效应匮乏。</li>
+<li><strong>成交额</strong>：上午半日成交 12548 亿元，<strong>较上一时段（10:32）放量 33.7%</strong>。放量集中在农业、化肥、教育等低位板块，而创业板、科创50 对应品种缩量下跌，量能结构呈“防御放量、成长失血”特征。</li>
+<li><strong>南向资金</strong>：港股通净买入 32.82 亿元，较上一时段增加 4.5 亿，较昨日同期扩大 19.9 亿，连续大幅净流入。南向资金是 A 股情绪反向指标，其持续大幅净买入表明内资风险偏好偏低，资金南下抄底港股而非回流 A 股。</li>
+<li><strong>外部联动</strong>：恒生指数 -0.41%，恒生科技 -1.18%，离岸人民币微贬 0.01%。外部共识得分 -4.8，呈偏空状态。南向大幅净流入叠加外部看空，内外资情绪均谨慎，上证逆势上涨更多是防御性板块拉动，持续性存疑。</li>
+<li><strong>资金流（昨日参考）</strong>：样本内大单净流出 36.45 亿元，主力资金净流出，与今日放量滞涨相互印证。</li>
+</ul>
+
+<h3>板块热点</h3>
+<p>领涨板块较昨日同期<strong>完全替换</strong>：昨日同期的次新股、电子器件、机械
+    </div>
+  </div>
+
+  <!-- 涨跌榜 -->
+  
+  <div class="chart-container">
+    <div class="chart-title">🔥 涨跌榜 TOP 10</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <table class="data-table">
+          <thead><tr><th>名称</th><th>涨幅</th></tr></thead>
+          <tbody>
+          
+          <tr><td>bj920371 欧福蛋业</td><td class="up">+29.91%</td></tr>
+          
+          <tr><td>sh688039 当虹科技</td><td class="up">+19.99%</td></tr>
+          
+          <tr><td>sz300788 中信出版</td><td class="up">+19.99%</td></tr>
+          
+          <tr><td>bj920786 骑士乳业</td><td class="up">+16.46%</td></tr>
+          
+          <tr><td>sz301206 三元生物</td><td class="up">+14.26%</td></tr>
+          
+          <tr><td>bj920608 丰安股份</td><td class="up">+13.10%</td></tr>
+          
+          <tr><td>sz300697 电工合金</td><td class="up">+12.67%</td></tr>
+          
+          <tr><td>sz300505 川金诺</td><td class="up">+12.37%</td></tr>
+          
+          <tr><td>sz300553 集智股份</td><td class="up">+11.91%</td></tr>
+          
+          <tr><td>sh688028 沃尔德</td><td class="up">+10.97%</td></tr>
+          
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <table class="data-table">
+          <thead><tr><th>名称</th><th>跌幅</th></tr></thead>
+          <tbody>
+          
+          <tr><td>sz300684 中石科技</td><td class="down">-14.08%</td></tr>
+          
+          <tr><td>sh603448 C天博 <span style="background:var(--accent-red);color:#fff;font-size:10px;padding:1px 5px;border-radius:3px;font-weight:700;">新股</span></td><td class="down">-13.54%</td></tr>
+          
+          <tr><td>sz301133 金钟股份</td><td class="down">-13.04%</td></tr>
+          
+          <tr><td>sh688583 思看科技</td><td class="down">-9.83%</td></tr>
+          
+          <tr><td>bj920269 杰锋动力</td><td class="down">-9.82%</td></tr>
+          
+          <tr><td>sz300889 爱克股份</td><td class="down">-8.92%</td></tr>
+          
+          <tr><td>sh603311 金海高科</td><td class="down">-8.65%</td></tr>
+          
+          <tr><td>sz002743 ST富煌</td><td class="down">-7.77%</td></tr>
+          
+          <tr><td>bj920748 路桥信息</td><td class="down">-7.40%</td></tr>
+          
+          <tr><td>sz301633 港迪技术</td><td class="down">-7.38%</td></tr>
+          
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- 龙虎榜 -->
+  
+
+  <!-- 免责声明 -->
+  <div class="disclaimer">
+    ⚠️ 免责声明：本报告由 AI 自动生成，仅供参考，不构成任何投资建议。投资有风险，入市需谨慎。报告中的数据来源于公开接口，不对其准确性做任何保证。
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var chartData = {"sectors": [{"name": "教育运营及其他", "change_pct": 9.11}, {"name": "粮食种植", "change_pct": 7.69}, {"name": "房产租赁经纪", "change_pct": 7.4}, {"name": "其他农产品加工", "change_pct": 7.15}, {"name": "学历教育", "change_pct": 6.73}, {"name": "氮肥", "change_pct": 6.72}, {"name": "磷肥及磷化工", "change_pct": 6.5}, {"name": "其他种植业", "change_pct": 5.57}, {"name": "大众出版", "change_pct": 5.53}, {"name": "种植业", "change_pct": 5.24}, {"name": "焦炭Ⅲ", "change_pct": 5.13}, {"name": "焦炭Ⅱ", "change_pct": 5.13}, {"name": "食用菌", "change_pct": 5.05}, {"name": "农业综合Ⅲ", "change_pct": 4.82}, {"name": "农业综合Ⅱ", "change_pct": 4.82}, {"name": "农产品加工", "change_pct": 4.77}, {"name": "出版", "change_pct": 4.69}, {"name": "种子", "change_pct": 4.66}, {"name": "复合肥", "change_pct": 4.64}, {"name": "农化制品", "change_pct": 4.53}], "gainers": [{"name": "欧福蛋业", "change_pct": 29.911, "is_ipo": false}, {"name": "当虹科技", "change_pct": 19.994, "is_ipo": false}, {"name": "中信出版", "change_pct": 19.992, "is_ipo": false}, {"name": "骑士乳业", "change_pct": 16.456, "is_ipo": false}, {"name": "三元生物", "change_pct": 14.262, "is_ipo": false}, {"name": "丰安股份", "change_pct": 13.099, "is_ipo": false}, {"name": "电工合金", "change_pct": 12.671, "is_ipo": false}, {"name": "川金诺", "change_pct": 12.372, "is_ipo": false}, {"name": "集智股份", "change_pct": 11.915, "is_ipo": false}, {"name": "沃尔德", "change_pct": 10.97, "is_ipo": false}], "losers": [{"name": "中石科技", "change_pct": -14.076, "is_ipo": false}, {"name": "C天博", "change_pct": -13.536, "is_ipo": true}, {"name": "金钟股份", "change_pct": -13.04, "is_ipo": false}, {"name": "思看科技", "change_pct": -9.833, "is_ipo": false}, {"name": "杰锋动力", "change_pct": -9.818, "is_ipo": false}, {"name": "爱克股份", "change_pct": -8.922, "is_ipo": false}, {"name": "金海高科", "change_pct": -8.648, "is_ipo": false}, {"name": "ST富煌", "change_pct": -7.771, "is_ipo": false}, {"name": "路桥信息", "change_pct": -7.4, "is_ipo": false}, {"name": "港迪技术", "change_pct": -7.38, "is_ipo": false}]};
+  var colorGreen = '#27ae60';
+  var colorRed = '#e74c3c';
+
+  function renderBar(chartId, items, hideIfEmpty) {
+    var el = document.getElementById(chartId);
+    if (!el) return;
+    if (!items || items.length === 0) {
+      if (hideIfEmpty) {
+        var p = el.parentElement;
+        if (p) p.style.display = 'none';
+      }
+      return;
+    }
+    try {
+      var names = items.map(function(s) {
+        var label = s.name || '(未知)';
+        if (s.is_ipo) label = label + ' [新股]';
+        return label;
+      });
+      var values = items.map(function(s) { return Number(s.change_pct) || 0; });
+
+      // 确保容器有明确高度
+      if (!el.style.height && !el.clientHeight) {
+        el.style.height = '400px';
+      }
+      if (!el.style.width || el.clientWidth === 0) {
+        el.style.width = '100%';
+      }
+
+      var chart = echarts.init(el);
+      chart.setOption({
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { return p[0].name + '<br/>涨跌幅：<b>' + p[0].value.toFixed(2) + '%</b>'; } },
+        grid: { left: '15%', right: '10%', top: 10, bottom: 10 },
+        xAxis: { type: 'value', name: '%', axisLabel: { formatter: '{value}%' }, splitLine: { lineStyle: { color: '#e0e3e8' } } },
+        yAxis: { type: 'category', data: names.reverse(), axisLabel: { color: '#5a6c7d', fontSize: 12, width: 100, overflow: 'truncate' }, inverse: true },
+        series: [{
+          type: 'bar',
+          data: values.reverse().map(function(v) { return { value: v, itemStyle: { color: v >= 0 ? colorGreen : colorRed } }; }),
+          label: { show: true, position: 'right', color: '#2c3e50', fontSize: 13, fontWeight: 'bold', formatter: function(p) { return p.value.toFixed(1) + '%'; } }
+        }]
+      });
+      window.addEventListener('resize', function() { chart.resize(); });
+    } catch (e) {
+      console.error('图表渲染失败:', chartId, e.message);
+    }
+  }
+
+  renderBar('sector-chart', chartData.sectors, true);
+  renderBar('gainers-chart', chartData.gainers, true);
+  renderBar('losers-chart', chartData.losers, true);
+
+  // 板块数据为空时显示提示
+  if (!chartData.sectors || chartData.sectors.length === 0) {
+    var scEl = document.getElementById('sector-chart');
+    var seEl = document.getElementById('sector-empty');
+    if (scEl) scEl.style.display = 'none';
+    if (seEl) seEl.style.display = 'block';
+  }
+})();
+</script>
+
+</body>
+</html>
